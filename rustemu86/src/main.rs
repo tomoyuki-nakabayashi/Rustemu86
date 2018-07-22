@@ -1,5 +1,11 @@
+extern crate getopts;
+
+mod args;
 mod loader;
 
+use args::Args;
+
 fn main() {
-    println!("Hello, world!");
+  let args = args::parse_args();
+  println!("{:?}", args);
 }
