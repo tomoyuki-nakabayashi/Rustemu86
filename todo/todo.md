@@ -1,14 +1,17 @@
 # TO DO
 
+## Emulator model
+
+- [ ] Prepare Emulator structure to manage all of the emulation.
+- [ ] Prepare Register structure consists of rax, rcx, rdx, and rbx.
+
+## Instruction
+
+- [ ] mov immidiate instruction.
+
 ## Load an x86 binary
 
-- [x] Open a binary given commandline option.
-
-## Commandline arguments
-
-- [x] Prepare args module.
-- [x] Print help with -h.
-- [x] Recieve file path.
+- [ ] Load Elf format.
 
 ## CI
 
