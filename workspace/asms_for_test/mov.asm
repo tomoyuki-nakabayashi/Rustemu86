@@ -1,1 +1,3 @@
-mov ax, 0
+bits 64
+
+mov rax, 0
