@@ -12,5 +12,7 @@ rust:
 
 cache: cargo
 
+before_script: cd rustemu86
+
 script:
 - cargo test
