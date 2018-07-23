@@ -3,11 +3,12 @@
 ## Emulator model
 
 - [ ] Prepare Emulator structure to manage all of the emulation.
-- [ ] Prepare Register structure consists of rax, rcx, rdx, and rbx.
+  - [x] Define structure.
+- [x] Prepare Register structure consists of rax.
 
 ## Instruction
 
-- [ ] mov immidiate instruction.
+- [x] mov immidiate instruction.
 
 ## Load an x86 binary
 
@@ -15,4 +16,4 @@
 
 ## CI
 
-- [ ] Setup Travis or Circle CI
+- [x] Setup Travis or Circle CI
