@@ -6,3 +6,4 @@ authors = ["tomoyuki-nakabayashi <tomo.wait.for.it.yuki@gmail.com>"]
 [dependencies]
 getopts = "0.2.18"
 byteorder = "1.2.3"
+num = "0.2.0"

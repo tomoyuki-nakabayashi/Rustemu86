@@ -1,5 +1,45 @@
 use byteorder::{ReadBytesExt, LittleEndian};
 use loader::BinaryReader;
+use num::FromPrimitive;
+
+enum GeneralRegisterId {
+  RegRax,
+  RegRcx,
+  RegRdx,
+  RegRbx,
+}
+
+impl FromPrimitive for GeneralRegisterId {
+  fn from_i64(n: i64) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(GeneralRegisterId::RegRax),
+      1 => Some(GeneralRegisterId::RegRcx),
+      2 => Some(GeneralRegisterId::RegRdx),
+      3 => Some(GeneralRegisterId::RegRbx),
+      _ => None,
+    }
+  }
+
+  fn from_u64(n: u64) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(GeneralRegisterId::RegRax),
+      1 => Some(GeneralRegisterId::RegRcx),
+      2 => Some(GeneralRegisterId::RegRdx),
+      3 => Some(GeneralRegisterId::RegRbx),
+      _ => None,
+    }
+  }
+
+  fn from_u8(n: u8) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(GeneralRegisterId::RegRax),
+      1 => Some(GeneralRegisterId::RegRcx),
+      2 => Some(GeneralRegisterId::RegRdx),
+      3 => Some(GeneralRegisterId::RegRbx),
+      _ => None,
+    }
+  }
+}
 
 #[derive(Debug)]
 pub struct Rustemu86 {
@@ -12,15 +52,15 @@ pub struct Rustemu86 {
 
 impl Rustemu86 {
   fn mov_imm(&mut self, inst: &[u8]) {
-    let dest = inst[0] & 0b00000111;
+    let dest = GeneralRegisterId::from_u8(inst[0] & 0b00000111).unwrap();
     let mut imm = &inst[2..];
     let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
 
     match dest {
-      0 => self.rax = imm,
-      1 => self.rcx = imm,
-      2 => self.rdx = imm,
-      3 => self.rbx = imm,
+      GeneralRegisterId::RegRax => self.rax = imm,
+      GeneralRegisterId::RegRcx => self.rcx = imm,
+      GeneralRegisterId::RegRdx => self.rdx = imm,
+      GeneralRegisterId::RegRbx => self.rbx = imm,
       _ => ()
     }
   }
