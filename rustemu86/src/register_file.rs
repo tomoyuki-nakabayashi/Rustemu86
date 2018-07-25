@@ -1,3 +1,5 @@
+use num::FromPrimitive;
+
 pub enum GeneralRegisterId {
   RegRax,
   RegRcx,
@@ -5,12 +7,45 @@ pub enum GeneralRegisterId {
   RegRbx,
 }
 
+use self::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
+impl FromPrimitive for GeneralRegisterId {
+  fn from_i64(n: i64) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(RegRax),
+      1 => Some(RegRcx),
+      2 => Some(RegRdx),
+      3 => Some(RegRbx),
+      _ => None,
+    }
+  }
+
+  fn from_u64(n: u64) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(RegRax),
+      1 => Some(RegRcx),
+      2 => Some(RegRdx),
+      3 => Some(RegRbx),
+      _ => None,
+    }
+  }
+
+  fn from_u8(n: u8) -> Option<GeneralRegisterId> {
+    match n {
+      0 => Some(RegRax),
+      1 => Some(RegRcx),
+      2 => Some(RegRdx),
+      3 => Some(RegRbx),
+      _ => None,
+    }
+  }
+}
+
 #[derive(Debug)]
 pub struct RegisterFile {
-  pub rax: u64,
-  pub rcx: u64,
-  pub rdx: u64,
-  pub rbx: u64,
+  rax: u64,
+  rcx: u64,
+  rdx: u64,
+  rbx: u64,
 }
 
 impl RegisterFile {
@@ -20,6 +55,24 @@ impl RegisterFile {
       rcx: 0xFFFFFFFF,
       rdx: 0xFFFFFFFF,
       rbx: 0xFFFFFFFF,
+    }
+  }
+
+  pub fn write64(&mut self, dest: GeneralRegisterId, value: u64) {
+    match dest {
+      GeneralRegisterId::RegRax => self.rax = value,
+      GeneralRegisterId::RegRcx => self.rcx = value,
+      GeneralRegisterId::RegRdx => self.rdx = value,
+      GeneralRegisterId::RegRbx => self.rbx = value,
+    }
+  }
+
+  pub fn read64(&mut self, src: GeneralRegisterId) -> u64 {
+    match src {
+      GeneralRegisterId::RegRax => self.rax,
+      GeneralRegisterId::RegRcx => self.rcx,
+      GeneralRegisterId::RegRdx => self.rdx,
+      GeneralRegisterId::RegRbx => self.rbx,
     }
   }
 }

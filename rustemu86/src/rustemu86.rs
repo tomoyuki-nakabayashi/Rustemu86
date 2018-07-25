@@ -5,45 +5,9 @@ use register_file::RegisterFile;
 use register_file::GeneralRegisterId;
 use register_file::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
 
-impl FromPrimitive for GeneralRegisterId {
-  fn from_i64(n: i64) -> Option<GeneralRegisterId> {
-    match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
-      _ => None,
-    }
-  }
-
-  fn from_u64(n: u64) -> Option<GeneralRegisterId> {
-    match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
-      _ => None,
-    }
-  }
-
-  fn from_u8(n: u8) -> Option<GeneralRegisterId> {
-    match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
-      _ => None,
-    }
-  }
-}
-
 #[derive(Debug)]
 pub struct Rustemu86 {
   // Must have cpu, memory, peripherals
-  // rax: u64,
-  // rcx: u64,
-  // rdx: u64,
-  // rbx: u64,
   rf: RegisterFile,
 }
 
@@ -53,13 +17,7 @@ impl Rustemu86 {
     let mut imm = &inst[2..];
     let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
 
-    match dest {
-      RegRax => self.rf.rax = imm,
-      RegRcx => self.rf.rcx = imm,
-      RegRdx => self.rf.rdx = imm,
-      RegRbx => self.rf.rbx = imm,
-      _ => ()
-    }
+    self.rf.write64(dest, imm);
   }
 }
 
@@ -80,15 +38,15 @@ mod test {
     insts.push(&[0xbb, 0x00, 0x00, 0x00, 0x00, 0x00]);  // mov rbx, 0
 
     emu.mov_imm(&insts[0]);
-    assert_eq!(emu.rf.rax, 0);
+    assert_eq!(emu.rf.read64(RegRax), 0);
 
     emu.mov_imm(&insts[1]);
-    assert_eq!(emu.rf.rcx, 0);
+    assert_eq!(emu.rf.read64(RegRcx), 0);
 
     emu.mov_imm(&insts[2]);
-    assert_eq!(emu.rf.rdx, 0);
+    assert_eq!(emu.rf.read64(RegRdx), 0);
 
     emu.mov_imm(&insts[3]);
-    assert_eq!(emu.rf.rbx, 0);
+    assert_eq!(emu.rf.read64(RegRbx), 0);
   }
 }
