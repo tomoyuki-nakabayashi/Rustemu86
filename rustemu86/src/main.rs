@@ -1,6 +1,5 @@
 extern crate getopts;
 extern crate byteorder;
-extern crate num;
 
 mod args;
 mod loader;

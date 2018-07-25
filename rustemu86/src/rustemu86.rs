@@ -1,6 +1,5 @@
 use byteorder::{ReadBytesExt, LittleEndian};
 use loader::BinaryReader;
-use num::FromPrimitive;
 use register_file::RegisterFile;
 use register_file::GeneralRegisterId;
 use register_file::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};

@@ -8,8 +8,14 @@
 
 - [ ] Prepare Emulator structure to manage all of the emulation.
   - [x] Define structure.
-- [ ] Instruction decoder.
-- [ ] Instruction executor.
+
+## CPU Model
+
+- [x] Make register file.
+- [x] Members of register file must be private.
+- [ ] Register can access by enum.
+- [ ] Make instruction decoder.
+- [ ] Make instruction executor.
 - [ ] CPU recieves an instrution.
 
 ## Instruction

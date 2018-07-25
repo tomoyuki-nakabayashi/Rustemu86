@@ -1,5 +1,3 @@
-use num::FromPrimitive;
-
 pub enum GeneralRegisterId {
   RegRax,
   RegRcx,
@@ -8,28 +6,8 @@ pub enum GeneralRegisterId {
 }
 
 use self::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
-impl FromPrimitive for GeneralRegisterId {
-  fn from_i64(n: i64) -> Option<GeneralRegisterId> {
-    match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
-      _ => None,
-    }
-  }
-
-  fn from_u64(n: u64) -> Option<GeneralRegisterId> {
-    match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
-      _ => None,
-    }
-  }
-
-  fn from_u8(n: u8) -> Option<GeneralRegisterId> {
+impl GeneralRegisterId {
+  pub fn from_u8(n: u8) -> Option<GeneralRegisterId> {
     match n {
       0 => Some(RegRax),
       1 => Some(RegRcx),
