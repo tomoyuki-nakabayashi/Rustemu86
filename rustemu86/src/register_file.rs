@@ -1,18 +1,18 @@
-pub enum GeneralRegisterId {
-  RegRax,
-  RegRcx,
-  RegRdx,
-  RegRbx,
+pub enum Reg64Id {
+  Rax,
+  Rcx,
+  Rdx,
+  Rbx,
 }
 
-use self::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
-impl GeneralRegisterId {
-  pub fn from_u8(n: u8) -> Option<GeneralRegisterId> {
+use self::Reg64Id::{Rax, Rcx, Rdx, Rbx};
+impl Reg64Id {
+  pub fn from_u8(n: u8) -> Option<Reg64Id> {
     match n {
-      0 => Some(RegRax),
-      1 => Some(RegRcx),
-      2 => Some(RegRdx),
-      3 => Some(RegRbx),
+      0 => Some(Rax),
+      1 => Some(Rcx),
+      2 => Some(Rdx),
+      3 => Some(Rbx),
       _ => None,
     }
   }
@@ -36,21 +36,21 @@ impl RegisterFile {
     }
   }
 
-  pub fn write64(&mut self, dest: GeneralRegisterId, value: u64) {
+  pub fn write64(&mut self, dest: Reg64Id, value: u64) {
     match dest {
-      GeneralRegisterId::RegRax => self.rax = value,
-      GeneralRegisterId::RegRcx => self.rcx = value,
-      GeneralRegisterId::RegRdx => self.rdx = value,
-      GeneralRegisterId::RegRbx => self.rbx = value,
+      Reg64Id::Rax => self.rax = value,
+      Reg64Id::Rcx => self.rcx = value,
+      Reg64Id::Rdx => self.rdx = value,
+      Reg64Id::Rbx => self.rbx = value,
     }
   }
 
-  pub fn read64(&mut self, src: GeneralRegisterId) -> u64 {
+  pub fn read64(&mut self, src: Reg64Id) -> u64 {
     match src {
-      GeneralRegisterId::RegRax => self.rax,
-      GeneralRegisterId::RegRcx => self.rcx,
-      GeneralRegisterId::RegRdx => self.rdx,
-      GeneralRegisterId::RegRbx => self.rbx,
+      Reg64Id::Rax => self.rax,
+      Reg64Id::Rcx => self.rcx,
+      Reg64Id::Rdx => self.rdx,
+      Reg64Id::Rbx => self.rbx,
     }
   }
 }

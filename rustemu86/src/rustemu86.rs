@@ -1,23 +1,12 @@
 use byteorder::{ReadBytesExt, LittleEndian};
 use loader::BinaryReader;
 use register_file::RegisterFile;
-use register_file::GeneralRegisterId;
-use register_file::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
+use instructions;
 
 #[derive(Debug)]
 pub struct Rustemu86 {
   // Must have cpu, memory, peripherals
-  pub rf: RegisterFile,
-}
-
-impl Rustemu86 {
-  fn mov_imm(&mut self, inst: &[u8]) {
-    let dest = GeneralRegisterId::from_u8(inst[0] & 0b00000111).unwrap();
-    let mut imm = &inst[2..];
-    let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
-
-    self.rf.write64(dest, imm);
-  }
+  rf: RegisterFile,
 }
 
 #[cfg(test)]
@@ -25,7 +14,8 @@ mod test {
   use super::*;
 
   #[test]
-  fn execute_mov_imm() {
+  fn execute_mov_imm64() {
+    use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
     let mut emu = Rustemu86{
       rf: RegisterFile::new(),
     };
@@ -36,16 +26,16 @@ mod test {
     insts.push(&[0xba, 0x00, 0x00, 0x00, 0x00, 0x00]);  // mov rdx, 0
     insts.push(&[0xbb, 0x00, 0x00, 0x00, 0x00, 0x00]);  // mov rbx, 0
 
-    emu.mov_imm(&insts[0]);
-    assert_eq!(emu.rf.read64(RegRax), 0);
+    instructions::mov_imm64(&mut emu.rf, &insts[0]);
+    assert_eq!(emu.rf.read64(Rax), 0);
 
-    emu.mov_imm(&insts[1]);
-    assert_eq!(emu.rf.read64(RegRcx), 0);
+    instructions::mov_imm64(&mut emu.rf, &insts[1]);
+    assert_eq!(emu.rf.read64(Rcx), 0);
 
-    emu.mov_imm(&insts[2]);
-    assert_eq!(emu.rf.read64(RegRdx), 0);
+    instructions::mov_imm64(&mut emu.rf, &insts[2]);
+    assert_eq!(emu.rf.read64(Rdx), 0);
 
-    emu.mov_imm(&insts[3]);
-    assert_eq!(emu.rf.read64(RegRbx), 0);
+    instructions::mov_imm64(&mut emu.rf, &insts[3]);
+    assert_eq!(emu.rf.read64(Rbx), 0);
   }
 }

@@ -2,7 +2,6 @@
 
 ## Refactor
 
-- [ ] rustem86/test/execute_mov_imm can be expressed with loop of instructions.
 - [ ] Make integration test.
 
 ## Emulator model
@@ -12,7 +11,7 @@
 
 ## CPU Model
 
-- [ ] Register can access by enum.
+- [x] Register can access by enum.
 - [ ] Make instruction decoder.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
@@ -20,7 +19,7 @@
 
 ## Instruction
 
-- [ ] Prepare general registers.
+- [x] Prepare general registers.
 - [ ] mov register to register.
 
 ## Load an x86 binary
