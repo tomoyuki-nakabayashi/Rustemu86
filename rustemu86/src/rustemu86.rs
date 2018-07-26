@@ -7,7 +7,7 @@ use register_file::GeneralRegisterId::{RegRax, RegRcx, RegRdx, RegRbx};
 #[derive(Debug)]
 pub struct Rustemu86 {
   // Must have cpu, memory, peripherals
-  rf: RegisterFile,
+  pub rf: RegisterFile,
 }
 
 impl Rustemu86 {

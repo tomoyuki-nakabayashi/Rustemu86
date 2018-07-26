@@ -5,6 +5,7 @@ mod args;
 mod loader;
 mod rustemu86;
 mod register_file;
+mod instructions;
 
 use args::Args;
 
