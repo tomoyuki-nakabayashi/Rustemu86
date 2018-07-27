@@ -9,3 +9,8 @@ pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {
 
   rf.write64(dest, imm);
 }
+
+pub fn inc(rf: &mut RegisterFile, inst: &[u8]) {
+  let dest = Reg64Id::Rax;
+  rf.write64(dest, 1);
+}

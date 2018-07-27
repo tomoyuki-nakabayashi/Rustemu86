@@ -7,11 +7,9 @@
 ## Emulator model
 
 - [ ] Prepare Emulator structure to manage all of the emulation.
-  - [x] Define structure.
 
 ## CPU Model
 
-- [x] Register can access by enum.
 - [ ] Make instruction decoder.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
@@ -19,8 +17,9 @@
 
 ## Instruction
 
-- [x] Prepare general registers.
-- [ ] mov register to register.
+- [ ] Add instruction.
+- [ ] Inc instruction.
+  - [x] Pass first test.
 
 ## Load an x86 binary
 

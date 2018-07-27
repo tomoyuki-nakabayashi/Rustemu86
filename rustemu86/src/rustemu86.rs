@@ -38,4 +38,17 @@ mod test {
     instructions::mov_imm64(&mut emu.rf, &insts[3]);
     assert_eq!(emu.rf.read64(Rbx), 0);
   }
+
+  #[test]
+  fn execute_inc_reg() {
+    use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
+    let mut emu = Rustemu86{
+      rf: RegisterFile::new(),
+    };
+    let insts: &[u8] = &[0xff, 0x48, 0xc3];
+
+    instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    instructions::inc(&mut emu.rf, insts);
+    assert_eq!(emu.rf.read64(Rax), 1);
+  }
 }
