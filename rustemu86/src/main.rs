@@ -1,15 +1,7 @@
-extern crate getopts;
-extern crate byteorder;
-
-mod args;
-mod loader;
-mod rustemu86;
-mod register_file;
-mod instructions;
-
-use args::Args;
+#[macro_use]
+extern crate rustemu86;
 
 fn main() {
-  let args = args::parse_args();
+  let args = rustemu86::args::parse_args();
   println!("{:?}", args);
 }

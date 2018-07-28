@@ -12,7 +12,7 @@ fn print_usage(program: &str, opts: &Options) {
   process::exit(0);
 }
 
-pub(crate) fn parse_args() -> Args {
+pub fn parse_args() -> Args {
   let args: Vec<String> = env::args().collect();
   let program = args[0].clone();
 
