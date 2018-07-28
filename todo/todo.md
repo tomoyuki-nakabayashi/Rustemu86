@@ -10,6 +10,7 @@
 
 ## CPU Model
 
+- [x] Add Program counter.
 - [ ] Make instruction decoder.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
@@ -17,9 +18,6 @@
 
 ## Instruction
 
-- [ ] Add instruction.
-- [x] Inc instruction.
-  - [x] Pass first test.
 
 ## Load an x86 binary
 

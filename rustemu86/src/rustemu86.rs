@@ -7,6 +7,21 @@ use instructions;
 pub struct Rustemu86 {
   // Must have cpu, memory, peripherals
   rf: RegisterFile,
+  rip: u64,
+}
+
+impl Rustemu86 {
+  pub fn new() -> Rustemu86 {
+    Rustemu86 {
+      rf: RegisterFile::new(),
+      rip: 0,
+    }
+  }
+
+  fn update_rip(&mut self, inst: &[u8]) {
+    let inst_length: u64 = inst.len() as u64;
+    self.rip += inst_length;
+  }
 }
 
 #[cfg(test)]
@@ -15,10 +30,16 @@ mod test {
   use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
 
   #[test]
+  fn increment_program_counter() {
+    let mut emu = Rustemu86::new();
+
+    emu.update_rip(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    assert_eq!(emu.rip, 6);
+  }
+
+  #[test]
   fn execute_mov_imm64() {
-    let mut emu = Rustemu86{
-      rf: RegisterFile::new(),
-    };
+    let mut emu = Rustemu86::new();
 
     let mut insts: Vec<&[u8]> = Vec::with_capacity(4);
     insts.push(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);  // mov rax, 0
@@ -41,9 +62,7 @@ mod test {
 
   #[test]
   fn execute_inc_reg() {
-    let mut emu = Rustemu86{
-      rf: RegisterFile::new(),
-    };
+    let mut emu = Rustemu86::new();
     instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
     let insts: &[u8] = &[0x48, 0xff, 0xc0];
@@ -55,9 +74,7 @@ mod test {
 
   #[test]
   fn execute_add() {
-    let mut emu = Rustemu86{
-      rf: RegisterFile::new(),
-    };
+    let mut emu = Rustemu86::new();
     instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x01]);
     instructions::mov_imm64(&mut emu.rf, &[0xb9, 0x00, 0x00, 0x00, 0x00, 0x02]);
 
