@@ -47,9 +47,22 @@ mod test {
     instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
     let insts: &[u8] = &[0x48, 0xff, 0xc0];
-    instructions::inc(&mut emu.rf, insts);
-    assert_eq!(emu.rf.read64(Rax), 1);
-    instructions::inc(&mut emu.rf, insts);
-    assert_eq!(emu.rf.read64(Rax), 2);
+    for i in 1..10 {
+      instructions::inc(&mut emu.rf, insts);
+      assert_eq!(emu.rf.read64(Rax), i);
+    }
+  }
+
+  #[test]
+  fn execute_add() {
+    let mut emu = Rustemu86{
+      rf: RegisterFile::new(),
+    };
+    instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x01]);
+    instructions::mov_imm64(&mut emu.rf, &[0xb9, 0x00, 0x00, 0x00, 0x00, 0x02]);
+
+    let insts: &[u8] = &[0x48, 0x01, 0xc8];
+    instructions::add(&mut emu.rf, insts);
+    assert_eq!(emu.rf.read64(Rax), 3);
   }
 }
