@@ -12,10 +12,10 @@ pub struct Rustemu86 {
 #[cfg(test)]
 mod test {
   use super::*;
+  use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
 
   #[test]
   fn execute_mov_imm64() {
-    use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
     let mut emu = Rustemu86{
       rf: RegisterFile::new(),
     };
@@ -41,14 +41,15 @@ mod test {
 
   #[test]
   fn execute_inc_reg() {
-    use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
     let mut emu = Rustemu86{
       rf: RegisterFile::new(),
     };
-    let insts: &[u8] = &[0xff, 0x48, 0xc3];
-
     instructions::mov_imm64(&mut emu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    let insts: &[u8] = &[0x48, 0xff, 0xc0];
     instructions::inc(&mut emu.rf, insts);
     assert_eq!(emu.rf.read64(Rax), 1);
+    instructions::inc(&mut emu.rf, insts);
+    assert_eq!(emu.rf.read64(Rax), 2);
   }
 }

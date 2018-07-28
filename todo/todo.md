@@ -18,7 +18,7 @@
 ## Instruction
 
 - [ ] Add instruction.
-- [ ] Inc instruction.
+- [x] Inc instruction.
   - [x] Pass first test.
 
 ## Load an x86 binary

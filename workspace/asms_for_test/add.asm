@@ -1,3 +1,4 @@
 bits 64
-  inc rbx
+  inc rax
+  inc rcx
   add rax, rbx
