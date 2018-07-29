@@ -3,6 +3,7 @@
 ## Refactor
 
 - [ ] Make integration test.
+- [x] Make CPU mod.
 
 ## Emulator model
 
@@ -10,7 +11,6 @@
 
 ## CPU Model
 
-- [x] Add Program counter.
 - [ ] Make instruction decoder.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
