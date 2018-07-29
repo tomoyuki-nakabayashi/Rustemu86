@@ -1,4 +1,4 @@
-use byteorder::{ReadBytesExt, BigEndian};
+use byteorder::{ReadBytesExt, LittleEndian};
 use register_file::RegisterFile;
 use register_file::Reg64Id;
 
@@ -46,7 +46,7 @@ pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {
   const MOV_OP: u8 = 0xb8;
   let dest = Reg64Id::from_u8(inst[0] - MOV_OP).unwrap();
   let mut imm = &inst[1..];
-  let imm: u64 = imm.read_u32::<BigEndian>().unwrap().into();
+  let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
 
   rf.write64(dest, imm);
 }
@@ -65,3 +65,5 @@ pub fn add(rf: &mut RegisterFile, inst: &[u8]) {
   let result_value = rf.read64(dest)+rf.read64(src);
   rf.write64(dest, result_value);
 }
+
+pub fn undefined(_rf: &mut RegisterFile, _inst: &[u8]) {}

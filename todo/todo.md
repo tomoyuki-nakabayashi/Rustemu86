@@ -5,7 +5,6 @@
 ## Test & Debug
 
 - [ ] Make integration test.
-- [x] Dump cpu state at end of emulation.
 
 ## Emulator model
 
@@ -18,7 +17,6 @@
   - [ ] Make decoded instruction structure.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
-- [x] CPU recieves a program.
 
 ## Instruction
 

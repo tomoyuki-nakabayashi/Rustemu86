@@ -40,8 +40,16 @@ impl Cpu {
     inst
   }
 
-  fn decode(_inst: &[u8]) -> fn(&mut RegisterFile, &[u8]) {
-    instructions::mov_imm64
+  fn decode(inst: &[u8]) -> fn(&mut RegisterFile, &[u8]) {
+    match inst[0] {
+      0x48 => match inst[1] {
+        0x01 => instructions::add,
+        0xff => instructions::inc,
+        _ => instructions::undefined,
+      }
+      0xb8 ... 0xbf => instructions::mov_imm64,
+      _ => instructions::undefined,
+    }
   }
 }
 
@@ -116,8 +124,8 @@ mod test {
   #[test]
   fn execute_add() {
     let mut cpu = Cpu::new();
-    instructions::mov_imm64(&mut cpu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x01]);
-    instructions::mov_imm64(&mut cpu.rf, &[0xb9, 0x00, 0x00, 0x00, 0x02]);
+    instructions::mov_imm64(&mut cpu.rf, &[0xb8, 0x01, 0x00, 0x00, 0x00]);
+    instructions::mov_imm64(&mut cpu.rf, &[0xb9, 0x02, 0x00, 0x00, 0x00]);
 
     let insts: &[u8] = &[0x48, 0x01, 0xc8];
     instructions::add(&mut cpu.rf, insts);
