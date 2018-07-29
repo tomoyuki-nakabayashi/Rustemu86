@@ -1,4 +1,3 @@
-use loader::BinaryReader;
 use cpu::Cpu;
 
 #[derive(Debug)]

@@ -3,7 +3,7 @@ use getopts::Options;
 
 #[derive(Debug)]
 pub struct Args {
-  file_path: String,
+  pub file_path: String,
 }
 
 fn print_usage(program: &str, opts: &Options) {

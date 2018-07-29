@@ -33,7 +33,7 @@ struct ModRm {
 fn decode_mod_rm(modrm: u8) -> ModRm {
   let mode = (modrm & 0b11000000) >> 6;
   let reg = (modrm & 0b00111000) >> 3;
-  let rm = (modrm & 0b00000111);
+  let rm = modrm & 0b00000111;
 
   ModRm {
     mode: ModRmModeField::from_u8(mode).unwrap(),

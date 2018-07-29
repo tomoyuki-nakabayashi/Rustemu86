@@ -3,7 +3,6 @@
 ## Refactor
 
 - [ ] Make integration test.
-- [x] Make CPU mod.
 
 ## Emulator model
 

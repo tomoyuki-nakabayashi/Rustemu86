@@ -1,10 +1,9 @@
 use register_file::RegisterFile;
-use instructions;
 
 #[derive(Debug)]
 pub struct Cpu {
-  pub rf: RegisterFile,
-  pub rip: u64,
+  rf: RegisterFile,
+  rip: u64,
 }
 
 impl Cpu {
@@ -23,6 +22,7 @@ impl Cpu {
 #[cfg(test)]
 mod test {
   use super::*;
+  use instructions;
   use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
 
   #[test]

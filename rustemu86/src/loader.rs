@@ -11,7 +11,7 @@ impl BinaryReader {
 
 }
 
-fn load(filename: &str) -> ::std::io::Result<BinaryReader> {
+pub fn load(filename: &str) -> ::std::io::Result<BinaryReader> {
   Ok(BinaryReader{ reader: BufReader::new(File::open(&filename)?) })
 }
 
@@ -26,7 +26,8 @@ mod test {
 
     let mut binary_file = load_result.unwrap();
     let mut buffer = [0; 6];
-    binary_file.reader.read(&mut buffer);
+    let len = binary_file.reader.read(&mut buffer);
+    assert!(len.is_ok());
 
     let mov_rax: &[u8] = &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00];
     assert_eq!(mov_rax, buffer);
