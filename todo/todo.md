@@ -2,6 +2,10 @@
 
 ## Refactor
 
+- [ ] Remove magic numbers of opcode.
+- [ ] CPU module.
+- [ ] Instruction module.
+
 ## Test & Debug
 
 - [ ] Make integration test.
@@ -20,6 +24,12 @@
 
 ## Instruction
 
+- [ ] Load
+- [ ] Store
+
+## Peripheral
+
+- [ ] Memory mapped serial.
 
 ## Load an x86 binary
 
