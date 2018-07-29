@@ -45,7 +45,7 @@ fn decode_mod_rm(modrm: u8) -> ModRm {
 pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {
   const MOV_OP: u8 = 0xb8;
   let dest = Reg64Id::from_u8(inst[0] - MOV_OP).unwrap();
-  let mut imm = &inst[2..];
+  let mut imm = &inst[1..];
   let imm: u64 = imm.read_u32::<BigEndian>().unwrap().into();
 
   rf.write64(dest, imm);

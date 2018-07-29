@@ -4,7 +4,7 @@ use std::io::BufReader;
 
 #[derive(Debug)]
 pub struct BinaryReader {
-  reader: BufReader<File>,
+  pub reader: BufReader<File>,
 }
 
 impl BinaryReader {

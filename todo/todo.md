@@ -2,7 +2,10 @@
 
 ## Refactor
 
+## Test & Debug
+
 - [ ] Make integration test.
+- [x] Dump cpu state at end of emulation.
 
 ## Emulator model
 
@@ -10,13 +13,12 @@
 
 ## CPU Model
 
-- [x] Fetcher can fetch succesive instructions.
+- [ ] fetch() returns Result.
 - [ ] Make instruction decoder.
-  - [x] Decoder returns instruction.
   - [ ] Make decoded instruction structure.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
-- [ ] CPU receives an instruction.
+- [x] CPU recieves a program.
 
 ## Instruction
 

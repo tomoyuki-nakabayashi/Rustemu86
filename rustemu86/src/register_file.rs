@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Reg64Id {
   Rax,
@@ -53,5 +55,12 @@ impl RegisterFile {
       Reg64Id::Rdx => self.rdx,
       Reg64Id::Rbx => self.rbx,
     }
+  }
+}
+
+impl fmt::Display for RegisterFile {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "  rax: {}\n  rcx: {}\n  rdx: {}\n  rbx: {}",
+        self.rax, self.rcx, self.rdx, self.rbx)
   }
 }
