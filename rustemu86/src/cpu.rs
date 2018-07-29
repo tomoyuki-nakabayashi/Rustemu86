@@ -1,4 +1,5 @@
 use register_file::RegisterFile;
+use instructions;
 
 #[derive(Debug)]
 pub struct Cpu {
@@ -14,8 +15,19 @@ impl Cpu {
     }
   }
 
-  pub fn decode(&mut self, inst: &[u8]) {
+  pub fn fetch<'a>(&mut self, buf: &'a [u8]) -> &'a [u8] {
+    let mut inst: &[u8] = &buf;
+    match buf[0] {
+      0x48 => inst = &buf[0..=2],
+      0xb8 ... 0xbf => inst = &buf[0..=5],
+      _ => (),
+    }
     self.rip += inst.len() as u64;
+    inst
+  }
+
+  pub fn decode(_inst: &[u8]) -> fn(&mut RegisterFile, &[u8]) {
+    instructions::mov_imm64
   }
 }
 
@@ -26,11 +38,20 @@ mod test {
   use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
 
   #[test]
-  fn increment_program_counter() {
+  fn fetch() {
     let mut cpu = Cpu::new();
 
-    cpu.decode(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    cpu.fetch(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
     assert_eq!(cpu.rip, 6);
+  }
+
+  #[test]
+  fn decode() {
+    let mut cpu = Cpu::new();
+    let inst = Cpu::decode(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    inst(&mut cpu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    assert_eq!(cpu.rf.read64(Rax), 0);
   }
 
   #[test]
