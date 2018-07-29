@@ -10,7 +10,10 @@
 
 ## CPU Model
 
+- [x] Fetcher can fetch succesive instructions.
 - [ ] Make instruction decoder.
+  - [x] Decoder returns instruction.
+  - [ ] Make decoded instruction structure.
 - [ ] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 - [ ] CPU receives an instruction.

@@ -15,11 +15,12 @@ impl Cpu {
     }
   }
 
-  pub fn fetch<'a>(&mut self, buf: &'a [u8]) -> &'a [u8] {
+  pub fn fetch<'a>(&mut self, buf: &'a Vec<u8>) -> &'a [u8] {
     let mut inst: &[u8] = &buf;
-    match buf[0] {
-      0x48 => inst = &buf[0..=2],
-      0xb8 ... 0xbf => inst = &buf[0..=5],
+    let rip: usize = self.rip as usize;
+    match buf[rip] {
+      0x48 => inst = &buf[rip..=rip+2],
+      0xb8 ... 0xbf => inst = &buf[rip..=rip+5],
       _ => (),
     }
     self.rip += inst.len() as u64;
@@ -41,8 +42,19 @@ mod test {
   fn fetch() {
     let mut cpu = Cpu::new();
 
-    cpu.fetch(&[0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    cpu.fetch(&vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0x00]);
     assert_eq!(cpu.rip, 6);
+  }
+
+  #[test]
+  fn fetch_instructions() {
+    let mut cpu = Cpu::new();
+    let mut insts = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x48, 0xff, 0xc0];
+
+    cpu.fetch(&insts);
+    assert_eq!(cpu.rip, 6);
+    cpu.fetch(&insts);
+    assert_eq!(cpu.rip, 9);
   }
 
   #[test]
