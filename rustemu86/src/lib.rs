@@ -27,7 +27,7 @@ mod test {
 
   #[test]
   fn success_emulation() {
-    let mut reader = loader::load("../workspace/asms_for_test/mov").unwrap();
+    let mut reader = loader::load("../tests/asms/simple_add").unwrap();
     let result = start_emulation(&mut reader);
     assert!(result.is_ok());
   }

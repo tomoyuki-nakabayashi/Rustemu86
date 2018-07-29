@@ -21,7 +21,7 @@ mod test {
 
   #[test]
   fn load_mov_binary() {
-    let load_result = load("../workspace/asms_for_test/mov");
+    let load_result = load("../tests/asms/simple_add");
     assert!(load_result.is_ok());
 
     let mut binary_file = load_result.unwrap();
