@@ -13,3 +13,19 @@ impl Rustemu86 {
     }
   }
 }
+
+pub trait EmulationStrategy {
+  fn do_cycle_end_action(cpu: &Cpu) {}
+}
+
+pub struct NormalEmulation {}
+impl EmulationStrategy for NormalEmulation {
+  fn do_cycle_end_action(cpu: &Cpu) {}
+}
+
+pub struct PerCycleDumpEmulation {}
+impl EmulationStrategy for PerCycleDumpEmulation {
+  fn do_cycle_end_action() {
+    println!("*** Instructions Executed. ***");
+  }
+}

@@ -1,7 +1,8 @@
-use register_file::RegisterFile;
-use instructions;
 use std::io;
 use std::fmt;
+use register_file::RegisterFile;
+use instructions;
+use rustemu86::EmulationStrategy;
 
 #[derive(Debug)]
 pub struct Cpu {
@@ -28,14 +29,12 @@ impl Cpu {
     Ok(())
   }
 
-  pub fn run_with_dump(&mut self, program: &Vec<u8>) -> io::Result<()> {
-    let mut executed_insts = 1;
+  pub fn run_with_dump(&mut self, program: &Vec<u8>, emulation_mode: &Box<EmulationStrategy>) -> io::Result<()> {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
       let exec = Cpu::decode(&inst);
       exec(&mut self.rf, &inst);
-      println!("*** {} Instructions Executed. ***\n{}", executed_insts, &self);
-      executed_insts += 1;
+      emulation_mode.do_cycle_end_action();
     }
     println!("Finish emulation.");
     println!("{}", &self);

@@ -13,6 +13,7 @@ use std::io::Read;
 use loader::BinaryReader;
 use cpu::Cpu;
 use args::EmulationMode;
+use rustemu86::{EmulationStrategy, NormalEmulation, PerCycleDumpEmulation};
 
 pub fn start_emulation(bin: &mut BinaryReader, mode_option: EmulationMode)
     -> io::Result<()> {
@@ -23,7 +24,8 @@ pub fn start_emulation(bin: &mut BinaryReader, mode_option: EmulationMode)
 
   match mode_option {
     EmulationMode::Normal => cpu.run(&program),
-    EmulationMode::PerCycleDump => cpu.run_with_dump(&program),
+    EmulationMode::PerCycleDump => 
+        cpu.run_with_dump(&program, &Box::new(PerCycleDumpEmulation{}) as Box<EmulationStrategy>),
     EmulationMode::InteractiveMode => Ok(()),
   }
   

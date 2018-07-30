@@ -8,8 +8,8 @@
 
 ## Test & Debug
 
-- [x] Per cycle dump.
 - [ ] Interactive mode.
+- [ ] Implement emulation mode as strategy pattern using trait object.
 - [ ] Make integration test.
 
 ## Emulator model
