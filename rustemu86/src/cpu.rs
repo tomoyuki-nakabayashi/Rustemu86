@@ -28,6 +28,20 @@ impl Cpu {
     Ok(())
   }
 
+  pub fn run_with_dump(&mut self, program: &Vec<u8>) -> io::Result<()> {
+    let mut executed_insts = 1;
+    while (self.rip as usize) < program.len() {
+      let inst: &[u8] = self.fetch(&program);
+      let exec = Cpu::decode(&inst);
+      exec(&mut self.rf, &inst);
+      println!("*** {} Instructions Executed. ***\n{}", executed_insts, &self);
+      executed_insts += 1;
+    }
+    println!("Finish emulation.");
+    println!("{}", &self);
+    Ok(())
+  }
+
   fn fetch<'a>(&mut self, buf: &'a Vec<u8>) -> &'a [u8] {
     let mut inst: &[u8] = &buf;
     let rip: usize = self.rip as usize;

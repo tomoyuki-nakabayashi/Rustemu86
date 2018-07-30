@@ -8,6 +8,8 @@
 
 ## Test & Debug
 
+- [x] Per cycle dump.
+- [ ] Interactive mode.
 - [ ] Make integration test.
 
 ## Emulator model
@@ -26,6 +28,7 @@
 
 - [ ] Load
 - [ ] Store
+- [ ] Branch
 
 ## Peripheral
 
