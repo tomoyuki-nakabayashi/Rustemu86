@@ -14,34 +14,18 @@ impl Rustemu86 {
   }
 }
 
-pub trait EmulationStrategy {
+pub trait DebugMode {
   fn do_cycle_end_action(&self, _cpu: &Cpu) {}
 }
 
-pub struct NormalEmulation {}
-impl EmulationStrategy for NormalEmulation {
+pub struct NoneDebug {}
+impl DebugMode for NoneDebug {
   fn do_cycle_end_action(&self, _cpu: &Cpu) {}
 }
 
-pub struct PerCycleDumpEmulation {}
-impl EmulationStrategy for PerCycleDumpEmulation {
+pub struct PerCycleDump {}
+impl DebugMode for PerCycleDump {
   fn do_cycle_end_action(&self, cpu: &Cpu) {
-    println!("*** Instructions Executed. ***");
     println!("{}", &cpu);
-  }
-}
-
-#[cfg(test)]
-mod test {
-  use super::*;
-
-  fn execute_strategy(strategy: &EmulationStrategy) {
-    strategy.do_cycle_end_action(&Cpu::new());
-  }
-
-  #[test]
-  fn emulation_strategy() {
-    let dump = PerCycleDumpEmulation{};
-    execute_strategy(&dump);
   }
 }

@@ -9,9 +9,9 @@
 ## Test & Debug
 
 - [ ] Interactive mode.
-- [ ] Implement emulation mode as strategy pattern using trait object.
+- [x] Implement emulation mode as strategy pattern using trait object.
   - [x] PerDump.
-  - [ ] Need refactoring names.
+  - [x] Need refactoring names.
 - [ ] Make integration test.
 
 ## Emulator model

@@ -2,12 +2,13 @@ use std::io;
 use std::fmt;
 use register_file::RegisterFile;
 use instructions;
-use rustemu86::EmulationStrategy;
+use rustemu86::DebugMode;
 
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
   rip: u64,
+  executed_insts: u64,
 }
 
 impl Cpu {
@@ -15,25 +16,16 @@ impl Cpu {
     Cpu {
       rf: RegisterFile::new(),
       rip: 0,
+      executed_insts: 0,
     }
   }
 
-  pub fn run(&mut self, program: &Vec<u8>) -> io::Result<()> {
+  pub fn run(&mut self, program: &Vec<u8>, strategy: &DebugMode) -> io::Result<()> {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
       let exec = Cpu::decode(&inst);
       exec(&mut self.rf, &inst);
-    }
-    println!("Finish emulation.");
-    println!("{}", &self);
-    Ok(())
-  }
-
-  pub fn run_with_dump(&mut self, program: &Vec<u8>, strategy: &EmulationStrategy) -> io::Result<()> {
-    while (self.rip as usize) < program.len() {
-      let inst: &[u8] = self.fetch(&program);
-      let exec = Cpu::decode(&inst);
-      exec(&mut self.rf, &inst);
+      self.executed_insts += 1;
       strategy.do_cycle_end_action(&self);
     }
     println!("Finish emulation.");
@@ -67,7 +59,8 @@ impl Cpu {
 
 impl fmt::Display for Cpu {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "=== CPU status ===\nRIP: {}\nRegisters:\n{}", self.rip, self.rf)
+    write!(f, "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
+        self.executed_insts, self.rip, self.rf)
   }
 }
 
