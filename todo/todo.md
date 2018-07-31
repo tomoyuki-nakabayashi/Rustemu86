@@ -5,13 +5,11 @@
 - [ ] Remove magic numbers of opcode.
 - [ ] CPU module.
 - [ ] Instruction module.
+- [x] Fix emulation mode using generics.
 
 ## Test & Debug
 
 - [ ] Interactive mode.
-- [x] Implement emulation mode as strategy pattern using trait object.
-  - [x] PerDump.
-  - [x] Need refactoring names.
 - [ ] Make integration test.
 
 ## Emulator model
