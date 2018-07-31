@@ -5,11 +5,10 @@
 - [ ] Remove magic numbers of opcode.
 - [ ] CPU module.
 - [ ] Instruction module.
-- [x] Fix emulation mode using generics.
 
 ## Test & Debug
 
-- [ ] Interactive mode.
+- [x] Interactive mode.
 - [ ] Make integration test.
 
 ## Emulator model

@@ -27,6 +27,7 @@ pub fn parse_args() -> Args {
   let mut opts = Options::new();
   opts.optflag("h", "help", "Print this help menu");
   opts.optflag("v", "verbose", "Print verbose log messages during emulation");
+  opts.optflag("i", "interactive", "Run emulation with interactive shell.");
 
   let matches = match opts.parse(&args[1..]) {
     Ok(m) => { m }
@@ -37,10 +38,11 @@ pub fn parse_args() -> Args {
     print_usage(&program, &opts);
   }
 
-  let mode = if matches.opt_present("v")
-    { EmulationMode::PerCycleDump } else { EmulationMode::Normal };
+  let mode = 
+      if matches.opt_present("v") { EmulationMode::PerCycleDump }
+      else if matches.opt_present("i") { EmulationMode::InteractiveMode }
+      else { EmulationMode::Normal };
   
-
   if matches.free.is_empty() {
     print_usage(&program, &opts)
   }

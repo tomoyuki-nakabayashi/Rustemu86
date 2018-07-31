@@ -29,3 +29,14 @@ impl DebugMode for PerCycleDump {
     println!("{}", &cpu);
   }
 }
+
+use std::io;
+pub struct Interactive {}
+impl DebugMode for Interactive {
+  fn do_cycle_end_action(&self, cpu: &Cpu) {
+    println!("{}", &cpu);
+    println!("Press Enter key to continue.");
+    let mut key = String::new();
+    io::stdin().read_line(&mut key).unwrap();
+  }
+}
