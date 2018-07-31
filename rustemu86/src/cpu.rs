@@ -29,15 +29,14 @@ impl Cpu {
     Ok(())
   }
 
-  pub fn run_with_dump(&mut self, program: &Vec<u8>, emulation_mode: &Box<EmulationStrategy>) -> io::Result<()> {
+  pub fn run_with_dump(&mut self, program: &Vec<u8>, strategy: &EmulationStrategy) -> io::Result<()> {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
       let exec = Cpu::decode(&inst);
       exec(&mut self.rf, &inst);
-      emulation_mode.do_cycle_end_action();
+      strategy.do_cycle_end_action(&self);
     }
     println!("Finish emulation.");
-    println!("{}", &self);
     Ok(())
   }
 

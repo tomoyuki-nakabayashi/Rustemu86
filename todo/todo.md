@@ -10,6 +10,8 @@
 
 - [ ] Interactive mode.
 - [ ] Implement emulation mode as strategy pattern using trait object.
+  - [x] PerDump.
+  - [ ] Need refactoring names.
 - [ ] Make integration test.
 
 ## Emulator model
