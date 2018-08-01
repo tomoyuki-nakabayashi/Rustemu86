@@ -66,4 +66,10 @@ pub fn add(rf: &mut RegisterFile, inst: &[u8]) {
   rf.write64(dest, result_value);
 }
 
+use cpu::Cpu;
+pub fn jmp(cpu: &mut Cpu, inst: &[u8]) {
+  let disp = inst[1];
+  cpu.rip += disp as u64;
+}
+
 pub fn undefined(_rf: &mut RegisterFile, _inst: &[u8]) {}

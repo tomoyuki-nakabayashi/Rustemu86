@@ -4,16 +4,16 @@
 
 - [ ] Remove magic numbers of opcode.
 - [ ] CPU module.
-- [ ] Instruction module.
+- [ ] Instructions module.
+- [ ] Make instruction data model instead &[u8]
+- [ ] Remove `pub` from Cpu.
+- [ ] Reconsider interface of instructions.
 
 ## Test & Debug
 
-- [x] Interactive mode.
 - [ ] Make integration test.
 
 ## Emulator model
-
-- [ ] Prepare Emulator structure to manage all of the emulation.
 
 ## CPU Model
 
@@ -27,7 +27,7 @@
 
 - [ ] Load
 - [ ] Store
-- [ ] Branch
+- [x] Jump
 
 ## Peripheral
 

@@ -7,7 +7,7 @@ use rustemu86::DebugMode;
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
-  rip: u64,
+  pub rip: u64,
   executed_insts: u64,
 }
 
@@ -137,5 +137,13 @@ mod test {
     let insts: &[u8] = &[0x48, 0x01, 0xc8];
     instructions::add(&mut cpu.rf, insts);
     assert_eq!(cpu.rf.read64(Rax), 3);
+  }
+
+  #[test]
+  fn execute_jmp() {
+    let mut cpu = Cpu::new();
+    instructions::jmp(&mut cpu, &[0xeb, 0x05]);
+
+    assert_eq!(cpu.rip, 5);
   }
 }
