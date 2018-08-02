@@ -1,4 +1,5 @@
 use std::fmt;
+use std::cmp::PartialEq;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Reg64Id {
@@ -62,5 +63,14 @@ impl fmt::Display for RegisterFile {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "  rax: {}\n  rcx: {}\n  rdx: {}\n  rbx: {}",
         self.rax, self.rcx, self.rdx, self.rbx)
+  }
+}
+
+impl PartialEq for RegisterFile {
+  fn eq(&self, other: &RegisterFile) -> bool {
+    return (self.rax == other.rax) &&
+           (self.rcx == other.rcx) &&
+           (self.rdx == other.rdx) &&
+           (self.rbx == other.rbx)
   }
 }

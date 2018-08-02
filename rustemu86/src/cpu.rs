@@ -1,5 +1,6 @@
 use std::io;
 use std::fmt;
+use std::cmp::PartialEq;
 use register_file::RegisterFile;
 use instructions;
 use rustemu86::DebugMode;
@@ -7,7 +8,7 @@ use rustemu86::DebugMode;
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
-  pub rip: u64,
+  rip: u64,
   executed_insts: u64,
 }
 
@@ -66,11 +67,27 @@ impl fmt::Display for Cpu {
   }
 }
 
+impl PartialEq for Cpu {
+  fn eq(&self, other: &Cpu) -> bool {
+    return (self.rip == other.rip) &&
+           (self.executed_insts == other.executed_insts) &&
+           (self.rf == other.rf)
+  }
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
   use instructions;
   use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
+
+  #[test]
+  fn compare_cpus() {
+    let cpu1 = Cpu::new();
+    let cpu2 = Cpu::new();
+
+    assert_eq!(cpu1, cpu2);
+  }
 
   #[test]
   fn fetch_instructions() {
@@ -142,7 +159,7 @@ mod test {
   #[test]
   fn execute_jmp() {
     let mut cpu = Cpu::new();
-    instructions::jmp(&mut cpu, &[0xeb, 0x05]);
+    instructions::jmp(&mut cpu.rip, &[0xeb, 0x05]);
 
     assert_eq!(cpu.rip, 5);
   }

@@ -6,7 +6,7 @@
 - [ ] CPU module.
 - [ ] Instructions module.
 - [ ] Make instruction data model instead &[u8]
-- [ ] Remove `pub` from Cpu.
+- [x] Remove `pub` from Cpu.
 - [ ] Reconsider interface of instructions.
 
 ## Test & Debug
@@ -27,7 +27,6 @@
 
 - [ ] Load
 - [ ] Store
-- [x] Jump
 
 ## Peripheral
 
