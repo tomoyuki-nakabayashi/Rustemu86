@@ -58,6 +58,13 @@ impl Cpu {
       _ => instructions::undefined,
     }
   }
+/* 
+  fn execute(&mut self, inst: decoded_inst) {
+    match decoded_inst.dest_type {
+      DestType::Register => self.rf.write64(decoded_inst.dest_rf, decoded_inst.result);
+    }
+  }
+ */
 }
 
 impl fmt::Display for Cpu {
@@ -109,7 +116,16 @@ mod test {
     exec(&mut cpu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00]);
     assert_eq!(cpu.rf.read64(Rax), 0);
   }
+/* 
+  #[test]
+  fn execute_inst() {
+    let mut cpu = Cpu::new();
+    let decoded_inst = cpu.decoder(&[0xb8, 0x00, 0x00, 0x00, 0x00]);
+    cpu.execute(decoded_inst);
 
+    assert_eq!(cpu.rf.read64(Rax), 0);
+  }
+ */
   #[test]
   fn execute_mov_imm64() {
     let mut cpu = Cpu::new();
