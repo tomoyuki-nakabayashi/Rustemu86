@@ -1,7 +1,6 @@
 use instructions;
 use instructions::DecodedInst;
 use instructions::DestType;
-use register_file::Reg64Id::*;
 use register_file::RegisterFile;
 use rustemu86::DebugMode;
 use std::cmp::PartialEq;
@@ -100,7 +99,7 @@ impl PartialEq for Cpu {
 mod test {
   use super::*;
   use instructions;
-  use register_file::Reg64Id::{Rax, Rbx, Rcx, Rdx};
+  use register_file::Reg64Id::{Rax, Rcx};
 
   #[test]
   fn compare_cpus() {

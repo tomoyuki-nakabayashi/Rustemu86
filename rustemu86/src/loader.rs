@@ -1,6 +1,7 @@
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::Result;
 use std::io::BufReader;
+use std::io::Read;
 
 #[derive(Debug)]
 pub struct BinaryReader {
@@ -9,7 +10,7 @@ pub struct BinaryReader {
 
 impl BinaryReader {}
 
-pub fn load(filename: &str) -> ::std::io::Result<BinaryReader> {
+pub fn load(filename: &str) -> Result<BinaryReader> {
   Ok(BinaryReader {
     reader: BufReader::new(File::open(&filename)?),
   })
