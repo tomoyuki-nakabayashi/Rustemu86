@@ -18,7 +18,7 @@
 
 - [ ] fetch() returns Result.
 - [ ] Make instruction decoder.
-  - [ ] Make decoded instruction structure.
+  - [x] Make decoded instruction structure.
 - [x] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 

@@ -14,6 +14,14 @@ pub struct DecodedInst {
   pub result: u64,
 }
 
+impl DecodedInst {
+  pub fn new(dest_type: DestType, rf: Reg64Id, result: u64) -> DecodedInst {
+    DecodedInst {
+      dest_type: dest_type, dest_rf: rf, result: result,
+    }
+  }
+}
+
 #[derive(Debug)]
 enum ModRmModeField {
   Indirect,
@@ -52,6 +60,15 @@ fn decode_mod_rm(modrm: u8) -> ModRm {
     reg: Reg64Id::from_u8(reg).unwrap(),
     rm: Reg64Id::from_u8(rm).unwrap(),
   }
+}
+
+pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
+  const MOV_OP: u8 = 0xb8;
+  let dest = Reg64Id::from_u8(inst[0] - MOV_OP).unwrap();
+  let mut imm = &inst[1..];
+  let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
+
+  DecodedInst::new(DestType::Register, dest, imm)
 }
 
 pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {

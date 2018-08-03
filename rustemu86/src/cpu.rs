@@ -2,6 +2,7 @@ use std::io;
 use std::fmt;
 use std::cmp::PartialEq;
 use register_file::RegisterFile;
+use register_file::Reg64Id::*;
 use instructions;
 use instructions::DecodedInst;
 use instructions::DestType;
@@ -58,6 +59,13 @@ impl Cpu {
       }
       0xb8 ... 0xbf => instructions::mov_imm64,
       _ => instructions::undefined,
+    }
+  }
+
+  fn decoder(&self, inst: &[u8]) -> DecodedInst {
+    match inst[0] {
+      0xb8 ... 0xbf => instructions::decode_mov_imm64(&inst),
+      _ => DecodedInst::new(DestType::Register, Rax, 0xFFFFFFFF),  // Must return Error
     }
   }
 
@@ -122,11 +130,8 @@ mod test {
   #[test]
   fn execute_inst() {
     let mut cpu = Cpu::new();
-    let inst = DecodedInst {
-      dest_type: DestType::Register,
-      dest_rf: Rax,
-      result: 0
-    };
+    let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
+    let inst = cpu.decoder(&inst);
     cpu.execute(&inst);
 
     assert_eq!(cpu.rf.read64(Rax), 0);
