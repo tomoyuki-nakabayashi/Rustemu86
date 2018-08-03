@@ -6,8 +6,7 @@
 - [ ] CPU module.
 - [ ] Instructions module.
 - [ ] Make instruction data model instead &[u8]
-- [x] Remove `pub` from Cpu.
-- [ ] Reconsider interface of instructions.
+- [x] Reconsider interface of instructions.
 
 ## Test & Debug
 
@@ -20,7 +19,7 @@
 - [ ] fetch() returns Result.
 - [ ] Make instruction decoder.
   - [ ] Make decoded instruction structure.
-- [ ] Make instruction executor.
+- [x] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 
 ## Instruction

@@ -3,6 +3,18 @@ use register_file::RegisterFile;
 use register_file::Reg64Id;
 
 #[derive(Debug)]
+pub enum DestType {
+  Register,
+}
+
+#[derive(Debug)]
+pub struct DecodedInst {
+  pub dest_type: DestType,
+  pub dest_rf: Reg64Id,
+  pub result: u64,
+}
+
+#[derive(Debug)]
 enum ModRmModeField {
   Indirect,
   OneByteDisp,
