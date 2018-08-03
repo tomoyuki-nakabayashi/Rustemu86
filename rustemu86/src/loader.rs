@@ -7,12 +7,12 @@ pub struct BinaryReader {
   pub reader: BufReader<File>,
 }
 
-impl BinaryReader {
-
-}
+impl BinaryReader {}
 
 pub fn load(filename: &str) -> ::std::io::Result<BinaryReader> {
-  Ok(BinaryReader{ reader: BufReader::new(File::open(&filename)?) })
+  Ok(BinaryReader {
+    reader: BufReader::new(File::open(&filename)?),
+  })
 }
 
 #[cfg(test)]

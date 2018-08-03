@@ -1,12 +1,12 @@
-use std::io;
-use std::fmt;
-use std::cmp::PartialEq;
-use register_file::RegisterFile;
-use register_file::Reg64Id::*;
 use instructions;
 use instructions::DecodedInst;
 use instructions::DestType;
+use register_file::Reg64Id::*;
+use register_file::RegisterFile;
 use rustemu86::DebugMode;
+use std::cmp::PartialEq;
+use std::fmt;
+use std::io;
 
 #[derive(Debug)]
 pub struct Cpu {
@@ -25,7 +25,8 @@ impl Cpu {
   }
 
   pub fn run<T>(&mut self, program: &Vec<u8>, debug_mode: &T) -> io::Result<()>
-      where T: DebugMode
+  where
+    T: DebugMode,
   {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
@@ -42,8 +43,8 @@ impl Cpu {
     let mut inst: &[u8] = &buf;
     let rip: usize = self.rip as usize;
     match buf[rip] {
-      0x48 => inst = &buf[rip..rip+3],
-      0xb8 ... 0xbf => inst = &buf[rip..rip+5],
+      0x48 => inst = &buf[rip..rip + 3],
+      0xb8...0xbf => inst = &buf[rip..rip + 5],
       _ => (),
     }
     self.rip += inst.len() as u64;
@@ -56,16 +57,16 @@ impl Cpu {
         0x01 => instructions::add,
         0xff => instructions::inc,
         _ => instructions::undefined,
-      }
-      0xb8 ... 0xbf => instructions::mov_imm64,
+      },
+      0xb8...0xbf => instructions::mov_imm64,
       _ => instructions::undefined,
     }
   }
 
   fn decoder(&self, inst: &[u8]) -> DecodedInst {
     match inst[0] {
-      0xb8 ... 0xbf => instructions::decode_mov_imm64(&inst),
-      _ => DecodedInst::new(DestType::Register, Rax, 0xFFFFFFFF),  // Must return Error
+      0xb8...0xbf => instructions::decode_mov_imm64(&inst),
+      _ => DecodedInst::new(DestType::Register, Rax, 0xFFFFFFFF), // Must return Error
     }
   }
 
@@ -74,21 +75,23 @@ impl Cpu {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
     }
   }
-
 }
 
 impl fmt::Display for Cpu {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
-        self.executed_insts, self.rip, self.rf)
+    write!(
+      f,
+      "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
+      self.executed_insts, self.rip, self.rf
+    )
   }
 }
 
 impl PartialEq for Cpu {
   fn eq(&self, other: &Cpu) -> bool {
-    return (self.rip == other.rip) &&
-           (self.executed_insts == other.executed_insts) &&
-           (self.rf == other.rf)
+    return (self.rip == other.rip)
+      && (self.executed_insts == other.executed_insts)
+      && (self.rf == other.rf);
   }
 }
 
@@ -96,7 +99,7 @@ impl PartialEq for Cpu {
 mod test {
   use super::*;
   use instructions;
-  use register_file::Reg64Id::{Rax, Rcx, Rdx, Rbx};
+  use register_file::Reg64Id::{Rax, Rbx, Rcx, Rdx};
 
   #[test]
   fn compare_cpus() {
@@ -142,10 +145,10 @@ mod test {
     let mut cpu = Cpu::new();
 
     let mut insts: Vec<&[u8]> = Vec::with_capacity(4);
-    insts.push(&[0xb8, 0x00, 0x00, 0x00, 0x00]);  // mov rax, 0
-    insts.push(&[0xb9, 0x00, 0x00, 0x00, 0x00]);  // mov rcx, 0
-    insts.push(&[0xba, 0x00, 0x00, 0x00, 0x00]);  // mov rdx, 0
-    insts.push(&[0xbb, 0x00, 0x00, 0x00, 0x00]);  // mov rbx, 0
+    insts.push(&[0xb8, 0x00, 0x00, 0x00, 0x00]); // mov rax, 0
+    insts.push(&[0xb9, 0x00, 0x00, 0x00, 0x00]); // mov rcx, 0
+    insts.push(&[0xba, 0x00, 0x00, 0x00, 0x00]); // mov rdx, 0
+    insts.push(&[0xbb, 0x00, 0x00, 0x00, 0x00]); // mov rbx, 0
 
     instructions::mov_imm64(&mut cpu.rf, &insts[0]);
     assert_eq!(cpu.rf.read64(Rax), 0);

@@ -1,6 +1,6 @@
-use byteorder::{ReadBytesExt, LittleEndian};
-use register_file::RegisterFile;
+use byteorder::{LittleEndian, ReadBytesExt};
 use register_file::Reg64Id;
+use register_file::RegisterFile;
 
 #[derive(Debug)]
 pub enum DestType {
@@ -17,7 +17,9 @@ pub struct DecodedInst {
 impl DecodedInst {
   pub fn new(dest_type: DestType, rf: Reg64Id, result: u64) -> DecodedInst {
     DecodedInst {
-      dest_type: dest_type, dest_rf: rf, result: result,
+      dest_type: dest_type,
+      dest_rf: rf,
+      result: result,
     }
   }
 }
@@ -30,7 +32,7 @@ enum ModRmModeField {
   Direct,
 }
 
-use self::ModRmModeField::{Indirect, OneByteDisp, FourByteDisp, Direct};
+use self::ModRmModeField::{Direct, FourByteDisp, Indirect, OneByteDisp};
 impl ModRmModeField {
   fn from_u8(n: u8) -> Option<ModRmModeField> {
     match n {
@@ -83,7 +85,7 @@ pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {
 pub fn inc(rf: &mut RegisterFile, inst: &[u8]) {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;
-  let incremented_value = rf.read64(dest)+1;
+  let incremented_value = rf.read64(dest) + 1;
   rf.write64(dest, incremented_value);
 }
 
@@ -91,7 +93,7 @@ pub fn add(rf: &mut RegisterFile, inst: &[u8]) {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;
   let src = mod_rm.reg;
-  let result_value = rf.read64(dest)+rf.read64(src);
+  let result_value = rf.read64(dest) + rf.read64(src);
   rf.write64(dest, result_value);
 }
 

@@ -1,5 +1,5 @@
-use std::fmt;
 use std::cmp::PartialEq;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Reg64Id {
@@ -9,7 +9,7 @@ pub enum Reg64Id {
   Rbx,
 }
 
-use self::Reg64Id::{Rax, Rcx, Rdx, Rbx};
+use self::Reg64Id::{Rax, Rbx, Rcx, Rdx};
 impl Reg64Id {
   pub fn from_u8(n: u8) -> Option<Reg64Id> {
     match n {
@@ -61,16 +61,19 @@ impl RegisterFile {
 
 impl fmt::Display for RegisterFile {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "  rax: {}\n  rcx: {}\n  rdx: {}\n  rbx: {}",
-        self.rax, self.rcx, self.rdx, self.rbx)
+    write!(
+      f,
+      "  rax: {}\n  rcx: {}\n  rdx: {}\n  rbx: {}",
+      self.rax, self.rcx, self.rdx, self.rbx
+    )
   }
 }
 
 impl PartialEq for RegisterFile {
   fn eq(&self, other: &RegisterFile) -> bool {
-    return (self.rax == other.rax) &&
-           (self.rcx == other.rcx) &&
-           (self.rdx == other.rdx) &&
-           (self.rbx == other.rbx)
+    return (self.rax == other.rax)
+      && (self.rcx == other.rcx)
+      && (self.rdx == other.rdx)
+      && (self.rbx == other.rbx);
   }
 }

@@ -1,33 +1,31 @@
-extern crate getopts;
 extern crate byteorder;
+extern crate getopts;
 
 pub mod args;
-pub mod loader;
-pub mod rustemu86;
 pub mod cpu;
-pub mod register_file;
 pub mod instructions;
+pub mod loader;
+pub mod register_file;
+pub mod rustemu86;
 
+use args::EmulationMode;
+use cpu::Cpu;
+use loader::BinaryReader;
+use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 use std::io;
 use std::io::Read;
-use loader::BinaryReader;
-use cpu::Cpu;
-use args::EmulationMode;
-use rustemu86::{NoneDebug, PerCycleDump, Interactive};
 
-pub fn start_emulation(bin: &mut BinaryReader, mode_option: EmulationMode)
-    -> io::Result<()> {
+pub fn start_emulation(bin: &mut BinaryReader, mode_option: EmulationMode) -> io::Result<()> {
   let mut program = Vec::new();
   bin.reader.read_to_end(&mut program)?;
   println!("Program load... {} bytes.", program.len());
   let mut cpu = Cpu::new();
 
   match mode_option {
-    EmulationMode::Normal => cpu.run(&program, &NoneDebug{}),
-    EmulationMode::PerCycleDump => cpu.run(&program, &PerCycleDump{}),
-    EmulationMode::InteractiveMode => cpu.run(&program, &Interactive{}),
+    EmulationMode::Normal => cpu.run(&program, &NoneDebug {}),
+    EmulationMode::PerCycleDump => cpu.run(&program, &PerCycleDump {}),
+    EmulationMode::InteractiveMode => cpu.run(&program, &Interactive {}),
   }
-  
 }
 
 #[cfg(test)]

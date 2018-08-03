@@ -8,9 +8,7 @@ pub struct Rustemu86 {
 
 impl Rustemu86 {
   pub fn new() -> Rustemu86 {
-    Rustemu86 {
-      cpu: Cpu::new(),
-    }
+    Rustemu86 { cpu: Cpu::new() }
   }
 }
 
