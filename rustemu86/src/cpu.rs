@@ -38,8 +38,8 @@ impl Cpu {
   {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
-      let exec = Cpu::decode(&inst);
-      exec(&mut self.rf, &inst);
+      let inst = self.decode(&inst).unwrap();
+      self.execute(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
@@ -59,20 +59,13 @@ impl Cpu {
     inst
   }
 
-  fn decode(inst: &[u8]) -> fn(&mut RegisterFile, &[u8]) {
+  fn decode(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
     match inst[0] {
       0x48 => match inst[1] {
-        0x01 => instructions::add,
-        0xff => instructions::inc,
-        _ => instructions::undefined,
+        0x01 => Ok(instructions::decode_add(&self.rf, &inst)),
+        0xff => Ok(instructions::decode_inc(&self.rf, &inst)),
+        opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
       },
-      0xb8...0xbf => instructions::mov_imm64,
-      _ => instructions::undefined,
-    }
-  }
-
-  fn decoder(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
-    match inst[0] {
       0xb8...0xbf => Ok(instructions::decode_mov_imm64(&inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
@@ -129,63 +122,32 @@ mod test {
   }
 
   #[test]
-  fn decode() {
-    let mut cpu = Cpu::new();
-    let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
-    let exec = Cpu::decode(cpu.fetch(&inst));
-
-    exec(&mut cpu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00]);
-    assert_eq!(cpu.rf.read64(Rax), 0);
+  fn decode_undefined_instruction() {
+    let cpu = Cpu::new();
+    let inst = vec![0x06];
+    assert!(cpu.decode(&inst).is_err());
   }
 
   #[test]
-  fn execute_inst() {
-    let mut cpu = Cpu::new();
+  fn mov64() {
     let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
-    let inst = cpu.decoder(&inst).unwrap();
+    let mut cpu = Cpu::new();
+    let inst = cpu.fetch(&inst);
+    let inst = cpu.decode(&inst).unwrap();
     cpu.execute(&inst);
 
     assert_eq!(cpu.rf.read64(Rax), 0);
   }
 
   #[test]
-  fn decode_undefined_instruction() {
-    let cpu = Cpu::new();
-    let inst = vec![0x06];
-    assert!(cpu.decoder(&inst).is_err());
-  }
-
-  #[test]
-  fn execute_mov_imm64() {
+  fn execute_inc() {
+    let inst = vec![0x48, 0xff, 0xc0];
     let mut cpu = Cpu::new();
+    cpu.rf.write64(Rax, 0);
 
-    let mut insts: Vec<&[u8]> = Vec::with_capacity(4);
-    insts.push(&[0xb8, 0x00, 0x00, 0x00, 0x00]); // mov rax, 0
-    insts.push(&[0xb9, 0x00, 0x00, 0x00, 0x00]); // mov rcx, 0
-    insts.push(&[0xba, 0x00, 0x00, 0x00, 0x00]); // mov rdx, 0
-    insts.push(&[0xbb, 0x00, 0x00, 0x00, 0x00]); // mov rbx, 0
-
-    instructions::mov_imm64(&mut cpu.rf, &insts[0]);
-    assert_eq!(cpu.rf.read64(Rax), 0);
-
-    instructions::mov_imm64(&mut cpu.rf, &insts[1]);
-    assert_eq!(cpu.rf.read64(Rcx), 0);
-
-    instructions::mov_imm64(&mut cpu.rf, &insts[2]);
-    assert_eq!(cpu.rf.read64(Rdx), 0);
-
-    instructions::mov_imm64(&mut cpu.rf, &insts[3]);
-    assert_eq!(cpu.rf.read64(Rbx), 0);
-  }
-
-  #[test]
-  fn execute_inc_reg() {
-    let mut cpu = Cpu::new();
-    instructions::mov_imm64(&mut cpu.rf, &[0xb8, 0x00, 0x00, 0x00, 0x00]);
-
-    let insts: &[u8] = &[0x48, 0xff, 0xc0];
     for i in 1..10 {
-      instructions::inc(&mut cpu.rf, insts);
+      let inst = cpu.decode(&inst).unwrap();
+      cpu.execute(&inst);
       assert_eq!(cpu.rf.read64(Rax), i);
     }
   }
@@ -193,11 +155,12 @@ mod test {
   #[test]
   fn execute_add() {
     let mut cpu = Cpu::new();
-    instructions::mov_imm64(&mut cpu.rf, &[0xb8, 0x01, 0x00, 0x00, 0x00]);
-    instructions::mov_imm64(&mut cpu.rf, &[0xb9, 0x02, 0x00, 0x00, 0x00]);
+    cpu.rf.write64(Rax, 1);
+    cpu.rf.write64(Rcx, 2);
 
-    let insts: &[u8] = &[0x48, 0x01, 0xc8];
-    instructions::add(&mut cpu.rf, insts);
+    let inst = vec![0x48, 0x01, 0xc8];
+    let inst = cpu.decode(&inst).unwrap();
+    cpu.execute(&inst);
     assert_eq!(cpu.rf.read64(Rax), 3);
   }
 

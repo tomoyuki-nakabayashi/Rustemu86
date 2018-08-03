@@ -16,7 +16,7 @@
 ## CPU Model
 
 - [ ] fetch() returns Result.
-- [ ] Make instruction decoder.
+- [x] Make instruction decoder.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 
 ## Instruction

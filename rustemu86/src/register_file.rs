@@ -49,7 +49,7 @@ impl RegisterFile {
     }
   }
 
-  pub fn read64(&mut self, src: Reg64Id) -> u64 {
+  pub fn read64(&self, src: Reg64Id) -> u64 {
     match src {
       Reg64Id::Rax => self.rax,
       Reg64Id::Rcx => self.rcx,

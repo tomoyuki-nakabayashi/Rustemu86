@@ -73,28 +73,21 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, imm)
 }
 
-pub fn mov_imm64(rf: &mut RegisterFile, inst: &[u8]) {
-  const MOV_OP: u8 = 0xb8;
-  let dest = Reg64Id::from_u8(inst[0] - MOV_OP).unwrap();
-  let mut imm = &inst[1..];
-  let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
-
-  rf.write64(dest, imm);
-}
-
-pub fn inc(rf: &mut RegisterFile, inst: &[u8]) {
+pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;
   let incremented_value = rf.read64(dest) + 1;
-  rf.write64(dest, incremented_value);
+
+  DecodedInst::new(DestType::Register, dest, incremented_value)
 }
 
-pub fn add(rf: &mut RegisterFile, inst: &[u8]) {
+pub fn decode_add(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;
   let src = mod_rm.reg;
   let result_value = rf.read64(dest) + rf.read64(src);
-  rf.write64(dest, result_value);
+
+  DecodedInst::new(DestType::Register, dest, result_value)
 }
 
 pub fn jmp(rip: &mut u64, inst: &[u8]) {
