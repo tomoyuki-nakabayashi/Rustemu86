@@ -6,7 +6,6 @@
 - [ ] CPU module.
 - [ ] Instructions module.
 - [ ] Make instruction data model instead &[u8]
-- [x] Reconsider interface of instructions.
 
 ## Test & Debug
 
@@ -18,8 +17,6 @@
 
 - [ ] fetch() returns Result.
 - [ ] Make instruction decoder.
-  - [x] Make decoded instruction structure.
-- [x] Make instruction executor.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 
 ## Instruction

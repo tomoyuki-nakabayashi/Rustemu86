@@ -8,6 +8,14 @@ use std::cmp::PartialEq;
 use std::fmt;
 use std::io;
 
+#[derive(Debug, Fail)]
+enum InternalException {
+  #[fail(display = "undefined instruction: {}", opcode)]
+  UndefinedInstruction {
+    opcode: u8,
+  },
+}
+
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
@@ -63,10 +71,10 @@ impl Cpu {
     }
   }
 
-  fn decoder(&self, inst: &[u8]) -> DecodedInst {
+  fn decoder(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
     match inst[0] {
-      0xb8...0xbf => instructions::decode_mov_imm64(&inst),
-      _ => DecodedInst::new(DestType::Register, Rax, 0xFFFFFFFF), // Must return Error
+      0xb8...0xbf => Ok(instructions::decode_mov_imm64(&inst)),
+      opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }
 
@@ -134,10 +142,17 @@ mod test {
   fn execute_inst() {
     let mut cpu = Cpu::new();
     let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
-    let inst = cpu.decoder(&inst);
+    let inst = cpu.decoder(&inst).unwrap();
     cpu.execute(&inst);
 
     assert_eq!(cpu.rf.read64(Rax), 0);
+  }
+
+  #[test]
+  fn decode_undefined_instruction() {
+    let cpu = Cpu::new();
+    let inst = vec![0x06];
+    assert!(cpu.decoder(&inst).is_err());
   }
 
   #[test]

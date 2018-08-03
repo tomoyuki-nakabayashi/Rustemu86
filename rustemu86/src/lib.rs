@@ -1,5 +1,6 @@
 extern crate byteorder;
 extern crate getopts;
+#[macro_use] extern crate failure;
 
 pub mod args;
 pub mod cpu;
