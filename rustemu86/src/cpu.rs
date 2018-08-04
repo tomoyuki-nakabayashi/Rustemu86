@@ -52,6 +52,7 @@ impl Cpu {
     let inst = match program[rip] {
       0x48 => Ok(&program[rip..rip + 3]),
       0xb8...0xbf => Ok(&program[rip..rip + 5]),
+      0xeb => Ok(&program[rip..rip + 2]),
       _ => Err(InternalException::FetchError{}),
     }?;
     self.rip += inst.len() as u64;
@@ -66,6 +67,7 @@ impl Cpu {
         opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
       },
       0xb8...0xbf => Ok(instructions::decode_mov_imm64(&inst)),
+      0xeb => Ok(instructions::decode_jmp(self.rip, &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }
@@ -73,6 +75,7 @@ impl Cpu {
   fn execute(&mut self, inst: &DecodedInst) {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
+      DestType::Rip => self.rip = inst.result,
     }
   }
 }
@@ -112,11 +115,11 @@ mod test {
   #[test]
   fn fetch_instructions() {
     let mut cpu = Cpu::new();
-    let insts = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0x48, 0xff, 0xc0];
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0x48, 0xff, 0xc0];
 
-    cpu.fetch(&insts);
+    cpu.fetch(&program).unwrap();
     assert_eq!(cpu.rip, 5);
-    cpu.fetch(&insts);
+    cpu.fetch(&program).unwrap();
     assert_eq!(cpu.rip, 8);
   }
 
@@ -166,8 +169,11 @@ mod test {
   #[test]
   fn execute_jmp() {
     let mut cpu = Cpu::new();
-    instructions::jmp(&mut cpu.rip, &[0xeb, 0x05]);
+    let inst = vec![0xeb, 0x05];
+    let inst = cpu.fetch(&inst).unwrap();
+    let inst = cpu.decode(&inst).unwrap();
+    cpu.execute(&inst);
 
-    assert_eq!(cpu.rip, 5);
+    assert_eq!(cpu.rip, 7);
   }
 }

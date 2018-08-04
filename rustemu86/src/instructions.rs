@@ -5,6 +5,7 @@ use register_file::RegisterFile;
 #[derive(Debug)]
 pub enum DestType {
   Register,
+  Rip,
 }
 
 #[derive(Debug)]
@@ -90,9 +91,11 @@ pub fn decode_add(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, result_value)
 }
 
-pub fn jmp(rip: &mut u64, inst: &[u8]) {
+pub fn decode_jmp(rip: u64, inst: &[u8]) -> DecodedInst {
   let disp = inst[1];
-  *rip += disp as u64;
+  let rip = rip + disp as u64;
+
+  DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
 }
 
 pub fn undefined(_rf: &mut RegisterFile, _inst: &[u8]) {}

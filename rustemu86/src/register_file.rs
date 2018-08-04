@@ -7,6 +7,7 @@ pub enum Reg64Id {
   Rcx,
   Rdx,
   Rbx,
+  Unknown,
 }
 
 use self::Reg64Id::{Rax, Rbx, Rcx, Rdx};
@@ -46,6 +47,7 @@ impl RegisterFile {
       Reg64Id::Rcx => self.rcx = value,
       Reg64Id::Rdx => self.rdx = value,
       Reg64Id::Rbx => self.rbx = value,
+      Reg64Id::Unknown => (),
     }
   }
 
@@ -55,6 +57,7 @@ impl RegisterFile {
       Reg64Id::Rcx => self.rcx,
       Reg64Id::Rdx => self.rdx,
       Reg64Id::Rbx => self.rbx,
+      Reg64Id::Unknown => 0,
     }
   }
 }
