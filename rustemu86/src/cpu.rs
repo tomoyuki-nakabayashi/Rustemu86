@@ -5,10 +5,9 @@ use register_file::RegisterFile;
 use rustemu86::DebugMode;
 use std::cmp::PartialEq;
 use std::fmt;
-use std::io;
 
 #[derive(Debug, Fail)]
-enum InternalException {
+pub enum InternalException {
   #[fail(display = "undefined instruction: {}", opcode)]
   UndefinedInstruction {
     opcode: u8,
@@ -31,13 +30,13 @@ impl Cpu {
     }
   }
 
-  pub fn run<T>(&mut self, program: &Vec<u8>, debug_mode: &T) -> io::Result<()>
+  pub fn run<T>(&mut self, program: &Vec<u8>, debug_mode: &T) -> Result<(), InternalException>
   where
     T: DebugMode,
   {
     while (self.rip as usize) < program.len() {
       let inst: &[u8] = self.fetch(&program);
-      let inst = self.decode(&inst).unwrap();
+      let inst = self.decode(&inst)?;
       self.execute(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);

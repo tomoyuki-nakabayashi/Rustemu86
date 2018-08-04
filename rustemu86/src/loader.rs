@@ -16,6 +16,14 @@ pub fn load(filename: &str) -> Result<BinaryReader> {
   })
 }
 
+pub fn map_to_memory(binary: &mut BinaryReader) -> Result<Vec<u8>> {
+  let mut program = Vec::new();
+  binary.reader.read_to_end(&mut program)?;
+  println!("Program load... {} bytes.", program.len());
+
+  Ok(program)
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
