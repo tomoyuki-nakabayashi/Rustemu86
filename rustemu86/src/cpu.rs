@@ -8,6 +8,8 @@ use std::fmt;
 
 #[derive(Debug, Fail)]
 pub enum InternalException {
+  #[fail(display = "fetch error")]
+  FetchError{},
   #[fail(display = "undefined instruction: {}", opcode)]
   UndefinedInstruction {
     opcode: u8,
@@ -35,7 +37,7 @@ impl Cpu {
     T: DebugMode,
   {
     while (self.rip as usize) < program.len() {
-      let inst: &[u8] = self.fetch(&program);
+      let inst: &[u8] = self.fetch(&program)?;
       let inst = self.decode(&inst)?;
       self.execute(&inst);
       self.executed_insts += 1;
@@ -45,16 +47,15 @@ impl Cpu {
     Ok(())
   }
 
-  fn fetch<'a>(&mut self, buf: &'a Vec<u8>) -> &'a [u8] {
-    let mut inst: &[u8] = &buf;
+  fn fetch<'a>(&mut self, program: &'a Vec<u8>) -> Result<&'a [u8], InternalException> {
     let rip: usize = self.rip as usize;
-    match buf[rip] {
-      0x48 => inst = &buf[rip..rip + 3],
-      0xb8...0xbf => inst = &buf[rip..rip + 5],
-      _ => (),
-    }
+    let inst = match program[rip] {
+      0x48 => Ok(&program[rip..rip + 3]),
+      0xb8...0xbf => Ok(&program[rip..rip + 5]),
+      _ => Err(InternalException::FetchError{}),
+    }?;
     self.rip += inst.len() as u64;
-    inst
+    Ok(inst)
   }
 
   fn decode(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
@@ -130,7 +131,7 @@ mod test {
   fn mov64() {
     let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
     let mut cpu = Cpu::new();
-    let inst = cpu.fetch(&inst);
+    let inst = cpu.fetch(&inst).unwrap();
     let inst = cpu.decode(&inst).unwrap();
     cpu.execute(&inst);
 
