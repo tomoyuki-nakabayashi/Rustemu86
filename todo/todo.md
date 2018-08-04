@@ -2,7 +2,7 @@
 
 ## Refactor
 
-- [ ] Remove magic numbers of opcode.
+- [x] Remove magic numbers of opcode.
 - [ ] CPU module.
 - [ ] Instructions module.
 - [ ] Make instruction data model instead &[u8]
@@ -15,7 +15,6 @@
 
 ## CPU Model
 
-- [x] fetch() returns Result.
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
 
 ## Instruction

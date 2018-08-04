@@ -1,9 +1,9 @@
 use instructions;
 use instructions::DecodedInst;
 use instructions::DestType;
+use opcode::*;
 use register_file::RegisterFile;
 use rustemu86::DebugMode;
-use std::cmp::PartialEq;
 use std::fmt;
 
 #[derive(Debug, Fail)]
@@ -43,16 +43,16 @@ impl Cpu {
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
-    println!("Finish emulation.");
+    println!("Finish emulation. {} instructions executed.", self.executed_insts);
     Ok(())
   }
 
   fn fetch<'a>(&mut self, program: &'a Vec<u8>) -> Result<&'a [u8], InternalException> {
     let rip: usize = self.rip as usize;
     let inst = match program[rip] {
-      0x48 => Ok(&program[rip..rip + 3]),
-      0xb8...0xbf => Ok(&program[rip..rip + 5]),
-      0xeb => Ok(&program[rip..rip + 2]),
+      REX_W => Ok(&program[rip..rip + 3]),
+      MOV_RAX...MOV_DI => Ok(&program[rip..rip + 5]),
+      JMP_REL8 => Ok(&program[rip..rip + 2]),
       _ => Err(InternalException::FetchError{}),
     }?;
     self.rip += inst.len() as u64;
@@ -61,13 +61,13 @@ impl Cpu {
 
   fn decode(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
     match inst[0] {
-      0x48 => match inst[1] {
-        0x01 => Ok(instructions::decode_add(&self.rf, &inst)),
-        0xff => Ok(instructions::decode_inc(&self.rf, &inst)),
+      REX_W => match inst[1] {
+        ADD => Ok(instructions::decode_add(&self.rf, &inst)),
+        INC => Ok(instructions::decode_inc(&self.rf, &inst)),
         opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
       },
-      0xb8...0xbf => Ok(instructions::decode_mov_imm64(&inst)),
-      0xeb => Ok(instructions::decode_jmp(self.rip, &inst)),
+      MOV_RAX...MOV_DI => Ok(instructions::decode_mov_imm64(&inst)),
+      JMP_REL8 => Ok(instructions::decode_jmp(self.rip, &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }
@@ -90,54 +90,37 @@ impl fmt::Display for Cpu {
   }
 }
 
-impl PartialEq for Cpu {
-  fn eq(&self, other: &Cpu) -> bool {
-    return (self.rip == other.rip)
-      && (self.executed_insts == other.executed_insts)
-      && (self.rf == other.rf);
-  }
-}
-
 #[cfg(test)]
 mod test {
   use super::*;
-  use instructions;
+  use rustemu86;
   use register_file::Reg64Id::{Rax, Rcx};
 
   #[test]
-  fn compare_cpus() {
-    let cpu1 = Cpu::new();
-    let cpu2 = Cpu::new();
-
-    assert_eq!(cpu1, cpu2);
-  }
-
-  #[test]
-  fn fetch_instructions() {
+  fn execute_two_instructions() {
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00, // mov rax, 0
+                       0x48, 0xff, 0xc0];            // inc rax
     let mut cpu = Cpu::new();
-    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0x48, 0xff, 0xc0];
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
-    cpu.fetch(&program).unwrap();
-    assert_eq!(cpu.rip, 5);
-    cpu.fetch(&program).unwrap();
+    assert!(result.is_ok());
     assert_eq!(cpu.rip, 8);
   }
 
   #[test]
   fn decode_undefined_instruction() {
-    let cpu = Cpu::new();
     let inst = vec![0x06];
+    let cpu = Cpu::new();
     assert!(cpu.decode(&inst).is_err());
   }
 
   #[test]
   fn mov64() {
-    let inst = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
     let mut cpu = Cpu::new();
-    let inst = cpu.fetch(&inst).unwrap();
-    let inst = cpu.decode(&inst).unwrap();
-    cpu.execute(&inst);
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
+    assert!(result.is_ok());
     assert_eq!(cpu.rf.read64(Rax), 0);
   }
 
@@ -169,11 +152,10 @@ mod test {
   #[test]
   fn execute_jmp() {
     let mut cpu = Cpu::new();
-    let inst = vec![0xeb, 0x05];
-    let inst = cpu.fetch(&inst).unwrap();
-    let inst = cpu.decode(&inst).unwrap();
-    cpu.execute(&inst);
+    let program = vec![0xeb, 0x05];
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
+    assert!(result.is_ok());
     assert_eq!(cpu.rip, 7);
   }
 }
