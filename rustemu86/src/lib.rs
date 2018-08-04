@@ -4,10 +4,7 @@ extern crate getopts;
 
 pub mod args;
 pub mod cpu;
-pub mod instructions;
-pub mod opcode;
 pub mod loader;
-pub mod register_file;
 pub mod rustemu86;
 
 use args::EmulationMode;

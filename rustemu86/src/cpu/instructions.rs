@@ -1,6 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use register_file::Reg64Id;
-use register_file::RegisterFile;
+use cpu::register_file::Reg64Id;
+use cpu::register_file::RegisterFile;
 
 #[derive(Debug)]
 pub enum DestType {

@@ -1,8 +1,11 @@
-use instructions;
-use instructions::DecodedInst;
-use instructions::DestType;
-use opcode::*;
-use register_file::RegisterFile;
+pub mod register_file;
+pub mod instructions;
+pub mod opcode;
+
+use self::instructions::DecodedInst;
+use self::instructions::DestType;
+use self::opcode::*;
+use self::register_file::RegisterFile;
 use rustemu86::DebugMode;
 use std::fmt;
 
@@ -94,7 +97,7 @@ impl fmt::Display for Cpu {
 mod test {
   use super::*;
   use rustemu86;
-  use register_file::Reg64Id::{Rax, Rcx};
+  use cpu::register_file::Reg64Id::{Rax, Rcx};
 
   #[test]
   fn execute_two_instructions() {

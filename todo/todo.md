@@ -2,8 +2,7 @@
 
 ## Refactor
 
-- [x] Remove magic numbers of opcode.
-- [ ] CPU module.
+- [x] CPU module.
 - [ ] Instructions module.
 - [ ] Make instruction data model instead &[u8]
 
