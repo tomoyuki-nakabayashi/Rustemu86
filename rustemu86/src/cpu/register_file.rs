@@ -1,25 +1,14 @@
 use std::cmp::PartialEq;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Reg64Id {
-  Rax,
-  Rcx,
-  Rdx,
-  Rbx,
-  Unknown,
-}
-
-use self::Reg64Id::{Rax, Rbx, Rcx, Rdx};
-impl Reg64Id {
-  pub fn from_u8(n: u8) -> Option<Reg64Id> {
-    match n {
-      0 => Some(Rax),
-      1 => Some(Rcx),
-      2 => Some(Rdx),
-      3 => Some(Rbx),
-      _ => None,
-    }
+enum_from_primitive! {
+  #[derive(Debug, Clone, Copy, PartialEq)]
+  pub enum Reg64Id {
+    Rax = 0x00,
+    Rcx = 0x01,
+    Rdx = 0x02,
+    Rbx = 0x03,
+    Unknown = 0xff,
   }
 }
 

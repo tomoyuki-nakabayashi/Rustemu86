@@ -2,6 +2,8 @@ use byteorder::{LittleEndian, ReadBytesExt};
 use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
 use cpu::instruction::InstructionX86_64;
+use num::FromPrimitive;
+use bit_field::BitField;
 
 #[derive(Debug, PartialEq)]
 pub enum DestType {
@@ -54,6 +56,16 @@ pub struct ModRm {
   rm: Reg64Id,
 }
 
+impl ModRm {
+  pub fn new_invalid() -> ModRm {
+    ModRm {
+      mode: Direct,
+      reg: Reg64Id::Unknown,
+      rm: Reg64Id::Unknown,
+    }
+  }
+}
+
 fn decode_mod_rm(modrm: u8) -> ModRm {
   let mode = (modrm & 0b11000000) >> 6;
   let reg = (modrm & 0b00111000) >> 3;
@@ -75,8 +87,9 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, imm)
 }
 
-pub fn decode_mov_new(rf: &RegisterFile, inst: &InstructionX86_64) -> DecodedInst {
-  DecodedInst::new(DestType::Register, Reg64Id::Rax, 0)
+pub fn decode_mov_new(inst: &InstructionX86_64) -> DecodedInst {
+  let dest = Reg64Id::from_u32(inst.opcode.get_bits(0..3)).unwrap();
+  DecodedInst::new(DestType::Register, dest, inst.immediate)
 }
 
 pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
@@ -116,15 +129,15 @@ mod test {
     let mut rf = RegisterFile::new();
 
     let inst = InstructionX86_64 {
-      lecacy_prefix: [0, 0, 0, 0],
-      opcode: [0, 0, 0, 0],
+      lecacy_prefix: 0,
+      opcode: 0xb8,
       mod_rm: decode_mod_rm(0),
       sib: 0,
       displacement: 0,
       immediate: 0,
     };
 
-    let decoded = decode_mov_new(&rf, &inst);
+    let decoded = decode_mov_new(&inst);
     let correct = decode_mov_imm64(&[0xb8, 0x00, 0x00, 0x00, 0x00]);
 
     assert_eq!(decoded.dest_type, correct.dest_type);
