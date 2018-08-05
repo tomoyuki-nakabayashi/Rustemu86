@@ -2,7 +2,6 @@
 
 ## Refactor
 
-- [x] Make instruction data model instead &[u8]
 - [ ] Remove pub of ModRm.
 
 ## Test & Debug

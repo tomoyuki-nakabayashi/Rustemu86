@@ -171,7 +171,7 @@ mod test {
     use cpu::fetcher;
     let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
     let mut cpu = Cpu::new();
-    let inst = fetcher::fetch(&cpu, &program);
+    let inst = fetcher::fetch(&cpu, &program).unwrap();
     let inst = decoder::decode_mov_new(&inst);
     cpu.execute(&inst);
 

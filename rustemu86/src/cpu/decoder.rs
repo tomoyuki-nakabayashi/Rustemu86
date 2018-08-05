@@ -1,7 +1,7 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
-use cpu::instruction::InstructionX86_64;
+use cpu::fetcher::FetchedInst;
 use num::FromPrimitive;
 use bit_field::BitField;
 
@@ -87,7 +87,7 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, imm)
 }
 
-pub fn decode_mov_new(inst: &InstructionX86_64) -> DecodedInst {
+pub fn decode_mov_new(inst: &FetchedInst) -> DecodedInst {
   let dest = Reg64Id::from_u32(inst.opcode.get_bits(0..3)).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)
 }
@@ -121,14 +121,11 @@ pub fn undefined(_rf: &RegisterFile, _inst: &[u8]) {}
 #[cfg(test)]
 mod test {
   use super::*;
-  use cpu::instruction::InstructionX86_64;
-  use cpu::register_file::RegisterFile;
+  use cpu::fetcher::FetchedInst;
 
   #[test]
   fn decode_mov_with_new_struct() {
-    let mut rf = RegisterFile::new();
-
-    let inst = InstructionX86_64 {
+    let inst = FetchedInst {
       lecacy_prefix: 0,
       opcode: 0xb8,
       mod_rm: decode_mod_rm(0),

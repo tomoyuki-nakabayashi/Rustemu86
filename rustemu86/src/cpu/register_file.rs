@@ -55,7 +55,7 @@ impl fmt::Display for RegisterFile {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(
       f,
-      "  rax: {}\n  rcx: {}\n  rdx: {}\n  rbx: {}",
+      "  rax: 0x{:>08X}\n  rcx: 0x{:>08X}\n  rdx: 0x{:>08X}\n  rbx: 0x{:>08X}",
       self.rax, self.rcx, self.rdx, self.rbx
     )
   }
