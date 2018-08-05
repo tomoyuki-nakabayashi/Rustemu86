@@ -1,9 +1,9 @@
 pub mod register_file;
-pub mod instructions;
+pub mod decoder;
 pub mod opcode;
 
-use self::instructions::DecodedInst;
-use self::instructions::DestType;
+use self::decoder::DecodedInst;
+use self::decoder::DestType;
 use self::opcode::*;
 use self::register_file::RegisterFile;
 use rustemu86::DebugMode;
@@ -65,12 +65,12 @@ impl Cpu {
   fn decode(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
     match inst[0] {
       REX_W => match inst[1] {
-        ADD => Ok(instructions::decode_add(&self.rf, &inst)),
-        INC => Ok(instructions::decode_inc(&self.rf, &inst)),
+        ADD => Ok(decoder::decode_add(&self.rf, &inst)),
+        INC => Ok(decoder::decode_inc(&self.rf, &inst)),
         opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
       },
-      MOV_RAX...MOV_DI => Ok(instructions::decode_mov_imm64(&inst)),
-      JMP_REL8 => Ok(instructions::decode_jmp(self.rip, &inst)),
+      MOV_RAX...MOV_DI => Ok(decoder::decode_mov_imm64(&inst)),
+      JMP_REL8 => Ok(decoder::decode_jmp(self.rip, &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }
