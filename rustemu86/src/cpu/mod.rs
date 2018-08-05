@@ -1,6 +1,9 @@
+extern crate bit_field;
+
 pub mod register_file;
 pub mod decoder;
 pub mod opcode;
+pub mod instruction;
 
 use self::decoder::DecodedInst;
 use self::decoder::DestType;

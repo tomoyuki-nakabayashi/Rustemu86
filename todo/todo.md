@@ -2,9 +2,8 @@
 
 ## Refactor
 
-- [x] CPU module.
-- [ ] Instructions module.
-- [ ] Make instruction data model instead &[u8]
+- [] Make instruction data model instead &[u8]
+- [ ] Remove pub of ModRm.
 
 ## Test & Debug
 

@@ -1,7 +1,7 @@
 use std::cmp::PartialEq;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Reg64Id {
   Rax,
   Rcx,

@@ -7,3 +7,4 @@ authors = ["tomoyuki-nakabayashi <tomo.wait.for.it.yuki@gmail.com>"]
 getopts = "0.2.18"
 byteorder = "1.2.3"
 failure = "0.1.2"
+bit_field = "0.9.0"

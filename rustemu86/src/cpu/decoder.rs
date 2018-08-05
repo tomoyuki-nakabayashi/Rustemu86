@@ -1,8 +1,9 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
+use cpu::instruction::InstructionX86_64;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DestType {
   Register,
   Rip,
@@ -47,7 +48,7 @@ impl ModRmModeField {
 }
 
 #[derive(Debug)]
-struct ModRm {
+pub struct ModRm {
   mode: ModRmModeField,
   reg: Reg64Id,
   rm: Reg64Id,
@@ -74,6 +75,10 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, imm)
 }
 
+pub fn decode_mov_new(rf: &RegisterFile, inst: &InstructionX86_64) -> DecodedInst {
+  DecodedInst::new(DestType::Register, Reg64Id::Rax, 0)
+}
+
 pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;
@@ -98,4 +103,32 @@ pub fn decode_jmp(rip: u64, inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
 }
 
-pub fn undefined(_rf: &mut RegisterFile, _inst: &[u8]) {}
+pub fn undefined(_rf: &RegisterFile, _inst: &[u8]) {}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+  use cpu::instruction::InstructionX86_64;
+  use cpu::register_file::RegisterFile;
+
+  #[test]
+  fn decode_mov_with_new_struct() {
+    let mut rf = RegisterFile::new();
+
+    let inst = InstructionX86_64 {
+      lecacy_prefix: [0, 0, 0, 0],
+      opcode: [0, 0, 0, 0],
+      mod_rm: decode_mod_rm(0),
+      sib: 0,
+      displacement: 0,
+      immediate: 0,
+    };
+
+    let decoded = decode_mov_new(&rf, &inst);
+    let correct = decode_mov_imm64(&[0xb8, 0x00, 0x00, 0x00, 0x00]);
+
+    assert_eq!(decoded.dest_type, correct.dest_type);
+    assert_eq!(decoded.dest_rf, correct.dest_rf);
+    assert_eq!(decoded.result, correct.result);
+  }
+}
