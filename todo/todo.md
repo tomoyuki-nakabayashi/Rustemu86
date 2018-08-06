@@ -2,8 +2,6 @@
 
 ## Refactor
 
-- [ ] Remove pub of ModRm.
-
 ## Test & Debug
 
 - [ ] Make integration test.

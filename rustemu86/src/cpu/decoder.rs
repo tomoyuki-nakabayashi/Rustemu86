@@ -118,6 +118,13 @@ pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, incremented_value)
 }
 
+pub fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
+  let dest = inst.mod_rm.rm;
+  let src = inst.mod_rm.reg;
+  let result_value = rf.read64(dest) + rf.read64(src);
+  DecodedInst::new(DestType::Register, dest, result_value)
+}
+
 pub fn decode_add(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   let mod_rm = decode_mod_rm(inst[2]);
   let dest = mod_rm.rm;

@@ -190,4 +190,18 @@ mod test {
 
     assert_eq!(cpu.rf.read64(Rax), 1);
   }
+
+  #[test]
+  fn execute_add_new_decoder() {
+    let program = vec![0x48, 0x01, 0xc8];
+    let mut cpu = Cpu::new();
+    cpu.rf.write64(Rax, 1);
+    cpu.rf.write64(Rcx, 2);
+
+    let inst = fetcher::fetch(&cpu, &program).unwrap();
+    let inst = decoder::decode_add_new(&cpu.rf, &inst);
+    cpu.execute(&inst);
+
+    assert_eq!(cpu.rf.read64(Rax), 3);
+  }
 }
