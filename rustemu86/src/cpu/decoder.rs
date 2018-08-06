@@ -57,6 +57,18 @@ pub struct ModRm {
 }
 
 impl ModRm {
+  pub fn new(modrm: u8) -> ModRm {
+    let mode = (modrm & 0b11000000) >> 6;
+    let reg = (modrm & 0b00111000) >> 3;
+    let rm = modrm & 0b00000111;
+
+    ModRm {
+      mode: ModRmModeField::from_u8(mode).unwrap(),
+      reg: Reg64Id::from_u8(reg).unwrap(),
+      rm: Reg64Id::from_u8(rm).unwrap(),
+    }
+  }
+
   pub fn new_invalid() -> ModRm {
     ModRm {
       mode: Direct,
@@ -66,7 +78,7 @@ impl ModRm {
   }
 }
 
-fn decode_mod_rm(modrm: u8) -> ModRm {
+pub fn decode_mod_rm(modrm: u8) -> ModRm {
   let mode = (modrm & 0b11000000) >> 6;
   let reg = (modrm & 0b00111000) >> 3;
   let rm = modrm & 0b00000111;
@@ -90,6 +102,12 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
 pub fn decode_mov_new(inst: &FetchedInst) -> DecodedInst {
   let dest = Reg64Id::from_u32(inst.opcode.get_bits(0..3)).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)
+}
+
+pub fn decode_inc_new(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
+  let dest = inst.mod_rm.rm;
+  let incremented_value = rf.read64(dest) + 1;
+  DecodedInst::new(DestType::Register, dest, incremented_value)
 }
 
 pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {

@@ -28,6 +28,7 @@ impl FetchedInst {
 pub fn fetch(cpu: &Cpu, program: &[u8]) -> Result<FetchedInst, ()> {
   let rip = cpu.rip as usize;
   match program[rip] {
+    REX_W => Ok(fetch_two_operand(&cpu, &program)),
     MOV_RAX...MOV_DI => Ok(fetch_imm32_to_reg(&cpu, &program)),
     _ => Err(()),
   }
@@ -39,4 +40,11 @@ fn fetch_imm32_to_reg(cpu: &Cpu, program: &[u8]) -> FetchedInst {
   let mut imm = &program[rip+1..rip+5];
   let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
   FetchedInst::new(0, opcode, ModRm::new_invalid(), 0, 0, imm)
+}
+
+fn fetch_two_operand(cpu: &Cpu, program: &[u8]) -> FetchedInst {
+  let rip = cpu.rip as usize;
+  let mut opcode = &program[rip..rip+2];
+  let opcode = opcode.read_u16::<LittleEndian>().unwrap().into();
+  FetchedInst::new(0, opcode, ModRm::new(program[rip+2]), 0, 0, 0)
 }

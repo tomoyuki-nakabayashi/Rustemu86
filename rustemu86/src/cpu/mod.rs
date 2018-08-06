@@ -166,9 +166,9 @@ mod test {
     assert_eq!(cpu.rip, 7);
   }
 
+  use cpu::fetcher;
   #[test]
-  fn new_decoder() {
-    use cpu::fetcher;
+  fn execute_mov32_new_decoder() {
     let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
     let mut cpu = Cpu::new();
     let inst = fetcher::fetch(&cpu, &program).unwrap();
@@ -176,5 +176,18 @@ mod test {
     cpu.execute(&inst);
 
     assert_eq!(cpu.rf.read64(Rax), 0);
+  }
+
+  #[test]
+  fn execute_inc_new_decoder() {
+    let program = vec![0x48, 0xff, 0xc0];
+    let mut cpu = Cpu::new();
+    cpu.rf.write64(Rax, 0);
+
+    let inst = fetcher::fetch(&cpu, &program).unwrap();
+    let inst = decoder::decode_inc_new(&cpu.rf, &inst);
+    cpu.execute(&inst);
+
+    assert_eq!(cpu.rf.read64(Rax), 1);
   }
 }
