@@ -3,9 +3,16 @@ use cpu::decoder::ModRm;
 use cpu::opcode::*;
 use byteorder::{LittleEndian, ReadBytesExt};
 
+/* 
+trait Inst64 {
+  fn opcode(&self) -> Opcode;  // Opcode is enum of 1 to 3 bytes.
+}
+ */
+
 pub struct FetchedInst {
   pub lecacy_prefix: u32,
-  pub opcode: u32,
+  // MandatoryPrefix, RexPrefix
+  pub opcode: u32,  // Opcode enum.
   pub mod_rm: ModRm,
   pub sib: u8,
   pub displacement: u64,
