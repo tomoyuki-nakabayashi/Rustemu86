@@ -10,6 +10,7 @@ use self::decoder::DecodedInst;
 use self::decoder::DestType;
 use self::opcode::*;
 use self::register_file::RegisterFile;
+use self::fetcher::FetchUnit;
 use self::fetcher::FetchedInst;
 use rustemu86::DebugMode;
 use std::fmt;
@@ -27,7 +28,7 @@ pub enum InternalException {
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
-  rip: u64,
+  fetch_unit: FetchUnit,
   executed_insts: u64,
 }
 
@@ -35,7 +36,7 @@ impl Cpu {
   pub fn new() -> Cpu {
     Cpu {
       rf: RegisterFile::new(),
-      rip: 0,
+      fetch_unit: FetchUnit::new(),
       executed_insts: 0,
     }
   }
@@ -44,8 +45,8 @@ impl Cpu {
   where
     T: DebugMode,
   {
-    while (self.rip as usize) < program.len() {
-      let inst = self.fetch(&program)?;
+    while (self.fetch_unit.get_rip() as usize) < program.len() {
+      let inst = self.fetch_unit.fetch(&program)?;
       let inst = self.decode(&inst)?;
       self.execute(&inst);
       self.executed_insts += 1;
@@ -55,22 +56,12 @@ impl Cpu {
     Ok(())
   }
 
-  fn fetch(&mut self, program: &Vec<u8>) -> Result<FetchedInst, InternalException> {
-    let inst = self::fetcher::fetch(&self, &program);
-    if inst.is_err() {
-      return Err(InternalException::FetchError{})
-    }
-    let inst = inst.unwrap();
-    self.rip += inst.length;
-    Ok(inst)
-  }
-
   fn decode(&self, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
     match inst.opcode {
       ADD => Ok(decoder::decode_add_new(&self.rf, &inst)),
       INC => Ok(decoder::decode_inc_new(&self.rf, &inst)),
       MOV_RAX...MOV_DI => Ok(decoder::decode_mov_new(&inst)),
-      JMP_REL8 => Ok(decoder::decode_jmp_new(self.rip, &inst)),
+      JMP_REL8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }
@@ -78,7 +69,7 @@ impl Cpu {
   fn execute(&mut self, inst: &DecodedInst) {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
-      DestType::Rip => self.rip = inst.result,
+      DestType::Rip => self.fetch_unit.set_rip(inst.result),
     }
   }
 }
@@ -88,7 +79,7 @@ impl fmt::Display for Cpu {
     write!(
       f,
       "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
-      self.executed_insts, self.rip, self.rf
+      self.executed_insts, self.fetch_unit.get_rip(), self.rf
     )
   }
 }
@@ -107,7 +98,7 @@ mod test {
     let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
     assert!(result.is_ok());
-    assert_eq!(cpu.rip, 8);
+    assert_eq!(cpu.fetch_unit.get_rip(), 8);
   }
 
   #[test]
@@ -154,6 +145,6 @@ mod test {
     let result = cpu.run(&program, &rustemu86::NoneDebug{});
     
     assert!(result.is_ok());
-    assert_eq!(cpu.rip, 7);
+    assert_eq!(cpu.fetch_unit.get_rip(), 7);
   }
 }

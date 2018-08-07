@@ -14,7 +14,7 @@
 - [ ] Make Inst64 trait.
 - [ ] Divide FetchedInstruction into RexPrefix, LegacyPrefix, ... and, so on.
 - [ ] Each Inst64 has a minimum filed.
-- [ ] Fetcher has RIP.
+- [x] Move RIP to FetchUnit.
 
 ## Instruction
 
