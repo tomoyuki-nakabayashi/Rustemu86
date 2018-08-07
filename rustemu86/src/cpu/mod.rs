@@ -204,4 +204,16 @@ mod test {
 
     assert_eq!(cpu.rf.read64(Rax), 3);
   }
+
+  #[test]
+  fn execute_jmp_new_decoder() {
+    let mut cpu = Cpu::new();
+    let program = vec![0xeb, 0x05];
+  
+    let inst = fetcher::fetch(&cpu, &program).unwrap();
+    let inst = decoder::decode_jmp_new(cpu.rip, &inst);
+    cpu.execute(&inst);
+
+    assert_eq!(cpu.rip, 7);
+  }
 }

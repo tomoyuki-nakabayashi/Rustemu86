@@ -134,6 +134,13 @@ pub fn decode_add(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, result_value)
 }
 
+pub fn decode_jmp_new(rip: u64, inst: &FetchedInst) -> DecodedInst {
+  let disp = inst.displacement;
+  let rip = rip + inst.length + disp as u64;
+
+  DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
+}
+
 pub fn decode_jmp(rip: u64, inst: &[u8]) -> DecodedInst {
   let disp = inst[1];
   let rip = rip + disp as u64;
@@ -157,6 +164,7 @@ mod test {
       sib: 0,
       displacement: 0,
       immediate: 0,
+      length: 0,
     };
 
     let decoded = decode_mov_new(&inst);
