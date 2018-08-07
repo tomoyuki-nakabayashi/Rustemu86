@@ -12,7 +12,7 @@ trait Inst64 {
 pub struct FetchedInst {
   pub lecacy_prefix: u32,
   // MandatoryPrefix, RexPrefix
-  pub opcode: u32,  // Opcode enum.
+  pub opcode: u8,  // Opcode enum.
   pub mod_rm: ModRm,
   pub sib: u8,
   pub displacement: u64,
@@ -21,7 +21,7 @@ pub struct FetchedInst {
 }
 
 impl FetchedInst {
-  pub fn new(prefix: u32, opcode: u32, mod_rm: ModRm, sib: u8, disp: u64, imm: u64, len: u64) -> FetchedInst {
+  pub fn new(prefix: u32, opcode: u8, mod_rm: ModRm, sib: u8, disp: u64, imm: u64, len: u64) -> FetchedInst {
     FetchedInst {
       lecacy_prefix: prefix,
       opcode: opcode,
@@ -46,7 +46,7 @@ pub fn fetch(cpu: &Cpu, program: &[u8]) -> Result<FetchedInst, ()> {
 
 fn fetch_imm32_to_reg(cpu: &Cpu, program: &[u8]) -> FetchedInst {
   let rip = cpu.rip as usize;
-  let opcode = program[rip] as u32;
+  let opcode = program[rip];
   let mut imm = &program[rip+1..rip+5];
   let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
   FetchedInst::new(0, opcode, ModRm::new_invalid(), 0, 0, imm, 5)
@@ -54,14 +54,13 @@ fn fetch_imm32_to_reg(cpu: &Cpu, program: &[u8]) -> FetchedInst {
 
 fn fetch_two_operand(cpu: &Cpu, program: &[u8]) -> FetchedInst {
   let rip = cpu.rip as usize;
-  let mut opcode = &program[rip..rip+2];
-  let opcode = opcode.read_u16::<LittleEndian>().unwrap().into();
+  let opcode = program[rip+1];
   FetchedInst::new(0, opcode, ModRm::new(program[rip+2]), 0, 0, 0, 3)
 }
 
 fn fetch_jmp_rel8(cpu: &Cpu, program: &[u8]) -> FetchedInst {
   let rip = cpu.rip as usize;
-  let opcode = program[rip] as u32;
+  let opcode = program[rip];
   let disp = program[rip+1] as u64;
   FetchedInst::new(0, opcode, ModRm::new_invalid(), 0, disp, 0, 2)
 }

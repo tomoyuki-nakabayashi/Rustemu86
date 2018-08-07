@@ -10,6 +10,7 @@ use self::decoder::DecodedInst;
 use self::decoder::DestType;
 use self::opcode::*;
 use self::register_file::RegisterFile;
+use self::fetcher::FetchedInst;
 use rustemu86::DebugMode;
 use std::fmt;
 
@@ -44,7 +45,7 @@ impl Cpu {
     T: DebugMode,
   {
     while (self.rip as usize) < program.len() {
-      let inst: &[u8] = self.fetch(&program)?;
+      let inst = self.fetch(&program)?;
       let inst = self.decode(&inst)?;
       self.execute(&inst);
       self.executed_insts += 1;
@@ -54,27 +55,22 @@ impl Cpu {
     Ok(())
   }
 
-  fn fetch<'a>(&mut self, program: &'a Vec<u8>) -> Result<&'a [u8], InternalException> {
-    let rip: usize = self.rip as usize;
-    let inst = match program[rip] {
-      REX_W => Ok(&program[rip..rip + 3]),
-      MOV_RAX...MOV_DI => Ok(&program[rip..rip + 5]),
-      JMP_REL8 => Ok(&program[rip..rip + 2]),
-      _ => Err(InternalException::FetchError{}),
-    }?;
-    self.rip += inst.len() as u64;
+  fn fetch(&mut self, program: &Vec<u8>) -> Result<FetchedInst, InternalException> {
+    let inst = self::fetcher::fetch(&self, &program);
+    if inst.is_err() {
+      return Err(InternalException::FetchError{})
+    }
+    let inst = inst.unwrap();
+    self.rip += inst.length;
     Ok(inst)
   }
 
-  fn decode(&self, inst: &[u8]) -> Result<DecodedInst, InternalException> {
-    match inst[0] {
-      REX_W => match inst[1] {
-        ADD => Ok(decoder::decode_add(&self.rf, &inst)),
-        INC => Ok(decoder::decode_inc(&self.rf, &inst)),
-        opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
-      },
-      MOV_RAX...MOV_DI => Ok(decoder::decode_mov_imm64(&inst)),
-      JMP_REL8 => Ok(decoder::decode_jmp(self.rip, &inst)),
+  fn decode(&self, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
+    match inst.opcode {
+      ADD => Ok(decoder::decode_add_new(&self.rf, &inst)),
+      INC => Ok(decoder::decode_inc_new(&self.rf, &inst)),
+      MOV_RAX...MOV_DI => Ok(decoder::decode_mov_new(&inst)),
+      JMP_REL8 => Ok(decoder::decode_jmp_new(self.rip, &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }

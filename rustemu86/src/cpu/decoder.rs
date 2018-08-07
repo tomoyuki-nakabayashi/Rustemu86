@@ -100,7 +100,7 @@ pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
 }
 
 pub fn decode_mov_new(inst: &FetchedInst) -> DecodedInst {
-  let dest = Reg64Id::from_u32(inst.opcode.get_bits(0..3)).unwrap();
+  let dest = Reg64Id::from_u8(inst.opcode.get_bits(0..3)).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)
 }
 
@@ -149,29 +149,3 @@ pub fn decode_jmp(rip: u64, inst: &[u8]) -> DecodedInst {
 }
 
 pub fn undefined(_rf: &RegisterFile, _inst: &[u8]) {}
-
-#[cfg(test)]
-mod test {
-  use super::*;
-  use cpu::fetcher::FetchedInst;
-
-  #[test]
-  fn decode_mov_with_new_struct() {
-    let inst = FetchedInst {
-      lecacy_prefix: 0,
-      opcode: 0xb8,
-      mod_rm: decode_mod_rm(0),
-      sib: 0,
-      displacement: 0,
-      immediate: 0,
-      length: 0,
-    };
-
-    let decoded = decode_mov_new(&inst);
-    let correct = decode_mov_imm64(&[0xb8, 0x00, 0x00, 0x00, 0x00]);
-
-    assert_eq!(decoded.dest_type, correct.dest_type);
-    assert_eq!(decoded.dest_rf, correct.dest_rf);
-    assert_eq!(decoded.result, correct.result);
-  }
-}
