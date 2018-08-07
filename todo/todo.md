@@ -2,6 +2,9 @@
 
 ## Refactor
 
+- [ ] Move InternalException to exception.
+- [ ] Define opcode as enum.
+
 ## Test & Debug
 
 - [ ] Make integration test.
@@ -15,6 +18,7 @@
 - [ ] Divide FetchedInstruction into RexPrefix, LegacyPrefix, ... and, so on.
 - [ ] Each Inst64 has a minimum filed.
 - [x] Move RIP to FetchUnit.
+- [ ] Decoder owes decode.
 
 ## Instruction
 
