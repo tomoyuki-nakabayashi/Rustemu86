@@ -111,16 +111,10 @@ mod test {
   }
 
   #[test]
-  fn decode_undefined_instruction() {
-    let inst = vec![0x06];
-    let cpu = Cpu::new();
-    assert!(cpu.decode(&inst).is_err());
-  }
-
-  #[test]
-  fn mov64() {
+  fn execute_mov32() {
     let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
     let mut cpu = Cpu::new();
+
     let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
     assert!(result.is_ok());
@@ -129,26 +123,26 @@ mod test {
 
   #[test]
   fn execute_inc() {
-    let inst = vec![0x48, 0xff, 0xc0];
+    let program = vec![0x48, 0xff, 0xc0];
     let mut cpu = Cpu::new();
     cpu.rf.write64(Rax, 0);
 
-    for i in 1..10 {
-      let inst = cpu.decode(&inst).unwrap();
-      cpu.execute(&inst);
-      assert_eq!(cpu.rf.read64(Rax), i);
-    }
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
+
+    assert!(result.is_ok());
+    assert_eq!(cpu.rf.read64(Rax), 1);
   }
 
   #[test]
   fn execute_add() {
+    let program = vec![0x48, 0x01, 0xc8];
     let mut cpu = Cpu::new();
     cpu.rf.write64(Rax, 1);
     cpu.rf.write64(Rcx, 2);
 
-    let inst = vec![0x48, 0x01, 0xc8];
-    let inst = cpu.decode(&inst).unwrap();
-    cpu.execute(&inst);
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
+    
+    assert!(result.is_ok());
     assert_eq!(cpu.rf.read64(Rax), 3);
   }
 
@@ -156,60 +150,10 @@ mod test {
   fn execute_jmp() {
     let mut cpu = Cpu::new();
     let program = vec![0xeb, 0x05];
+
     let result = cpu.run(&program, &rustemu86::NoneDebug{});
-
+    
     assert!(result.is_ok());
-    assert_eq!(cpu.rip, 7);
-  }
-
-  use cpu::fetcher;
-  #[test]
-  fn execute_mov32_new_decoder() {
-    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
-    let mut cpu = Cpu::new();
-    let inst = fetcher::fetch(&cpu, &program).unwrap();
-    let inst = decoder::decode_mov_new(&inst);
-    cpu.execute(&inst);
-
-    assert_eq!(cpu.rf.read64(Rax), 0);
-  }
-
-  #[test]
-  fn execute_inc_new_decoder() {
-    let program = vec![0x48, 0xff, 0xc0];
-    let mut cpu = Cpu::new();
-    cpu.rf.write64(Rax, 0);
-
-    let inst = fetcher::fetch(&cpu, &program).unwrap();
-    let inst = decoder::decode_inc_new(&cpu.rf, &inst);
-    cpu.execute(&inst);
-
-    assert_eq!(cpu.rf.read64(Rax), 1);
-  }
-
-  #[test]
-  fn execute_add_new_decoder() {
-    let program = vec![0x48, 0x01, 0xc8];
-    let mut cpu = Cpu::new();
-    cpu.rf.write64(Rax, 1);
-    cpu.rf.write64(Rcx, 2);
-
-    let inst = fetcher::fetch(&cpu, &program).unwrap();
-    let inst = decoder::decode_add_new(&cpu.rf, &inst);
-    cpu.execute(&inst);
-
-    assert_eq!(cpu.rf.read64(Rax), 3);
-  }
-
-  #[test]
-  fn execute_jmp_new_decoder() {
-    let mut cpu = Cpu::new();
-    let program = vec![0xeb, 0x05];
-  
-    let inst = fetcher::fetch(&cpu, &program).unwrap();
-    let inst = decoder::decode_jmp_new(cpu.rip, &inst);
-    cpu.execute(&inst);
-
     assert_eq!(cpu.rip, 7);
   }
 }

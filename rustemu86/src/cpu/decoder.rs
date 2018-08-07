@@ -1,4 +1,3 @@
-use byteorder::{LittleEndian, ReadBytesExt};
 use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
 use cpu::fetcher::FetchedInst;
@@ -90,15 +89,6 @@ pub fn decode_mod_rm(modrm: u8) -> ModRm {
   }
 }
 
-pub fn decode_mov_imm64(inst: &[u8]) -> DecodedInst {
-  const MOV_OP: u8 = 0xb8;
-  let dest = Reg64Id::from_u8(inst[0] - MOV_OP).unwrap();
-  let mut imm = &inst[1..];
-  let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
-
-  DecodedInst::new(DestType::Register, dest, imm)
-}
-
 pub fn decode_mov_new(inst: &FetchedInst) -> DecodedInst {
   let dest = Reg64Id::from_u8(inst.opcode.get_bits(0..3)).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)
@@ -110,14 +100,6 @@ pub fn decode_inc_new(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, incremented_value)
 }
 
-pub fn decode_inc(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
-  let mod_rm = decode_mod_rm(inst[2]);
-  let dest = mod_rm.rm;
-  let incremented_value = rf.read64(dest) + 1;
-
-  DecodedInst::new(DestType::Register, dest, incremented_value)
-}
-
 pub fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   let dest = inst.mod_rm.rm;
   let src = inst.mod_rm.reg;
@@ -125,24 +107,8 @@ pub fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   DecodedInst::new(DestType::Register, dest, result_value)
 }
 
-pub fn decode_add(rf: &RegisterFile, inst: &[u8]) -> DecodedInst {
-  let mod_rm = decode_mod_rm(inst[2]);
-  let dest = mod_rm.rm;
-  let src = mod_rm.reg;
-  let result_value = rf.read64(dest) + rf.read64(src);
-
-  DecodedInst::new(DestType::Register, dest, result_value)
-}
-
 pub fn decode_jmp_new(rip: u64, inst: &FetchedInst) -> DecodedInst {
   let disp = inst.displacement;
-  let rip = rip + inst.length + disp as u64;
-
-  DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
-}
-
-pub fn decode_jmp(rip: u64, inst: &[u8]) -> DecodedInst {
-  let disp = inst[1];
   let rip = rip + disp as u64;
 
   DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
