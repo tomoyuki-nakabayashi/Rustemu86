@@ -9,6 +9,7 @@ pub mod instruction;
 use self::decoder::DecodedInst;
 use self::decoder::DestType;
 use self::opcode::*;
+use self::opcode::Opcode::*;
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
 use self::fetcher::FetchedInst;
@@ -19,9 +20,9 @@ use std::fmt;
 pub enum InternalException {
   #[fail(display = "fetch error")]
   FetchError{},
-  #[fail(display = "undefined instruction: {}", opcode)]
+  #[fail(display = "undefined instruction: {:?}", opcode)]
   UndefinedInstruction {
-    opcode: u8,
+    opcode: Opcode,
   },
 }
 
@@ -58,10 +59,10 @@ impl Cpu {
 
   fn decode(&self, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
     match inst.opcode {
-      ADD => Ok(decoder::decode_add_new(&self.rf, &inst)),
-      INC => Ok(decoder::decode_inc_new(&self.rf, &inst)),
-      MOV_RAX...MOV_DI => Ok(decoder::decode_mov_new(&inst)),
-      JMP_REL8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
+      Add => Ok(decoder::decode_add_new(&self.rf, &inst)),
+      Inc => Ok(decoder::decode_inc_new(&self.rf, &inst)),
+      MovImm32 => Ok(decoder::decode_mov_new(&inst)),
+      JmpRel8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }

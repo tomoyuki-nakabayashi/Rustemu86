@@ -1,8 +1,11 @@
 use cpu::decoder::ModRm;
 use cpu::opcode::*;
+use cpu::opcode::Opcode::*;
 use cpu::InternalException;
 use cpu::InternalException::FetchError;
 use byteorder::{LittleEndian, ReadBytesExt};
+use bit_field::BitField;
+use num::FromPrimitive;
 
 /* 
 trait Inst64 {
@@ -42,7 +45,8 @@ impl FetchUnit {
 pub struct FetchedInst {
   pub lecacy_prefix: u32,
   // MandatoryPrefix, RexPrefix
-  pub opcode: u8,  // Opcode enum.
+  pub opcode: Opcode,  // Opcode enum.
+  pub r: u8,
   pub mod_rm: ModRm,
   pub sib: u8,
   pub displacement: u64,
@@ -51,10 +55,11 @@ pub struct FetchedInst {
 }
 
 impl FetchedInst {
-  pub fn new(prefix: u32, opcode: u8, mod_rm: ModRm, sib: u8, disp: u64, imm: u64, len: u64) -> FetchedInst {
+  pub fn new(prefix: u32, opcode: Opcode, r: u8, mod_rm: ModRm, sib: u8, disp: u64, imm: u64, len: u64) -> FetchedInst {
     FetchedInst {
       lecacy_prefix: prefix,
       opcode: opcode,
+      r: r,
       mod_rm: mod_rm,
       sib: sib,
       displacement: disp,
@@ -67,20 +72,24 @@ impl FetchedInst {
 fn fetch_imm32_to_reg(rip: u64, program: &[u8]) -> FetchedInst {
   let rip = rip as usize;
   let opcode = program[rip];
+  let r = opcode.get_bits(0..3);
+  let opcode = Opcode::from_u8(opcode & MOV_RAX).unwrap();
   let mut imm = &program[rip+1..rip+5];
   let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
-  FetchedInst::new(0, opcode, ModRm::new_invalid(), 0, 0, imm, 5)
+  FetchedInst::new(0, opcode, r, ModRm::new_invalid(), 0, 0, imm, 5)
 }
 
 fn fetch_two_operand(rip: u64, program: &[u8]) -> FetchedInst {
   let rip = rip as usize;
   let opcode = program[rip+1];
-  FetchedInst::new(0, opcode, ModRm::new(program[rip+2]), 0, 0, 0, 3)
+  let opcode = Opcode::from_u8(opcode).unwrap();
+  FetchedInst::new(0, opcode, 0, ModRm::new(program[rip+2]), 0, 0, 0, 3)
 }
 
 fn fetch_jmp_rel8(rip: u64, program: &[u8]) -> FetchedInst {
   let rip = rip as usize;
   let opcode = program[rip];
+  let opcode = Opcode::from_u8(opcode).unwrap();
   let disp = program[rip+1] as u64;
-  FetchedInst::new(0, opcode, ModRm::new_invalid(), 0, disp, 0, 2)
+  FetchedInst::new(0, opcode, 0, ModRm::new_invalid(), 0, disp, 0, 2)
 }

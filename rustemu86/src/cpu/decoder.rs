@@ -2,7 +2,6 @@ use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
 use cpu::fetcher::FetchedInst;
 use num::FromPrimitive;
-use bit_field::BitField;
 
 #[derive(Debug, PartialEq)]
 pub enum DestType {
@@ -90,7 +89,7 @@ pub fn decode_mod_rm(modrm: u8) -> ModRm {
 }
 
 pub fn decode_mov_new(inst: &FetchedInst) -> DecodedInst {
-  let dest = Reg64Id::from_u8(inst.opcode.get_bits(0..3)).unwrap();
+  let dest = Reg64Id::from_u8(inst.r).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)
 }
 
