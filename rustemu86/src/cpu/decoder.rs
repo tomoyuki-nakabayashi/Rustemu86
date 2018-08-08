@@ -2,6 +2,7 @@ use cpu::register_file::Reg64Id;
 use cpu::register_file::RegisterFile;
 use cpu::fetcher::FetchedInst;
 use num::FromPrimitive;
+use bit_field::BitField;
 
 #[derive(Debug, PartialEq)]
 pub enum DestType {
@@ -56,9 +57,9 @@ pub struct ModRm {
 
 impl ModRm {
   pub fn new(modrm: u8) -> ModRm {
-    let mode = (modrm & 0b11000000) >> 6;
-    let reg = (modrm & 0b00111000) >> 3;
-    let rm = modrm & 0b00000111;
+    let mode = modrm.get_bits(6..8);
+    let reg = modrm.get_bits(3..6);
+    let rm = modrm.get_bits(0..3);
 
     ModRm {
       mode: ModRmModeField::from_u8(mode).unwrap(),
@@ -73,18 +74,6 @@ impl ModRm {
       reg: Reg64Id::Unknown,
       rm: Reg64Id::Unknown,
     }
-  }
-}
-
-pub fn decode_mod_rm(modrm: u8) -> ModRm {
-  let mode = (modrm & 0b11000000) >> 6;
-  let reg = (modrm & 0b00111000) >> 3;
-  let rm = modrm & 0b00000111;
-
-  ModRm {
-    mode: ModRmModeField::from_u8(mode).unwrap(),
-    reg: Reg64Id::from_u8(reg).unwrap(),
-    rm: Reg64Id::from_u8(rm).unwrap(),
   }
 }
 

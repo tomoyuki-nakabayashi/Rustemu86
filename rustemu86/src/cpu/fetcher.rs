@@ -51,11 +51,10 @@ pub struct FetchedInst {
   pub sib: u8,
   pub displacement: u64,
   pub immediate: u64,
-  pub length: u64,
 }
 
 impl FetchedInst {
-  pub fn new(prefix: u32, opcode: Opcode, r: u8, mod_rm: ModRm, sib: u8, disp: u64, imm: u64, len: u64) -> FetchedInst {
+  pub fn new(prefix: u32, opcode: Opcode, r: u8, mod_rm: ModRm, sib: u8, disp: u64, imm: u64) -> FetchedInst {
     FetchedInst {
       lecacy_prefix: prefix,
       opcode: opcode,
@@ -64,7 +63,6 @@ impl FetchedInst {
       sib: sib,
       displacement: disp,
       immediate: imm,
-      length: len,
     }
   }
 }
@@ -76,14 +74,14 @@ fn fetch_imm32_to_reg(rip: u64, program: &[u8]) -> FetchedInst {
   let opcode = Opcode::from_u8(opcode & MOV_RAX).unwrap();
   let mut imm = &program[rip+1..rip+5];
   let imm: u64 = imm.read_u32::<LittleEndian>().unwrap().into();
-  FetchedInst::new(0, opcode, r, ModRm::new_invalid(), 0, 0, imm, 5)
+  FetchedInst::new(0, opcode, r, ModRm::new_invalid(), 0, 0, imm)
 }
 
 fn fetch_two_operand(rip: u64, program: &[u8]) -> FetchedInst {
   let rip = rip as usize;
   let opcode = program[rip+1];
   let opcode = Opcode::from_u8(opcode).unwrap();
-  FetchedInst::new(0, opcode, 0, ModRm::new(program[rip+2]), 0, 0, 0, 3)
+  FetchedInst::new(0, opcode, 0, ModRm::new(program[rip+2]), 0, 0, 0)
 }
 
 fn fetch_jmp_rel8(rip: u64, program: &[u8]) -> FetchedInst {
@@ -91,5 +89,5 @@ fn fetch_jmp_rel8(rip: u64, program: &[u8]) -> FetchedInst {
   let opcode = program[rip];
   let opcode = Opcode::from_u8(opcode).unwrap();
   let disp = program[rip+1] as u64;
-  FetchedInst::new(0, opcode, 0, ModRm::new_invalid(), 0, disp, 0, 2)
+  FetchedInst::new(0, opcode, 0, ModRm::new_invalid(), 0, disp, 0)
 }
