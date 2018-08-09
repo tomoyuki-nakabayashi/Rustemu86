@@ -4,12 +4,15 @@ pub const MOV_DI: u8 = 0xbf;
 pub const JMP_REL8: u8 = 0xeb;
 pub const INC: u8 = 0xff;
 
+pub const REX: u8 = 0x40;
 pub const REX_W: u8 = 0x48;
+pub const REX_WRXB: u8 = 0x4F;
 
 enum_from_primitive! {
   #[derive(Debug, Clone, Copy, PartialEq)]
   pub enum Opcode {
     Add = 0x01,
+    Invalid = 0x06,
     MovImm32 = 0xb8,
     JmpRel8 = 0xeb,
     Inc = 0xff,

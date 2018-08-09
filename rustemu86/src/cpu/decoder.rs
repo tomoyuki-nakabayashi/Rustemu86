@@ -27,7 +27,7 @@ impl DecodedInst {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum ModRmModeField {
   Indirect,
   OneByteDisp,
@@ -48,7 +48,7 @@ impl ModRmModeField {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ModRm {
   mode: ModRmModeField,
   reg: Reg64Id,
