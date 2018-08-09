@@ -3,12 +3,12 @@ extern crate bit_field;
 pub mod register_file;
 pub mod decoder;
 pub mod fetcher;
-pub mod opcode;
+pub mod isa;
 pub mod instruction;
 
 use self::decoder::DecodedInst;
 use self::decoder::DestType;
-use self::opcode::Opcode;
+use self::isa::opcode::Opcode;
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
 use self::fetcher::FetchedInst;
@@ -88,7 +88,7 @@ impl fmt::Display for Cpu {
 mod test {
   use super::*;
   use rustemu86;
-  use cpu::register_file::Reg64Id::{Rax, Rcx};
+  use cpu::isa::registers::Reg64Id::{Rax, Rcx};
 
   #[test]
   fn execute_two_instructions() {

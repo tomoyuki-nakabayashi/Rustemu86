@@ -1,6 +1,6 @@
-use cpu::decoder::ModRm;
-use cpu::opcode::{REX, REX_WRXB};
-use cpu::opcode::Opcode;
+use cpu::isa::modrm::ModRm;
+use cpu::isa::opcode::{REX, REX_WRXB};
+use cpu::isa::opcode::Opcode;
 use cpu::InternalException;
 use byteorder::{LittleEndian, ReadBytesExt};
 use bit_field::BitField;

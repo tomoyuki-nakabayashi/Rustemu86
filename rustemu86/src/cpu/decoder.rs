@@ -1,8 +1,7 @@
-use cpu::register_file::Reg64Id;
+use cpu::isa::registers::Reg64Id;
 use cpu::register_file::RegisterFile;
 use cpu::fetcher::FetchedInst;
 use num::FromPrimitive;
-use bit_field::BitField;
 
 #[derive(Debug, PartialEq)]
 pub enum DestType {
@@ -23,56 +22,6 @@ impl DecodedInst {
       dest_type: dest_type,
       dest_rf: rf,
       result: result,
-    }
-  }
-}
-
-#[derive(Debug, Clone, Copy)]
-enum ModRmModeField {
-  Indirect,
-  OneByteDisp,
-  FourByteDisp,
-  Direct,
-}
-
-use self::ModRmModeField::{Direct, FourByteDisp, Indirect, OneByteDisp};
-impl ModRmModeField {
-  fn from_u8(n: u8) -> Option<ModRmModeField> {
-    match n {
-      0 => Some(Indirect),
-      1 => Some(OneByteDisp),
-      2 => Some(FourByteDisp),
-      3 => Some(Direct),
-      _ => None,
-    }
-  }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct ModRm {
-  mode: ModRmModeField,
-  reg: Reg64Id,
-  rm: Reg64Id,
-}
-
-impl ModRm {
-  pub fn new(modrm: u8) -> ModRm {
-    let mode = modrm.get_bits(6..8);
-    let reg = modrm.get_bits(3..6);
-    let rm = modrm.get_bits(0..3);
-
-    ModRm {
-      mode: ModRmModeField::from_u8(mode).unwrap(),
-      reg: Reg64Id::from_u8(reg).unwrap(),
-      rm: Reg64Id::from_u8(rm).unwrap(),
-    }
-  }
-
-  pub fn new_invalid() -> ModRm {
-    ModRm {
-      mode: Direct,
-      reg: Reg64Id::Unknown,
-      rm: Reg64Id::Unknown,
     }
   }
 }
