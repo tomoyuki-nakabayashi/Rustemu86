@@ -6,6 +6,8 @@ enum_from_primitive! {
   pub enum Opcode {
     Add = 0x01,
     Invalid = 0x06,
+    MovToRm = 0x89,
+//    MovToReg = 0x8b,
     MovImm32 = 0xb8,
     JmpRel8 = 0xeb,
     Inc = 0xff,

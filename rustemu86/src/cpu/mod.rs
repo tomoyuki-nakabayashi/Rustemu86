@@ -14,6 +14,8 @@ use self::exceptions::InternalException;
 use rustemu86::DebugMode;
 use std::fmt;
 
+static mut MEMORY: [u64; 100] = [0; 100];
+
 #[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
@@ -49,6 +51,7 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
+      DestType::Memory => unsafe { MEMORY[self.rf.read64(inst.dest_rf) as usize] = inst.result },
     }
   }
 }
@@ -67,7 +70,7 @@ impl fmt::Display for Cpu {
 mod test {
   use super::*;
   use rustemu86;
-  use cpu::isa::registers::Reg64Id::{Rax, Rcx};
+  use cpu::isa::registers::Reg64Id::{Rax, Rcx, Rbx};
 
   #[test]
   fn execute_two_instructions() {
@@ -125,5 +128,18 @@ mod test {
     
     assert!(result.is_ok());
     assert_eq!(cpu.fetch_unit.get_rip(), 7);
+  }
+
+  #[test]
+  fn execute_load_store() {
+    let program = vec![0x48, 0x89, 0x18];
+    let mut cpu = Cpu::new();
+    cpu.rf.write64(Rax, 0);
+    cpu.rf.write64(Rbx, 1);
+
+    let result = cpu.run(&program, &rustemu86::NoneDebug{});
+
+    assert!(result.is_ok());
+    assert_eq!(unsafe { MEMORY[0] }, 1);
   }
 }

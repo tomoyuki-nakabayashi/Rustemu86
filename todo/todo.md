@@ -2,8 +2,6 @@
 
 ## Refactor
 
-- [x] Move InternalException to exception.
-
 ## Test & Debug
 
 - [ ] Make integration test.
@@ -13,15 +11,16 @@
 ## CPU Model
 
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
-- [x] Decoder owes decode.
 
 ## Instruction
 
 - [ ] Load
-- [ ] Store
+- [x] Store
+- [ ] Halt
 
 ## Peripheral
 
+- [x] Memory.
 - [ ] Memory mapped serial.
 
 ## Load an x86 binary

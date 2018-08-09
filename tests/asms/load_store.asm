@@ -1,0 +1,6 @@
+bits 64
+
+mov rax, 0
+mov rbx, 1
+mov [rax], rbx
+mov rcx, [rax]
