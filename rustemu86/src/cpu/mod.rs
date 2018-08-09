@@ -8,8 +8,7 @@ pub mod instruction;
 
 use self::decoder::DecodedInst;
 use self::decoder::DestType;
-use self::opcode::*;
-use self::opcode::Opcode::*;
+use self::opcode::Opcode;
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
 use self::fetcher::FetchedInst;
@@ -59,10 +58,10 @@ impl Cpu {
 
   fn decode(&self, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
     match inst.opcode {
-      Add => Ok(decoder::decode_add_new(&self.rf, &inst)),
-      Inc => Ok(decoder::decode_inc_new(&self.rf, &inst)),
-      MovImm32 => Ok(decoder::decode_mov_new(&inst)),
-      JmpRel8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
+      Opcode::Add => Ok(decoder::decode_add_new(&self.rf, &inst)),
+      Opcode::Inc => Ok(decoder::decode_inc_new(&self.rf, &inst)),
+      Opcode::MovImm32 => Ok(decoder::decode_mov_new(&inst)),
+      Opcode::JmpRel8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
       opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
     }
   }

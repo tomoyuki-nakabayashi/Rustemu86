@@ -3,7 +3,8 @@
 ## Refactor
 
 - [ ] Move InternalException to exception.
-- [ ] Define opcode as enum.
+- [x] Define opcode as enum.
+- [ ] Make isa module.
 
 ## Test & Debug
 
@@ -14,9 +15,7 @@
 ## CPU Model
 
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
-- [ ] Make Inst64 trait.
-- [ ] Divide FetchedInstruction into RexPrefix, LegacyPrefix, ... and, so on.
-- [ ] Each Inst64 has a minimum filed.
+- [x] Divide FetchedInstruction into RexPrefix, LegacyPrefix, ... and, so on.
 - [x] Move RIP to FetchUnit.
 - [ ] Decoder owes decode.
 

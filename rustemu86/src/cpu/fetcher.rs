@@ -1,5 +1,5 @@
 use cpu::decoder::ModRm;
-use cpu::opcode::*;
+use cpu::opcode::{REX, REX_WRXB};
 use cpu::opcode::Opcode;
 use cpu::InternalException;
 use byteorder::{LittleEndian, ReadBytesExt};
