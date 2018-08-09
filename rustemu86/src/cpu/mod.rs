@@ -3,27 +3,16 @@ extern crate bit_field;
 pub mod register_file;
 pub mod decoder;
 pub mod fetcher;
+pub mod exceptions;
 pub mod isa;
-pub mod instruction;
 
+use self::fetcher::FetchUnit;
 use self::decoder::DecodedInst;
 use self::decoder::DestType;
-use self::isa::opcode::Opcode;
 use self::register_file::RegisterFile;
-use self::fetcher::FetchUnit;
-use self::fetcher::FetchedInst;
+use self::exceptions::InternalException;
 use rustemu86::DebugMode;
 use std::fmt;
-
-#[derive(Debug, Fail)]
-pub enum InternalException {
-  #[fail(display = "fetch error")]
-  FetchError{},
-  #[fail(display = "undefined instruction: {:?}", opcode)]
-  UndefinedInstruction {
-    opcode: Opcode,
-  },
-}
 
 #[derive(Debug)]
 pub struct Cpu {
@@ -47,23 +36,13 @@ impl Cpu {
   {
     while (self.fetch_unit.get_rip() as usize) < program.len() {
       let inst = self.fetch_unit.fetch(&program)?;
-      let inst = self.decode(&inst)?;
+      let inst = decoder::decode(self.fetch_unit.get_rip(), &self.rf, &inst)?;
       self.execute(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
     println!("Finish emulation. {} instructions executed.", self.executed_insts);
     Ok(())
-  }
-
-  fn decode(&self, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
-    match inst.opcode {
-      Opcode::Add => Ok(decoder::decode_add_new(&self.rf, &inst)),
-      Opcode::Inc => Ok(decoder::decode_inc_new(&self.rf, &inst)),
-      Opcode::MovImm32 => Ok(decoder::decode_mov_new(&inst)),
-      Opcode::JmpRel8 => Ok(decoder::decode_jmp_new(self.fetch_unit.get_rip(), &inst)),
-      opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
-    }
   }
 
   fn execute(&mut self, inst: &DecodedInst) {

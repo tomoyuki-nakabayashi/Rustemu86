@@ -2,9 +2,7 @@
 
 ## Refactor
 
-- [ ] Move InternalException to exception.
-- [x] Make isa module.
-- [x] Move Reg64Id into isa.
+- [x] Move InternalException to exception.
 
 ## Test & Debug
 
@@ -15,7 +13,7 @@
 ## CPU Model
 
 - [ ] Make uOP model to divide an instruction to RISC like instructions.
-- [ ] Decoder owes decode.
+- [x] Decoder owes decode.
 
 ## Instruction
 
