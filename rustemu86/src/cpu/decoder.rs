@@ -85,6 +85,7 @@ impl DecodedInst {
 pub fn new_decode(rip: u64, rf: &RegisterFile, inst: &FetchedInst) -> Result<Box<ExStageInst>, InternalException> {
   match inst.opcode {
     Opcode::Inc => Ok(decode_inc_new(&rf, &inst)),
+    Opcode::Add => Ok(decode_add_new(&rf, &inst)),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
 }
@@ -130,6 +131,14 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   let dest = inst.mod_rm.rm;
   let incremented_value = rf.read64(dest) + 1;
   DecodedInst::new(DestType::Register, dest, incremented_value)
+}
+
+fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
+  let dest = inst.mod_rm.rm;
+  let src = inst.mod_rm.reg;
+  let op1 = rf.read64(dest);
+  let op2 = rf.read64(src);
+  Box::new(ArithLogicInst::new(ExOpcode::Add, dest, op1, op2, 0)) as Box<ExStageInst>
 }
 
 fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {

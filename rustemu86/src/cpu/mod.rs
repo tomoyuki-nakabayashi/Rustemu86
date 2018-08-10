@@ -157,15 +157,16 @@ mod test {
 
   #[test]
   fn new_decode_and_execute() {
-    let program = vec![0x48, 0xff, 0xc0];
+    let program = vec![0x48, 0x01, 0xc8];
     let mut cpu = Cpu::new();
     cpu.rf.write64(Rax, 1);
+    cpu.rf.write64(Rcx, 2);
 
     let inst = cpu.fetch_unit.fetch(&program).unwrap();
     let inst = decoder::new_decode(cpu.fetch_unit.get_rip(), &cpu.rf, &inst).unwrap();
     let inst = ex_stage::execute(&inst);
     cpu.new_execute(&inst);
     
-    assert_eq!(cpu.rf.read64(Rax), 2);
+    assert_eq!(cpu.rf.read64(Rax), 3);
   }
 }
