@@ -2,8 +2,6 @@
 
 ## Refactor
 
-- [x] Rebuild DecodedInst as ExecutedInst.
-
 ## Test & Debug
 
 - [ ] Make integration test.
@@ -16,7 +14,7 @@
 
 ## Instruction
 
-- [ ] Load
+- [x] Load
 - [ ] Halt
 
 ## Peripheral

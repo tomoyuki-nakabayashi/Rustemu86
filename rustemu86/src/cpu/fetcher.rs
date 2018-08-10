@@ -123,7 +123,7 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
-      Opcode::Add | Opcode::Inc | Opcode::MovToRm => {
+      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg => {
         self.mod_rm = ModRm::new(self.program[self.rip]);
         self.rip += 1;
       }

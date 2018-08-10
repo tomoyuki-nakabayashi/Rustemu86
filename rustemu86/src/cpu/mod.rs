@@ -53,7 +53,8 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::Memory => unsafe { MEMORY[self.rf.read64(inst.dest_rf) as usize] = inst.result },
+      DestType::Memory => unsafe { MEMORY[inst.addr as usize] = inst.result },
+      DestType::MemToReg => self.rf.write64(inst.dest_rf, unsafe { MEMORY[inst.addr as usize] } ),
     }
   }
 }
@@ -134,8 +135,7 @@ mod test {
 
   #[test]
   fn execute_load_store() {
-//    let program = vec![0x48, 0x89, 0x18, 0x48, 0x8b, 0x08];
-    let program = vec![0x48, 0x89, 0x18];
+    let program = vec![0x48, 0x89, 0x18, 0x48, 0x8b, 0x08];
     let mut cpu = Cpu::new();
     cpu.rf.write64(Rax, 0);
     cpu.rf.write64(Rbx, 1);
@@ -144,6 +144,6 @@ mod test {
 
     assert!(result.is_ok());
     assert_eq!(unsafe { MEMORY[0] }, 1);
-//    assert_eq!(cpu.rf.read64(Rcx), 1);
+    assert_eq!(cpu.rf.read64(Rcx), 1);
   }
 }

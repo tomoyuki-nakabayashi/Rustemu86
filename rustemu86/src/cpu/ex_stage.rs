@@ -8,7 +8,7 @@ use cpu::decoder::ExOpcode;
 pub struct WriteBackInst {
   pub dest_type: DestType,
   pub dest_rf: Reg64Id,
-  pub dest_addr: u64,
+  pub addr: u64,
   pub result: u64,
 }
 
@@ -17,7 +17,7 @@ impl WriteBackInst {
     WriteBackInst {
       dest_type: DestType::Register,
       dest_rf: Reg64Id::Unknown,
-      dest_addr: 0,
+      addr: 0,
       result: 0,
     }
   }
@@ -26,7 +26,7 @@ impl WriteBackInst {
     WriteBackInst {
       dest_type: DestType::Register,
       dest_rf: dest,
-      dest_addr: 0,
+      addr: 0,
       result: result,
     }
   }
@@ -35,7 +35,7 @@ impl WriteBackInst {
     WriteBackInst {
       dest_type: DestType::Rip,
       dest_rf: Reg64Id::Unknown,
-      dest_addr: 0,
+      addr: 0,
       result: result,
     }
   }
@@ -44,8 +44,17 @@ impl WriteBackInst {
     WriteBackInst {
       dest_type: DestType::Memory,
       dest_rf: Reg64Id::Unknown,
-      dest_addr: addr,
+      addr: addr,
       result: result,
+    }
+  }
+
+  fn new_dest_mem_to_reg(dest: Reg64Id, addr: u64) -> WriteBackInst {
+    WriteBackInst {
+      dest_type: DestType::MemToReg,
+      dest_rf: dest,
+      addr: addr,
+      result: 0,
     }
   }
 }
@@ -96,9 +105,15 @@ fn execute_jump(inst: &Box<ExStageInst>) -> WriteBackInst {
 
 fn execute_load_store(inst: &Box<ExStageInst>) -> WriteBackInst {
   match inst.get_ex_opcode().unwrap() {
+    ExOpcode::Load => execute_load(&inst),
     ExOpcode::Store => execute_store(&inst),
     _ => WriteBackInst::new_invalid_inst(),
   }
+}
+
+fn execute_load(inst: &Box<ExStageInst>) -> WriteBackInst {
+  let addr = inst.get_operand1();
+  WriteBackInst::new_dest_mem_to_reg(inst.get_dest_reg(), addr)
 }
 
 fn execute_store(inst: &Box<ExStageInst>) -> WriteBackInst {
