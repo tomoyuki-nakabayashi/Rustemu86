@@ -2,6 +2,8 @@
 
 ## Refactor
 
+- [ ] Rebuild DecodedInst as ExecutedInst.
+
 ## Test & Debug
 
 - [ ] Make integration test.
