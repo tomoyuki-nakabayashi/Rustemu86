@@ -45,11 +45,69 @@ impl ExStageInst for ArithLogicInst {
   fn get_operand3(&self) -> u64 { self.operand3 }
 }
 
+pub struct BranchInst {
+  inst_type: InstType,
+  opcode: ExOpcode,
+  rip: u64,
+  displacement: u64,
+}
+
+impl BranchInst {
+  fn new(op: ExOpcode, rip: u64, disp: u64) -> BranchInst {
+    BranchInst {
+      inst_type: InstType::Branch,
+      opcode: op,
+      rip: rip,
+      displacement: disp,
+    }
+  }
+}
+
+impl ExStageInst for BranchInst {
+  fn get_inst_type(&self) -> InstType { self.inst_type }
+  fn get_ex_opcode(&self) -> Option<ExOpcode> { Some(self.opcode) }
+  fn get_dest_reg(&self) -> Reg64Id { Reg64Id::Unknown }
+  fn get_operand1(&self) -> u64 { self.rip }
+  fn get_operand2(&self) -> u64 { self.displacement }
+  fn get_operand3(&self) -> u64 { 0 }
+}
+
+pub struct LoadStoreInst {
+  inst_type: InstType,
+  opcode: ExOpcode,
+  dest: Reg64Id,
+  addr: u64,
+  displacement: u64,
+  result: u64,
+}
+
+impl LoadStoreInst {
+  fn new_store(op: ExOpcode, addr: u64, disp: u64, result: u64) -> LoadStoreInst {
+    LoadStoreInst {
+      inst_type: InstType::LoadStore,
+      opcode: op,
+      dest: Reg64Id::Unknown,
+      addr: addr,
+      displacement: disp,
+      result: result,
+    }
+  }
+}
+
+impl ExStageInst for LoadStoreInst {
+  fn get_inst_type(&self) -> InstType { self.inst_type }
+  fn get_ex_opcode(&self) -> Option<ExOpcode> { Some(self.opcode) }
+  fn get_dest_reg(&self) -> Reg64Id { self.dest }
+  fn get_operand1(&self) -> u64 { self.addr }
+  fn get_operand2(&self) -> u64 { self.displacement }
+  fn get_operand3(&self) -> u64 { self.result }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum InstType {
   ArithLogic,
   Branch,
-  MemoryAccess,
+  LoadStore,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -57,6 +115,8 @@ pub enum ExOpcode {
   Add,
   Inc,
   Mov,
+  Jump,
+  Store,
 }
 
 #[derive(Debug, PartialEq)]
@@ -83,33 +143,24 @@ impl DecodedInst {
   }
 }
 
-pub fn new_decode(rip: u64, rf: &RegisterFile, inst: &FetchedInst) -> Result<Box<ExStageInst>, InternalException> {
+pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Box<ExStageInst>, InternalException> {
   match inst.opcode {
-    Opcode::Inc => Ok(decode_inc_new(&rf, &inst)),
-    Opcode::Add => Ok(decode_add_new(&rf, &inst)),
-    Opcode::MovImm32 => Ok(decode_reg_mov(&inst)),
-    opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
-  }
-}
-
-pub fn decode(rip: u64, rf: &RegisterFile, inst: &FetchedInst) -> Result<DecodedInst, InternalException> {
-  match inst.opcode {
+    Opcode::Inc => Ok(decode_inc(&rf, &inst)),
     Opcode::Add => Ok(decode_add(&rf, &inst)),
     Opcode::MovToRm => Ok(decode_store(&rf, &inst)),
-//    Opcode::MovToReg => Ok(decode_load(&rf, &inst)),
-    Opcode::MovImm32 => Ok(decode_mov(&inst)),
-    Opcode::JmpRel8 => Ok(decode_jmp(rip, &inst)),
-    Opcode::Inc => Ok(decode_inc(&rf, &inst)),
+    Opcode::MovImm32 => Ok(decode_reg_mov(&inst)),
+    Opcode::JmpRel8 => Ok(decode_jmp(&inst)),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
 }
 
-fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
-  let dest = inst.mod_rm.rm;
+fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
+  let addr = rf.read64(inst.mod_rm.rm);
   let src = inst.mod_rm.reg;
-  let result_value = rf.read64(src);
-  DecodedInst::new(DestType::Memory, dest, result_value)
+  let result = rf.read64(src);
+  Box::new(LoadStoreInst::new_store(ExOpcode::Store, addr, 0, result)) as Box<ExStageInst>
 }
+
 /* 
 fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   let dest = inst.mod_rm.reg;
@@ -124,24 +175,13 @@ fn decode_reg_mov(inst: &FetchedInst) -> Box<ExStageInst> {
   Box::new(ArithLogicInst::new(ExOpcode::Mov, dest, op1, 0, 0)) as Box<ExStageInst>
 }
 
-fn decode_mov(inst: &FetchedInst) -> DecodedInst {
-  let dest = Reg64Id::from_u8(inst.r).unwrap();
-  DecodedInst::new(DestType::Register, dest, inst.immediate)
-}
-
-fn decode_inc_new(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
+fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
   let dest = inst.mod_rm.rm;
   let op1 = rf.read64(dest);
   Box::new(ArithLogicInst::new(ExOpcode::Inc, dest, op1, 0, 0)) as Box<ExStageInst>
 }
 
-fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
-  let dest = inst.mod_rm.rm;
-  let incremented_value = rf.read64(dest) + 1;
-  DecodedInst::new(DestType::Register, dest, incremented_value)
-}
-
-fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
+fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
   let dest = inst.mod_rm.rm;
   let src = inst.mod_rm.reg;
   let op1 = rf.read64(dest);
@@ -149,16 +189,9 @@ fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> Box<ExStageInst> {
   Box::new(ArithLogicInst::new(ExOpcode::Add, dest, op1, op2, 0)) as Box<ExStageInst>
 }
 
-fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
-  let dest = inst.mod_rm.rm;
-  let src = inst.mod_rm.reg;
-  let result_value = rf.read64(dest) + rf.read64(src);
-  DecodedInst::new(DestType::Register, dest, result_value)
-}
-
-fn decode_jmp(rip: u64, inst: &FetchedInst) -> DecodedInst {
+fn decode_jmp(inst: &FetchedInst) -> Box<ExStageInst> {
   let disp = inst.displacement;
-  let rip = rip + disp as u64;
+  let rip = inst.next_rip as u64;
 
-  DecodedInst::new(DestType::Rip, Reg64Id::Unknown, rip)
+  Box::new(BranchInst::new(ExOpcode::Jump, rip, disp)) as Box<ExStageInst>
 }

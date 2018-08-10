@@ -2,7 +2,7 @@
 
 ## Refactor
 
-- [ ] Rebuild DecodedInst as ExecutedInst.
+- [x] Rebuild DecodedInst as ExecutedInst.
 
 ## Test & Debug
 
@@ -17,12 +17,10 @@
 ## Instruction
 
 - [ ] Load
-- [x] Store
 - [ ] Halt
 
 ## Peripheral
 
-- [x] Memory.
 - [ ] Memory mapped serial.
 
 ## Load an x86 binary

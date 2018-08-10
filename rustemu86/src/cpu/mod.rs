@@ -9,7 +9,6 @@ pub mod isa;
 
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
-use self::decoder::DecodedInst;
 use self::decoder::DestType;
 use self::ex_stage::WriteBackInst;
 use self::exceptions::InternalException;
@@ -40,8 +39,9 @@ impl Cpu {
   {
     while (self.fetch_unit.get_rip() as usize) < program.len() {
       let inst = self.fetch_unit.fetch(&program)?;
-      let inst = decoder::decode(self.fetch_unit.get_rip(), &self.rf, &inst)?;
-      self.execute(&inst);
+      let inst = decoder::decode(&self.rf, &inst)?;
+      let inst = ex_stage::execute(&inst);
+      self.write_back(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
@@ -49,15 +49,7 @@ impl Cpu {
     Ok(())
   }
 
-  fn execute(&mut self, inst: &DecodedInst) {
-    match inst.dest_type {
-      DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
-      DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::Memory => unsafe { MEMORY[self.rf.read64(inst.dest_rf) as usize] = inst.result },
-    }
-  }
-
-  fn new_execute(&mut self, inst: &WriteBackInst) {
+  fn write_back(&mut self, inst: &WriteBackInst) {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
@@ -153,33 +145,5 @@ mod test {
     assert!(result.is_ok());
     assert_eq!(unsafe { MEMORY[0] }, 1);
 //    assert_eq!(cpu.rf.read64(Rcx), 1);
-  }
-
-  #[test]
-  fn new_decode_and_execute_add() {
-    let program = vec![0x48, 0x01, 0xc8];
-    let mut cpu = Cpu::new();
-    cpu.rf.write64(Rax, 1);
-    cpu.rf.write64(Rcx, 2);
-
-    let inst = cpu.fetch_unit.fetch(&program).unwrap();
-    let inst = decoder::new_decode(cpu.fetch_unit.get_rip(), &cpu.rf, &inst).unwrap();
-    let inst = ex_stage::execute(&inst);
-    cpu.new_execute(&inst);
-    
-    assert_eq!(cpu.rf.read64(Rax), 3);
-  }
-
-  #[test]
-  fn new_decode_and_execute_mov() {
-    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
-    let mut cpu = Cpu::new();
-
-    let inst = cpu.fetch_unit.fetch(&program).unwrap();
-    let inst = decoder::new_decode(cpu.fetch_unit.get_rip(), &cpu.rf, &inst).unwrap();
-    let inst = ex_stage::execute(&inst);
-    cpu.new_execute(&inst);
-    
-    assert_eq!(cpu.rf.read64(Rax), 0);
   }
 }
