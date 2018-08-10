@@ -2,19 +2,21 @@
 
 ## Refactor
 
+- [ ] Fetcher's match of parse_mod_rm().
+
 ## Test & Debug
 
 - [ ] Make integration test.
 
 ## Emulator model
 
-## CPU Model
+- [ ] Memory interface.
+- [ ] Interconnect.
 
-- [ ] Make uOP model to divide an instruction to RISC like instructions.
+## CPU Model
 
 ## Instruction
 
-- [x] Load
 - [ ] Halt
 
 ## Peripheral

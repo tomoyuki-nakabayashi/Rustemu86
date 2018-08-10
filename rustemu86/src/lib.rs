@@ -7,6 +7,7 @@ extern crate bit_field;
 
 pub mod args;
 pub mod cpu;
+pub mod memory;
 pub mod loader;
 pub mod rustemu86;
 
