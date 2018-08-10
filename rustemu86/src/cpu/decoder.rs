@@ -56,6 +56,7 @@ pub enum InstType {
 pub enum ExOpcode {
   Add,
   Inc,
+  Mov,
 }
 
 #[derive(Debug, PartialEq)]
@@ -86,6 +87,7 @@ pub fn new_decode(rip: u64, rf: &RegisterFile, inst: &FetchedInst) -> Result<Box
   match inst.opcode {
     Opcode::Inc => Ok(decode_inc_new(&rf, &inst)),
     Opcode::Add => Ok(decode_add_new(&rf, &inst)),
+    Opcode::MovImm32 => Ok(decode_reg_mov(&inst)),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
 }
@@ -116,6 +118,12 @@ fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> DecodedInst {
   DecodedInst::new(DestType::Memory, dest, result_value)
 }
  */
+fn decode_reg_mov(inst: &FetchedInst) -> Box<ExStageInst> {
+  let dest = Reg64Id::from_u8(inst.r).unwrap();
+  let op1 = inst.immediate;
+  Box::new(ArithLogicInst::new(ExOpcode::Mov, dest, op1, 0, 0)) as Box<ExStageInst>
+}
+
 fn decode_mov(inst: &FetchedInst) -> DecodedInst {
   let dest = Reg64Id::from_u8(inst.r).unwrap();
   DecodedInst::new(DestType::Register, dest, inst.immediate)

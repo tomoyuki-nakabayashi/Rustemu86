@@ -156,7 +156,7 @@ mod test {
   }
 
   #[test]
-  fn new_decode_and_execute() {
+  fn new_decode_and_execute_add() {
     let program = vec![0x48, 0x01, 0xc8];
     let mut cpu = Cpu::new();
     cpu.rf.write64(Rax, 1);
@@ -168,5 +168,18 @@ mod test {
     cpu.new_execute(&inst);
     
     assert_eq!(cpu.rf.read64(Rax), 3);
+  }
+
+  #[test]
+  fn new_decode_and_execute_mov() {
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
+    let mut cpu = Cpu::new();
+
+    let inst = cpu.fetch_unit.fetch(&program).unwrap();
+    let inst = decoder::new_decode(cpu.fetch_unit.get_rip(), &cpu.rf, &inst).unwrap();
+    let inst = ex_stage::execute(&inst);
+    cpu.new_execute(&inst);
+    
+    assert_eq!(cpu.rf.read64(Rax), 0);
   }
 }
