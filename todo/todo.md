@@ -10,7 +10,7 @@
 
 ## Emulator model
 
-- [ ] Memory interface.
+- [x] Memory interface.
 - [ ] Interconnect.
 
 ## CPU Model

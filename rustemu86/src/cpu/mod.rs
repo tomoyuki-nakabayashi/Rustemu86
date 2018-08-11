@@ -16,13 +16,11 @@ use ::memory::Memory;
 use rustemu86::DebugMode;
 use std::fmt;
 
-static mut MEMORY: [u64; 100] = [0; 100];
-
-#[derive(Debug)]
 pub struct Cpu {
   rf: RegisterFile,
   fetch_unit: FetchUnit,
   executed_insts: u64,
+  interconnect: Box<Memory>,
 }
 
 impl Cpu {
@@ -31,6 +29,7 @@ impl Cpu {
       rf: RegisterFile::new(),
       fetch_unit: FetchUnit::new(),
       executed_insts: 0,
+      interconnect: Box::new(Memory::new(1024)),
     }
   }
 
@@ -54,9 +53,19 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::Memory => unsafe { MEMORY[inst.addr as usize] = inst.result },
-      DestType::MemToReg => self.rf.write64(inst.dest_rf, unsafe { MEMORY[inst.addr as usize] } ),
+      DestType::Memory => self.interconnect.write64(inst.addr as usize, inst.result),
+      DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr as usize)),
     }
+  }
+}
+
+impl fmt::Debug for Cpu {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(
+      f,
+      "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
+      self.executed_insts, self.fetch_unit.get_rip(), self.rf
+    )
   }
 }
 
@@ -144,7 +153,7 @@ mod test {
     let result = cpu.run(&program, &rustemu86::NoneDebug{});
 
     assert!(result.is_ok());
-    assert_eq!(unsafe { MEMORY[0] }, 1);
+    assert_eq!(cpu.interconnect.read64(0), 1);
     assert_eq!(cpu.rf.read64(Rcx), 1);
   }
 }
