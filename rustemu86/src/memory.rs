@@ -1,5 +1,5 @@
-#![feature(int_to_from_bytes)]
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use std::mem;
 
 pub struct Memory {
   ram: Vec<u8>,
@@ -13,14 +13,14 @@ impl Memory {
   }
 
   pub fn read64(&self, addr: usize) -> u64 {
-    let mut start = &self.ram[addr..addr+8];
+    let mut start = &self.ram[addr..addr + mem::size_of::<u64>()];
     start.read_u64::<LittleEndian>().unwrap()
   }
 
   pub fn write64(&mut self, addr: usize, data: u64) {
-    let bytes = data.to_le().to_bytes();
-    for pos in 0..8 {
-      self.ram[addr + pos] = bytes[pos];
+    let bytes: [u8; mem::size_of::<u64>()] = unsafe{ mem::transmute(data) };
+    for (pos, byte) in bytes.iter().enumerate() {
+      self.ram[addr + pos] = *byte;
     }
   }
 }
