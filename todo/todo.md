@@ -23,6 +23,7 @@
 ## Peripheral
 
 - [ ] Memory mapped serial.
+  - [x] UART16550
 
 ## Load an x86 binary
 
