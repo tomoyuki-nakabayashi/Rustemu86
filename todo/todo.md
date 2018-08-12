@@ -6,11 +6,10 @@
 
 ## Test & Debug
 
-- [ ] Make integration test.
+- [x] Make integration test.
 
 ## Emulator model
 
-- [x] Memory interface.
 - [ ] Interconnect.
 
 ## CPU Model
