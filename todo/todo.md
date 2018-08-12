@@ -14,6 +14,8 @@
 
 ## CPU Model
 
+- [ ] Fetch instruction from memory.
+
 ## Instruction
 
 - [ ] Halt

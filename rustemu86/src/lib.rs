@@ -35,7 +35,7 @@ mod test {
 
   #[test]
   fn success_emulation() {
-    let mut reader = loader::load("../tests/asms/simple_add").unwrap();
+    let mut reader = loader::load("./tests/asms/simple_add").unwrap();
     let mut program = loader::map_to_memory(&mut reader).unwrap();
     let result = start_emulation(&mut program, EmulationMode::Normal);
     assert!(result.is_ok());
@@ -43,7 +43,7 @@ mod test {
 
   #[test]
   fn success_emulation_with_per_cycle_dump() {
-    let mut reader = loader::load("../tests/asms/simple_add").unwrap();
+    let mut reader = loader::load("./tests/asms/simple_add").unwrap();
     let mut program = loader::map_to_memory(&mut reader).unwrap();
     let result = start_emulation(&mut program, EmulationMode::PerCycleDump);
     assert!(result.is_ok());
