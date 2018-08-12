@@ -12,7 +12,7 @@ use self::fetcher::FetchUnit;
 use self::decoder::DestType;
 use self::ex_stage::WriteBackInst;
 use self::exceptions::InternalException;
-use ::memory::Memory;
+use peripherals::memory::Memory;
 use rustemu86::DebugMode;
 use std::fmt;
 
