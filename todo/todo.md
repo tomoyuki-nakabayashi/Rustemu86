@@ -6,8 +6,6 @@
 
 ## Test & Debug
 
-- [x] Make integration test.
-
 ## Emulator model
 
 - [ ] Interconnect.
@@ -23,7 +21,6 @@
 ## Peripheral
 
 - [ ] Memory mapped serial.
-  - [x] UART16550
 
 ## Load an x86 binary
 

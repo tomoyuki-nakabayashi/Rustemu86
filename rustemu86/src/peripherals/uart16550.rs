@@ -1,9 +1,11 @@
 use std::collections::VecDeque;
 use std::io;
 use std::fmt;
+use std::fs;
+use std::fs::File;
 use std::fmt::Write;
 
-struct Uart16550<'a, T: 'a> {
+pub struct Uart16550<'a, T: 'a> {
   tx_buffer: &'a mut T,
 }
 
@@ -15,7 +17,7 @@ impl<'a, T: 'a + Write> Uart16550<'a, T> {
   }
 
   fn write(&mut self, c: char) {
-    write!(self.tx_buffer, "{}", c).unwrap()
+    write!(self.tx_buffer, "{}", c).expect("Printing to serial failed")
   }
 }
 
@@ -60,6 +62,27 @@ impl Write for DefaultWriter {
   }
 }
 
+struct FileWriter {
+  file: fs::File,
+}
+
+impl FileWriter {
+  fn new(filename: &str) -> FileWriter {
+    let file = fs::File::create(&filename).expect("Fail to create file.");
+    FileWriter {
+      file: file,
+    }
+  }
+}
+
+impl Write for FileWriter {
+  fn write_str(&mut self, s: &str) -> fmt::Result {
+    use std::io::Write;
+    write!(self.file, "{}", s).unwrap();
+    Ok(())
+  }
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
@@ -78,5 +101,20 @@ mod test {
     let mut writer = DefaultWriter{};
     let mut uart16550 = Uart16550::new(&mut writer);
     uart16550.write('a');
+  }
+
+  #[test]
+  fn file_write() {
+    use std::fs::File;
+    use std::io::prelude::*;
+    let mut writer = FileWriter::new("test");
+    let mut uart16550 = Uart16550::new(&mut writer);
+    uart16550.write('a');
+
+    let file_exists = File::open("test");
+    assert!(file_exists.is_ok());
+    let mut contents = String::new();
+    file_exists.unwrap().read_to_string(&mut contents).unwrap();
+    assert_eq!(contents, "a");
   }
 }
