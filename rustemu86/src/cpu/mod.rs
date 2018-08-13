@@ -13,6 +13,7 @@ use self::decoder::DestType;
 use self::ex_stage::WriteBackInst;
 use self::exceptions::InternalException;
 use peripherals::memory::Memory;
+use peripherals::interconnect::Interconnect;
 use rustemu86::DebugMode;
 use std::fmt;
 
@@ -20,7 +21,7 @@ pub struct Cpu {
   rf: RegisterFile,
   fetch_unit: FetchUnit,
   executed_insts: u64,
-  interconnect: Box<Memory>,
+  interconnect: Interconnect,
 }
 
 impl Cpu {
@@ -29,7 +30,7 @@ impl Cpu {
       rf: RegisterFile::new(),
       fetch_unit: FetchUnit::new(),
       executed_insts: 0,
-      interconnect: Box::new(Memory::new(1024)),
+      interconnect: Interconnect::new(),
     }
   }
 
@@ -53,8 +54,8 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::Memory => self.interconnect.write64(inst.addr as usize, inst.result),
-      DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr as usize)),
+      DestType::Memory => self.interconnect.write64(inst.addr, inst.result),
+      DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr)),
     }
   }
 }

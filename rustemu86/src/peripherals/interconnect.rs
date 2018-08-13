@@ -26,10 +26,18 @@ impl Interconnect {
     }
   }
 
-  pub fn write(&mut self, addr: u64, data: u64) {
+  pub fn write64(&mut self, addr: u64, data: u64) {
     match addr {
-      0x0...0x200 => self.memory.write64(addr, data);
+      0x0...0x200 => self.memory.write64(addr as usize, data),
       0x10000000 => self.serial.write(data as u8),
+      _ => (),
+    }
+  }
+
+  pub fn read64(&self, addr: u64) -> u64 {
+    match addr {
+      0x0...0x200 => self.memory.read64(addr as usize),
+      _ => 0,
     }
   }
 }
@@ -48,11 +56,11 @@ mod test {
   #[test]
   fn uart_write() {
     let mut interconnect = Interconnect::new();
-    interconnect.write(0x10000000, 'h' as u64);
-    interconnect.write(0x10000000, 'e' as u64);
-    interconnect.write(0x10000000, 'l' as u64);
-    interconnect.write(0x10000000, 'l' as u64);
-    interconnect.write(0x10000000, 'o' as u64);
+    interconnect.write64(0x10000000, 'h' as u64);
+    interconnect.write64(0x10000000, 'e' as u64);
+    interconnect.write64(0x10000000, 'l' as u64);
+    interconnect.write64(0x10000000, 'l' as u64);
+    interconnect.write64(0x10000000, 'o' as u64);
 
     let created_file = File::open("test");
     assert!(created_file.is_ok());
