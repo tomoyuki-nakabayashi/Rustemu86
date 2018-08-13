@@ -8,21 +8,21 @@ pub struct Uart16550<T> {
 }
 
 impl<T: UartWrite<T>> Uart16550<T> {
-  fn new() -> Uart16550<T> {
+  pub fn new() -> Uart16550<T> {
     Uart16550 {
       tx_writer: T::new(),
     }
   }
 
-  fn write(&mut self, c: char) {
-    write!(self.tx_writer, "{}", c).expect("Printing to serial failed")
+  pub fn write(&mut self, c: u8) {
+    write!(self.tx_writer, "{}", c as char).expect("Printing to serial failed")
   }
 }
 
 pub trait UartWrite<T>: Write {
   fn new() -> T;
 }
-struct DefaultWriter {}
+pub struct DefaultWriter {}
 
 impl UartWrite<DefaultWriter> for DefaultWriter {
   fn new() -> DefaultWriter {
@@ -38,7 +38,7 @@ impl Write for DefaultWriter {
   }
 }
 
-struct FileWriter {
+pub struct FileWriter {
   file: fs::File,
 }
 
@@ -68,13 +68,13 @@ mod test {
   #[test]
   fn stdout_write() {
     let mut uart16550 = Uart16550::<DefaultWriter>::new();
-    uart16550.write('a');
+    uart16550.write(b'a');
   }
 
   #[test]
   fn file_write() {
     let mut uart16550 = Uart16550::<FileWriter>::new();
-    uart16550.write('a');
+    uart16550.write(b'a');
 
     let created_file = File::open("test");
     assert!(created_file.is_ok());
