@@ -4,48 +4,35 @@ use std::fs;
 use std::fmt::Write;
 
 pub struct Uart16550 {
-  tx_writer: Box<UartWrite>,
+  tx_writer: Box<Write>,
 }
 
 impl Uart16550 {
-  pub fn new<F>(create_writer: F) -> Uart16550
-    where F: FnOnce() -> Box<UartWrite>
-  {
-    Uart16550 {
-      tx_writer: create_writer(),
-    }
-  }
-
   pub fn write(&mut self, c: u8) {
     write!(self.tx_writer, "{}", c as char).expect("Printing to serial failed")
   }
 }
 
-pub trait UartWrite: Write {}
+pub enum Target {
+  Stdout,
+  File,
+}
 
-pub struct UartFactory;
-impl UartFactory {
-  pub fn create<T, F>(&self, create_writer: F) -> Uart16550
-    where T: UartWrite + 'static,
-          F: FnOnce() -> T
-  {
-    Uart16550 {
-      tx_writer: Box::new(create_writer())
-    }
+pub fn uart_factory(target: Target) -> Uart16550 {
+  match target {
+    Target::Stdout => Uart16550 { tx_writer: Box::new(StdoutWriter::new()) },
+    Target::File => Uart16550 { tx_writer: Box::new(FileWriter::new()) },
   }
 }
 
-pub struct DefaultWriter;
-
-impl DefaultWriter{
-  pub fn new() -> DefaultWriter {
-    DefaultWriter{}
+struct StdoutWriter;
+impl StdoutWriter{
+  fn new() -> StdoutWriter {
+    StdoutWriter{}
   }
 }
 
-impl UartWrite for DefaultWriter {}
-
-impl Write for DefaultWriter {
+impl Write for StdoutWriter {
   fn write_str(&mut self, s: &str) -> fmt::Result {
     use std::io::Write;
     write!(io::stdout(), "{}", s).unwrap();
@@ -53,20 +40,18 @@ impl Write for DefaultWriter {
   }
 }
 
-pub struct FileWriter {
+struct FileWriter {
   file: fs::File,
 }
 
 impl FileWriter {
-  pub fn new() -> FileWriter {
+  fn new() -> FileWriter {
     let file = fs::File::create("test").expect("Fail to create file.");
     FileWriter {
       file: file,
     }
   }
 }
-
-impl UartWrite for FileWriter {}
 
 impl Write for FileWriter {
   fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -84,16 +69,14 @@ mod test {
 
   #[test]
   fn stdout_write() {
-    let factory = UartFactory;
-    let mut uart16550 = factory.create(|| DefaultWriter::new());
-    uart16550.write(b'a');
+    let mut uart = uart_factory(Target::Stdout);
+    uart.write(b'a');
   }
 
   #[test]
   fn file_write() {
-    let factory = UartFactory;
-    let mut uart16550 = factory.create(|| FileWriter::new());;
-    uart16550.write(b'a');
+    let mut uart = uart_factory(Target::File);
+    uart.write(b'a');
 
     let created_file = File::open("test");
     assert!(created_file.is_ok());

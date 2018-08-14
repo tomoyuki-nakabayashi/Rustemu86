@@ -16,7 +16,7 @@ impl Interconnect {
     Interconnect {
       memory_map: memory_map,
       memory: Memory::new(1024),
-      serial: Uart16550::new(|| Box::new(uart16550::FileWriter::new()) as Box<uart16550::UartWrite>),
+      serial: uart16550::uart_factory(uart16550::Target::File),
     }
   }
 
