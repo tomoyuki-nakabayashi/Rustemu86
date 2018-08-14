@@ -2,16 +2,10 @@ use peripherals::memory::Memory;
 use peripherals::uart16550;
 use peripherals::uart16550::Uart16550;
 
-#[cfg(test)]
-type UartWriter = uart16550::FileWriter;
-
-#[cfg(not(test))]
-type UartWriter = uart16550::DefaultWriter;
-
 pub struct Interconnect {
   memory_map: Vec<MemoryMapEntry>,
   memory: Memory,
-  serial: Uart16550<UartWriter>,
+  serial: Uart16550,
 }
 
 impl Interconnect {
@@ -22,7 +16,7 @@ impl Interconnect {
     Interconnect {
       memory_map: memory_map,
       memory: Memory::new(1024),
-      serial: Uart16550::<UartWriter>::new()
+      serial: Uart16550::new(|| Box::new(uart16550::FileWriter::new()) as Box<uart16550::UartWrite>),
     }
   }
 

@@ -3,14 +3,16 @@ use std::fmt;
 use std::fs;
 use std::fmt::Write;
 
-pub struct Uart16550<T> {
-  tx_writer: T,
+pub struct Uart16550 {
+  tx_writer: Box<UartWrite>,
 }
 
-impl<T: UartWrite<T>> Uart16550<T> {
-  pub fn new() -> Uart16550<T> {
+impl Uart16550 {
+  pub fn new<F>(create_writer: F) -> Uart16550
+    where F: FnOnce() -> Box<UartWrite>
+  {
     Uart16550 {
-      tx_writer: T::new(),
+      tx_writer: create_writer(),
     }
   }
 
@@ -19,16 +21,25 @@ impl<T: UartWrite<T>> Uart16550<T> {
   }
 }
 
-pub trait UartWrite<T>: Write {
-  fn new() -> T;
-}
-pub struct DefaultWriter {}
+pub trait UartWrite: Write {}
 
-impl UartWrite<DefaultWriter> for DefaultWriter {
-  fn new() -> DefaultWriter {
-    DefaultWriter {}
+pub struct UartFactory;
+impl UartFactory {
+  pub fn create(&self) -> Uart16550
+  {
+    Uart16550::new(|| Box::new(FileWriter::new()))
   }
 }
+
+pub struct DefaultWriter;
+
+impl DefaultWriter{
+  pub fn new() -> DefaultWriter {
+    DefaultWriter{}
+  }
+}
+
+impl UartWrite for DefaultWriter {}
 
 impl Write for DefaultWriter {
   fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -42,14 +53,16 @@ pub struct FileWriter {
   file: fs::File,
 }
 
-impl UartWrite<FileWriter> for FileWriter {
-  fn new() -> FileWriter {
+impl FileWriter {
+  pub fn new() -> FileWriter {
     let file = fs::File::create("test").expect("Fail to create file.");
     FileWriter {
       file: file,
     }
   }
 }
+
+impl UartWrite for FileWriter {}
 
 impl Write for FileWriter {
   fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -67,13 +80,15 @@ mod test {
 
   #[test]
   fn stdout_write() {
-    let mut uart16550 = Uart16550::<DefaultWriter>::new();
+    let factory = UartFactory;
+    let mut uart16550 = factory.create();;
     uart16550.write(b'a');
   }
 
   #[test]
   fn file_write() {
-    let mut uart16550 = Uart16550::<FileWriter>::new();
+    let factory = UartFactory;
+    let mut uart16550 = factory.create();;
     uart16550.write(b'a');
 
     let created_file = File::open("test");

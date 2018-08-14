@@ -14,5 +14,5 @@ fn test_hello() {
   assert!(created_file.is_ok());
   let mut contents = String::new();
   created_file.unwrap().read_to_string(&mut contents).unwrap();
-  assert_eq!(contents, "Hello");
+  assert_eq!(contents, "Hello\n");
 }
