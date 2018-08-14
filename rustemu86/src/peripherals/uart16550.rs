@@ -25,9 +25,13 @@ pub trait UartWrite: Write {}
 
 pub struct UartFactory;
 impl UartFactory {
-  pub fn create(&self) -> Uart16550
+  pub fn create<T, F>(&self, create_writer: F) -> Uart16550
+    where T: UartWrite + 'static,
+          F: FnOnce() -> T
   {
-    Uart16550::new(|| Box::new(FileWriter::new()))
+    Uart16550 {
+      tx_writer: Box::new(create_writer())
+    }
   }
 }
 
@@ -81,14 +85,14 @@ mod test {
   #[test]
   fn stdout_write() {
     let factory = UartFactory;
-    let mut uart16550 = factory.create();;
+    let mut uart16550 = factory.create(|| DefaultWriter::new());
     uart16550.write(b'a');
   }
 
   #[test]
   fn file_write() {
     let factory = UartFactory;
-    let mut uart16550 = factory.create();;
+    let mut uart16550 = factory.create(|| FileWriter::new());;
     uart16550.write(b'a');
 
     let created_file = File::open("test");
