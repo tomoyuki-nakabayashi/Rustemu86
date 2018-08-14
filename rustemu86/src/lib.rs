@@ -18,15 +18,18 @@ use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 pub struct CpuError {}
 
 pub fn start_emulation(program: &mut Vec<u8>, mode_option: EmulationMode) -> Result<(), CpuError> {
-  let mut cpu = Cpu::new();
+  let mut cpu = Cpu::new(mode_option);
 
-  let _result = match mode_option {
-    EmulationMode::Normal => cpu.run(&program, &NoneDebug {}),
+  let result = match mode_option {
+    EmulationMode::Normal | EmulationMode::IntegrationTest => cpu.run(&program, &NoneDebug {}),
     EmulationMode::PerCycleDump => cpu.run(&program, &PerCycleDump {}),
     EmulationMode::InteractiveMode => cpu.run(&program, &Interactive {}),
   };
 
-  Ok(())
+  match result {
+    Ok(_) => Ok(()),
+    Err(_) => Err(CpuError{}),
+  }
 }
 
 #[cfg(test)]

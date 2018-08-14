@@ -1,3 +1,3 @@
-pub mod memory;
-pub mod uart16550;
 pub mod interconnect;
+mod memory;
+mod uart16550;

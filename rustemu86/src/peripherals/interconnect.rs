@@ -1,6 +1,7 @@
 use peripherals::memory::Memory;
 use peripherals::uart16550;
 use peripherals::uart16550::Uart16550;
+use ::args::EmulationMode;
 
 pub struct Interconnect {
   memory_map: Vec<MemoryMapEntry>,
@@ -9,14 +10,17 @@ pub struct Interconnect {
 }
 
 impl Interconnect {
-  pub fn new() -> Interconnect {
+  pub fn new(mode: EmulationMode) -> Interconnect {
     let mut memory_map = Vec::<MemoryMapEntry>::new();
     memory_map.push(MemoryMapEntry{ address: 0, size: 1024 });
     memory_map.push(MemoryMapEntry{ address: 0x10000000, size: 0x10} );
     Interconnect {
       memory_map: memory_map,
       memory: Memory::new(1024),
-      serial: uart16550::uart_factory(uart16550::Target::File),
+      serial: match mode {
+        EmulationMode::Normal => uart16550::uart_factory(uart16550::Target::Stdout),
+        _ => uart16550::uart_factory(uart16550::Target::File),
+      }
     }
   }
 
@@ -46,10 +50,11 @@ mod test {
   use super::*;
   use std::fs::File;
   use std::io::prelude::*;
+  use ::args::EmulationMode;
 
   #[test]
   fn uart_write() {
-    let mut interconnect = Interconnect::new();
+    let mut interconnect = Interconnect::new(EmulationMode::IntegrationTest);
     interconnect.write64(0x10000000, 'h' as u64);
     interconnect.write64(0x10000000, 'e' as u64);
     interconnect.write64(0x10000000, 'l' as u64);
