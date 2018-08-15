@@ -3,12 +3,13 @@
 ## Refactor
 
 - [ ] Fetcher's match of parse_mod_rm().
+- [ ] Execute stage uses command pattern.
 
 ## Test & Debug
 
 ## Emulator model
 
-- [ ] Interconnect.
+- [x] Interconnect.
 
 ## CPU Model
 
@@ -20,7 +21,7 @@
 
 ## Peripheral
 
-- [ ] Memory mapped serial.
+- [x] Memory mapped serial.
 
 ## Load an x86 binary
 
