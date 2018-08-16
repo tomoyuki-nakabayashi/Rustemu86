@@ -45,29 +45,29 @@ pub enum ExOpcode {
   Halt,
 }
 
-pub fn decode_new(rf: &RegisterFile, inst: &FetchedInst) -> Result<ExecuteInstType, InternalException> {
+pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<ExecuteInstType, InternalException> {
   use self::ExecuteInstType::*;
   match inst.opcode {
-    Opcode::Inc => Ok(ArithLogic(decode_inc_new(&rf, &inst))),
-    Opcode::Add => Ok(ArithLogic(decode_add_new(&rf, &inst))),
-    Opcode::MovToReg => Ok(LoadStore(decode_load_new(&rf, &inst))),
-    Opcode::MovToRm => Ok(LoadStore(decode_store_new(&rf, &inst))),
-    Opcode::MovImm32 => Ok(ArithLogic(decode_reg_mov_new(&inst))),
-    Opcode::JmpRel8 => Ok(Branch(decode_jmp_new(&inst))),
+    Opcode::Inc => Ok(ArithLogic(decode_inc(&rf, &inst))),
+    Opcode::Add => Ok(ArithLogic(decode_add(&rf, &inst))),
+    Opcode::MovToReg => Ok(LoadStore(decode_load(&rf, &inst))),
+    Opcode::MovToRm => Ok(LoadStore(decode_store(&rf, &inst))),
+    Opcode::MovImm32 => Ok(ArithLogic(decode_reg_mov(&inst))),
+    Opcode::JmpRel8 => Ok(Branch(decode_jmp(&inst))),
     Opcode::Halt => Ok(Privilege(decode_halt(&inst))),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
 }
 
 
-fn decode_inc_new(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
+fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
   let dest = inst.mod_rm.rm;
   let op1 = rf.read64(dest);
   ExecuteInst { opcode: ExOpcode::Inc, dest: Some(dest), rip: None,
     op1: Some(op1), op2: None, op3: None, op4: None }
 }
 
-fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
+fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
   let dest = inst.mod_rm.rm;
   let src = inst.mod_rm.reg;
   let op1 = rf.read64(dest);
@@ -76,28 +76,28 @@ fn decode_add_new(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
     op1: Some(op1), op2: Some(op2), op3: None, op4: None }
 }
 
-fn decode_reg_mov_new(inst: &FetchedInst) -> ExecuteInst {
+fn decode_reg_mov(inst: &FetchedInst) -> ExecuteInst {
   let dest = Reg64Id::from_u8(inst.r).unwrap();
   let op1 = inst.immediate;
   ExecuteInst { opcode: ExOpcode::Mov, dest: Some(dest), rip: None, 
     op1: Some(op1), op2: None, op3: None, op4: None }
 }
 
-fn decode_load_new(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
+fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
   let dest = inst.mod_rm.reg;
   let addr = rf.read64(inst.mod_rm.rm);
   ExecuteInst { opcode: ExOpcode::Load, dest: Some(dest), rip: None,
     op1: Some(addr), op2: None, op3: None, op4: None }
 }
 
-fn decode_store_new(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
+fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {
   let addr = rf.read64(inst.mod_rm.rm);
   let result = rf.read64(inst.mod_rm.reg);
   ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
     op1: Some(addr), op2: Some(result), op3: None, op4: None }
 }
 
-fn decode_jmp_new(inst: &FetchedInst) -> ExecuteInst {
+fn decode_jmp(inst: &FetchedInst) -> ExecuteInst {
   let disp = inst.displacement;
   let rip = inst.next_rip as u64;
   ExecuteInst { opcode: ExOpcode::Jump, dest: None, rip: Some(rip),

@@ -42,8 +42,8 @@ impl Cpu {
     while self.state == CpuState::Running {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
       let inst = self.fetch_unit.fetch_new(&inst_candidate)?;
-      let inst = decoder::decode_new(&self.rf, &inst)?;
-      let inst = ex_stage::execute_new(inst);
+      let inst = decoder::decode(&self.rf, &inst)?;
+      let inst = ex_stage::execute(inst);
       self.write_back(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
