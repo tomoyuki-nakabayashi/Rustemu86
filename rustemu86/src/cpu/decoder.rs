@@ -146,7 +146,7 @@ pub enum ExOpcode {
 pub enum DestType {
   Register,
   Rip,
-  Halted,
+  CpuState,
   Memory,
   MemToReg,
 }

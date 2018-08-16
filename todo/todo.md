@@ -4,6 +4,7 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
+- [ ] Define enum for DecodedInst and WriteBackInst.
 
 ## Test & Debug
 
@@ -11,11 +12,11 @@
 
 ## CPU Model
 
-- [x] Fetch instruction from memory.
-
 ## Instruction
 
 ## Peripheral
+
+- [ ] Register memory map.
 
 ## Load an x86 binary
 

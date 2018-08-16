@@ -60,7 +60,7 @@ impl WriteBackInst {
 
   fn new_dest_halt() -> WriteBackInst {
     WriteBackInst {
-      dest_type: DestType::Halted,
+      dest_type: DestType::CpuState,
       dest_rf: Reg64Id::Unknown,
       addr: 0,
       result: 0,

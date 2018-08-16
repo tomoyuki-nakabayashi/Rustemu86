@@ -21,7 +21,7 @@ pub struct Cpu {
   fetch_unit: FetchUnit,
   executed_insts: u64,
   interconnect: Interconnect,
-  halted: bool,
+  state: CpuState,
 }
 
 impl Cpu {
@@ -31,7 +31,7 @@ impl Cpu {
       fetch_unit: FetchUnit::new(),
       executed_insts: 0,
       interconnect: interconnect,
-      halted: false,
+      state: CpuState::Running,
     }
   }
 
@@ -39,7 +39,7 @@ impl Cpu {
   where
     T: DebugMode,
   {
-    while !self.halted {
+    while self.state == CpuState::Running {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
       let inst = self.fetch_unit.fetch_new(&inst_candidate)?;
       let inst = decoder::decode(&self.rf, &inst)?;
@@ -56,7 +56,7 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::Halted => self.halted = true,
+      DestType::CpuState => self.state = CpuState::Halt,
       DestType::Memory => self.interconnect.write64(inst.addr, inst.result),
       DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr)),
     }
@@ -82,6 +82,12 @@ impl fmt::Display for Cpu {
       self.executed_insts, self.fetch_unit.get_rip(), self.rf
     )
   }
+}
+
+#[derive(PartialEq, Debug)]
+enum CpuState {
+  Running,
+  Halt,
 }
 
 #[cfg(test)]
