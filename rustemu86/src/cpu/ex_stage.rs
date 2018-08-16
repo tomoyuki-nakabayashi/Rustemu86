@@ -57,6 +57,15 @@ impl WriteBackInst {
       result: 0,
     }
   }
+
+  fn new_dest_halt() -> WriteBackInst {
+    WriteBackInst {
+      dest_type: DestType::Halted,
+      dest_rf: Reg64Id::Unknown,
+      addr: 0,
+      result: 0,
+    }
+  }
 }
 
 pub fn execute(inst: &Box<ExStageInst>) -> WriteBackInst {
@@ -72,6 +81,7 @@ fn execute_arith_logic(inst: &Box<ExStageInst>) -> WriteBackInst {
     ExOpcode::Inc => execute_inc(&inst),
     ExOpcode::Add => execute_add(&inst),
     ExOpcode::Mov => execute_mov(&inst),
+    ExOpcode::Halt => WriteBackInst::new_dest_halt(),
     _ => WriteBackInst::new_invalid_inst(),
   }
 }

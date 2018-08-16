@@ -10,6 +10,7 @@ enum_from_primitive! {
     MovToReg = 0x8b,
     MovImm32 = 0xb8,
     JmpRel8 = 0xeb,
+    Halt = 0xf4,
     Inc = 0xff,
   }
 }

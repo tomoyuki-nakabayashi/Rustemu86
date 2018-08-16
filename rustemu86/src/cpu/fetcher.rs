@@ -16,6 +16,19 @@ impl FetchUnit {
     FetchUnit{ rip: 0 }
   }
 
+  pub fn fetch_new(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
+    let inst = FetchedInstBuilder::new(0 as usize, &program)
+                  .parse_rex_prefix()
+                  .parse_r()
+                  .parse_opcode()
+                  .parse_modrm()
+                  .parse_disp()
+                  .parse_imm()
+                  .build();
+    self.rip += inst.next_rip;
+    Ok(inst)
+  }
+
   pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
     let inst = FetchedInstBuilder::new(self.rip as usize, &program)
                   .parse_rex_prefix()

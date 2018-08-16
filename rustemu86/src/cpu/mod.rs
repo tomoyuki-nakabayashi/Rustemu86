@@ -21,6 +21,7 @@ pub struct Cpu {
   fetch_unit: FetchUnit,
   executed_insts: u64,
   interconnect: Interconnect,
+  halted: bool,
 }
 
 impl Cpu {
@@ -30,6 +31,7 @@ impl Cpu {
       fetch_unit: FetchUnit::new(),
       executed_insts: 0,
       interconnect: interconnect,
+      halted: false,
     }
   }
 
@@ -37,9 +39,9 @@ impl Cpu {
   where
     T: DebugMode,
   {
-    while (self.fetch_unit.get_rip() as usize) < 5 {
+    while !self.halted {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
-      let inst = self.fetch_unit.fetch(&inst_candidate)?;
+      let inst = self.fetch_unit.fetch_new(&inst_candidate)?;
       let inst = decoder::decode(&self.rf, &inst)?;
       let inst = ex_stage::execute(&inst);
       self.write_back(&inst);
@@ -59,7 +61,6 @@ impl Cpu {
       let inst = decoder::decode(&self.rf, &inst)?;
       let inst = ex_stage::execute(&inst);
       self.write_back(&inst);
-      self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
     println!("Finish emulation. {} instructions executed.", self.executed_insts);
@@ -70,9 +71,11 @@ impl Cpu {
     match inst.dest_type {
       DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
       DestType::Rip => self.fetch_unit.set_rip(inst.result),
+      DestType::Halted => self.halted = true,
       DestType::Memory => self.interconnect.write64(inst.addr, inst.result),
       DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr)),
     }
+    self.executed_insts += 1;
   }
 }
 
@@ -125,13 +128,13 @@ mod test {
 
   #[test]
   fn new_run() {
-    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0xf4];
     let mut interconnect = Interconnect::new(EmulationMode::Normal);
     interconnect.init_memory(program);
     let mut cpu = Cpu::new(interconnect);
     let result = cpu.run_new(&rustemu86::NoneDebug{});
 
-    assert!(result.is_ok());
+    assert!(result.is_ok(), "{:?}", result.err());
     assert_eq!(cpu.rf.read64(Rax), 0);
   }
 

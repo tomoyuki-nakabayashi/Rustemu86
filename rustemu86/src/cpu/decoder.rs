@@ -21,6 +21,16 @@ pub enum InstType {
   LoadStore,
 }
 
+struct NopInst;
+impl ExStageInst for NopInst {
+  fn get_inst_type(&self) -> InstType { InstType::ArithLogic }
+  fn get_ex_opcode(&self) -> Option<ExOpcode> { Some(ExOpcode::Halt) }
+  fn get_dest_reg(&self) -> Reg64Id { Reg64Id::Unknown }
+  fn get_operand1(&self) -> u64 { 0 }
+  fn get_operand2(&self) -> u64 { 0 }
+  fn get_operand3(&self) -> u64 { 0 }
+}
+
 struct ArithLogicInst {
   inst_type: InstType,
   opcode: ExOpcode,
@@ -129,12 +139,14 @@ pub enum ExOpcode {
   Jump,
   Load,
   Store,
+  Halt,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum DestType {
   Register,
   Rip,
+  Halted,
   Memory,
   MemToReg,
 }
@@ -147,6 +159,7 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Box<ExStageInst>,
     Opcode::MovToRm => Ok(decode_store(&rf, &inst)),
     Opcode::MovImm32 => Ok(decode_reg_mov(&inst)),
     Opcode::JmpRel8 => Ok(decode_jmp(&inst)),
+    Opcode::Halt => Ok(Box::new(NopInst)),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
 }

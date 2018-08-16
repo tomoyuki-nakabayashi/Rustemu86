@@ -15,7 +15,7 @@
 
 ## Instruction
 
-- [ ] Halt
+- [x] Halt
 
 ## Peripheral
 
