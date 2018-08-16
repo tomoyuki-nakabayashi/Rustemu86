@@ -13,3 +13,4 @@ mov rbx, 0x6f
 mov [rax], rbx
 mov rbx, 0x0a
 mov [rax], rbx
+hlt

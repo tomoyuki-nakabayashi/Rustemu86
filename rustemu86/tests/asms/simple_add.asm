@@ -6,3 +6,4 @@ mov rdx, 0
 mov rbx, 0
 inc rcx
 add rax, rcx
+hlt

@@ -11,11 +11,9 @@
 
 ## CPU Model
 
-- [] Fetch instruction from memory.
+- [x] Fetch instruction from memory.
 
 ## Instruction
-
-- [x] Halt
 
 ## Peripheral
 

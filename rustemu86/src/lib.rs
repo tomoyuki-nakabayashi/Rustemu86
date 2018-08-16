@@ -25,9 +25,9 @@ pub fn start_emulation(program: &mut Vec<u8>, mode_option: EmulationMode) -> Res
   let mut cpu = Cpu::new(interconnect);
 
   let result = match mode_option {
-    EmulationMode::Normal | EmulationMode::IntegrationTest => cpu.run(&program, &NoneDebug {}),
-    EmulationMode::PerCycleDump => cpu.run(&program, &PerCycleDump {}),
-    EmulationMode::InteractiveMode => cpu.run(&program, &Interactive {}),
+    EmulationMode::Normal | EmulationMode::IntegrationTest => cpu.run(&NoneDebug {}),
+    EmulationMode::PerCycleDump => cpu.run(&PerCycleDump {}),
+    EmulationMode::InteractiveMode => cpu.run(&Interactive {}),
   };
 
   match result {

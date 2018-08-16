@@ -5,3 +5,4 @@ bits 64
   mov rax, 10
 label:
   add rax, rax
+  hlt
