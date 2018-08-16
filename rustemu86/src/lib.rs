@@ -13,12 +13,14 @@ pub mod rustemu86;
 
 use args::EmulationMode;
 use cpu::Cpu;
+use peripherals::interconnect::Interconnect;
 use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 
 pub struct CpuError {}
 
 pub fn start_emulation(program: &mut Vec<u8>, mode_option: EmulationMode) -> Result<(), CpuError> {
-  let mut cpu = Cpu::new(mode_option);
+  let interconnect = Interconnect::new(mode_option);
+  let mut cpu = Cpu::new(interconnect);
 
   let result = match mode_option {
     EmulationMode::Normal | EmulationMode::IntegrationTest => cpu.run(&program, &NoneDebug {}),

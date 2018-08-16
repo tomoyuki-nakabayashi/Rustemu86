@@ -9,8 +9,6 @@
 
 ## Emulator model
 
-- [x] Interconnect.
-
 ## CPU Model
 
 - [ ] Fetch instruction from memory.
@@ -20,8 +18,6 @@
 - [ ] Halt
 
 ## Peripheral
-
-- [x] Memory mapped serial.
 
 ## Load an x86 binary
 
