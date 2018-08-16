@@ -4,7 +4,7 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [x] Define enum for DecodedInst.
+- [x] Define enum for WriteBackInst.
 
 ## Test & Debug
 

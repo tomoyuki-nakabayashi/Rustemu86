@@ -16,19 +16,6 @@ impl FetchUnit {
     FetchUnit{ rip: 0 }
   }
 
-  pub fn fetch_new(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
-    let inst = FetchedInstBuilder::new(0 as usize, &program)
-                  .parse_rex_prefix()
-                  .parse_r()
-                  .parse_opcode()
-                  .parse_modrm()
-                  .parse_disp()
-                  .parse_imm()
-                  .build();
-    self.rip += inst.next_rip;
-    Ok(inst)
-  }
-
   pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
     let inst = FetchedInstBuilder::new(self.rip as usize, &program)
                   .parse_rex_prefix()
@@ -88,7 +75,8 @@ struct FetchedInstBuilder<'a> {
   sib: u8,
   displacement: u64,
   immediate: u64,
-  rip: usize,
+  rip_base: usize,
+  rip_offset: usize,
   program: &'a [u8],
 }
 
@@ -103,42 +91,43 @@ impl<'a> FetchedInstBuilder<'a> {
       sib: 0,
       displacement: 0,
       immediate: 0,
-      rip: rip,
+      rip_base: rip,
+      rip_offset: 0,
       program: program,
     }
   }
 
   fn parse_rex_prefix(&mut self) -> &mut FetchedInstBuilder<'a> {
-    let candidate = self.program[self.rip];
+    let candidate = self.program[self.rip_offset];
     match candidate {
-      REX...REX_WRXB => { self.rex_prefix = candidate; self.rip += 1 },
+      REX...REX_WRXB => { self.rex_prefix = candidate; self.rip_offset += 1 },
       _ => (),
     }
     self
   }
 
   fn parse_r(&mut self) -> &mut FetchedInstBuilder<'a> {
-    let candidate = self.program[self.rip];
+    let candidate = self.program[self.rip_offset];
     self.r = candidate.get_bits(0..3);
     self
   }
 
   fn parse_opcode(&mut self) -> &mut FetchedInstBuilder<'a> {
-    let candidate = self.program[self.rip];
+    let candidate = self.program[self.rip_offset];
     let plus_r_opcode = || { Opcode::from_u8(candidate & 0xf8) };
     self.opcode = Opcode::from_u8(candidate)
                           .or_else(plus_r_opcode)
                           .or_else(|| Some(Opcode::Invalid))
                           .unwrap();
-    self.rip += 1;
+    self.rip_offset += 1;
     self
   }
 
   fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
       Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg => {
-        self.mod_rm = ModRm::new(self.program[self.rip]);
-        self.rip += 1;
+        self.mod_rm = ModRm::new(self.program[self.rip_offset]);
+        self.rip_offset += 1;
       }
       _ => (),
     }
@@ -147,7 +136,10 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_disp(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
-      Opcode::JmpRel8 => { self.displacement = self.program[self.rip] as u64; self.rip += 1 }
+      Opcode::JmpRel8 => {
+        self.displacement = self.program[self.rip_offset] as u64;
+        self.rip_offset += 1
+      }
       _ => (),
     }
     self
@@ -156,9 +148,9 @@ impl<'a> FetchedInstBuilder<'a> {
   fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
       Opcode::MovImm32 => {
-        let mut imm = &self.program[self.rip..self.rip+4];
+        let mut imm = &self.program[self.rip_offset..self.rip_offset+4];
         self.immediate = imm.read_u32::<LittleEndian>().unwrap().into();
-        self.rip += 4
+        self.rip_offset += 4
       }
       _ => (),
     }
@@ -175,7 +167,7 @@ impl<'a> FetchedInstBuilder<'a> {
       sib: self.sib,
       displacement: self.displacement,
       immediate: self.immediate,
-      next_rip: self.rip,
+      next_rip: self.rip_base + self.rip_offset,
     }
   }
 }

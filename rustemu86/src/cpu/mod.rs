@@ -9,8 +9,7 @@ pub mod isa;
 
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
-use self::ex_stage::DestType;
-use self::ex_stage::WriteBackInst;
+use self::ex_stage::WriteBack;
 use self::exceptions::InternalException;
 use peripherals::interconnect::Interconnect;
 use rustemu86::DebugMode;
@@ -41,24 +40,23 @@ impl Cpu {
   {
     while self.state == CpuState::Running {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
-      let inst = self.fetch_unit.fetch_new(&inst_candidate)?;
+      let inst = self.fetch_unit.fetch(&inst_candidate)?;
       let inst = decoder::decode(&self.rf, &inst)?;
-      let inst = ex_stage::execute(inst);
-      self.write_back(&inst);
-      self.executed_insts += 1;
+      let inst = ex_stage::execute(inst).unwrap();
+      self.write_back(inst);
       debug_mode.do_cycle_end_action(&self);
     }
     println!("Finish emulation. {} instructions executed.", self.executed_insts);
     Ok(())
   }
 
-  fn write_back(&mut self, inst: &WriteBackInst) {
-    match inst.dest_type {
-      DestType::Register => self.rf.write64(inst.dest_rf, inst.result),
-      DestType::Rip => self.fetch_unit.set_rip(inst.result),
-      DestType::CpuState => self.state = CpuState::Halt,
-      DestType::Memory => self.interconnect.write64(inst.addr, inst.result),
-      DestType::MemToReg => self.rf.write64(inst.dest_rf, self.interconnect.read64(inst.addr)),
+  fn write_back(&mut self, inst: WriteBack) {
+    match inst {
+      WriteBack::GeneralRegister(dest, value) => self.rf.write64(dest, value),
+      WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(next_rip),
+      WriteBack::Load(dest, addr) => self.rf.write64(dest, self.interconnect.read64(addr)),
+      WriteBack::Store(addr, data) => self.interconnect.write64(addr, data),
+      WriteBack::CpuState(next_state) => self.state = next_state,
     }
     self.executed_insts += 1;
   }
@@ -85,7 +83,7 @@ impl fmt::Display for Cpu {
 }
 
 #[derive(PartialEq, Debug)]
-enum CpuState {
+pub enum CpuState {
   Running,
   Halt,
 }
