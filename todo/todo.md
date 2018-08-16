@@ -4,7 +4,7 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [ ] Define enum for DecodedInst and WriteBackInst.
+- [x] Define enum for DecodedInst.
 
 ## Test & Debug
 
@@ -12,7 +12,12 @@
 
 ## CPU Model
 
+- [ ] RSP
+
 ## Instruction
+
+- [ ] push/pop
+- [ ] callq/retq
 
 ## Peripheral
 

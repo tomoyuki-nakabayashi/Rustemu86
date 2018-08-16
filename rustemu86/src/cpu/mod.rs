@@ -9,7 +9,7 @@ pub mod isa;
 
 use self::register_file::RegisterFile;
 use self::fetcher::FetchUnit;
-use self::decoder::DestType;
+use self::ex_stage::DestType;
 use self::ex_stage::WriteBackInst;
 use self::exceptions::InternalException;
 use peripherals::interconnect::Interconnect;
@@ -42,8 +42,8 @@ impl Cpu {
     while self.state == CpuState::Running {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
       let inst = self.fetch_unit.fetch_new(&inst_candidate)?;
-      let inst = decoder::decode(&self.rf, &inst)?;
-      let inst = ex_stage::execute(&inst);
+      let inst = decoder::decode_new(&self.rf, &inst)?;
+      let inst = ex_stage::execute_new(inst);
       self.write_back(&inst);
       self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
@@ -155,7 +155,7 @@ mod test {
   }
 
   #[test]
-  fn execute_jmp() {
+  fn execute_jmp_short() {
     let program = vec![0xeb, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf4];
     let cpu = execute_program(program);
     assert_eq!(cpu.fetch_unit.get_rip(), 8);
