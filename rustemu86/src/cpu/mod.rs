@@ -33,6 +33,23 @@ impl Cpu {
     }
   }
 
+  pub fn run_new<T>(&mut self, debug_mode: &T) -> Result<(), InternalException>
+  where
+    T: DebugMode,
+  {
+    while (self.fetch_unit.get_rip() as usize) < 5 {
+      let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
+      let inst = self.fetch_unit.fetch(&inst_candidate)?;
+      let inst = decoder::decode(&self.rf, &inst)?;
+      let inst = ex_stage::execute(&inst);
+      self.write_back(&inst);
+      self.executed_insts += 1;
+      debug_mode.do_cycle_end_action(&self);
+    }
+    println!("Finish emulation. {} instructions executed.", self.executed_insts);
+    Ok(())
+  } 
+
   pub fn run<T>(&mut self, program: &Vec<u8>, debug_mode: &T) -> Result<(), InternalException>
   where
     T: DebugMode,
@@ -104,6 +121,18 @@ mod test {
 
     assert!(result.is_ok());
     cpu
+  }
+
+  #[test]
+  fn new_run() {
+    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00];
+    let mut interconnect = Interconnect::new(EmulationMode::Normal);
+    interconnect.init_memory(program);
+    let mut cpu = Cpu::new(interconnect);
+    let result = cpu.run_new(&rustemu86::NoneDebug{});
+
+    assert!(result.is_ok());
+    assert_eq!(cpu.rf.read64(Rax), 0);
   }
 
   #[test]

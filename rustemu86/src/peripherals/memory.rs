@@ -12,6 +12,16 @@ impl Memory {
     }
   }
 
+  pub fn fill_ram(&mut self, data: Vec<u8>, start: usize) {
+    for (pos, b) in data.iter().enumerate() {
+      self.ram[start + pos] = *b;
+    }
+  }
+
+  pub fn read8(&self, addr: usize) -> u8 {
+    self.ram[addr]
+  }
+
   pub fn read64(&self, addr: usize) -> u64 {
     let mut start = &self.ram[addr..addr + mem::size_of::<u64>()];
     start.read_u64::<LittleEndian>().unwrap()

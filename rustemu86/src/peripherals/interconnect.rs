@@ -3,6 +3,8 @@ use peripherals::uart16550;
 use peripherals::uart16550::Uart16550;
 use ::args::EmulationMode;
 
+const MAX_INSTRUCTION_LENGTH: usize = 15;
+
 pub struct Interconnect {
   memory_map: Vec<MemoryMapEntry>,
   memory: Memory,
@@ -21,6 +23,26 @@ impl Interconnect {
         EmulationMode::Normal => uart16550::uart_factory(uart16550::Target::Stdout),
         _ => uart16550::uart_factory(uart16550::Target::File),
       }
+    }
+  }
+
+  pub fn init_memory(&mut self, program: Vec<u8>) {
+    self.memory.fill_ram(program, 0);
+  }
+
+  pub fn fetch_inst_candidate(&self, rip: u64) -> Vec<u8> {
+    let mut inst_candidate = Vec::with_capacity(MAX_INSTRUCTION_LENGTH);
+    for i in 0..MAX_INSTRUCTION_LENGTH {
+      inst_candidate.push(self.read8(rip + i as u64));
+    }
+
+    inst_candidate
+  }
+
+  pub fn read8(&self, addr: u64) -> u8 {
+    match addr {
+      0x0...0x200 => self.memory.read8(addr as usize),
+      _ => 0,
     }
   }
 
@@ -66,5 +88,16 @@ mod test {
     let mut contents = String::new();
     created_file.unwrap().read_to_string(&mut contents).unwrap();
     assert_eq!(contents, "hello");
+  }
+
+  #[test]
+  fn test_init_memory() {
+    let program = vec![0x48, 0xff, 0xc0];
+    let mut interconnect = Interconnect::new(EmulationMode::IntegrationTest);
+    interconnect.init_memory(program);
+
+    assert_eq!(interconnect.read8(0x0), 0x48);
+    assert_eq!(interconnect.read8(0x1), 0xff);
+    assert_eq!(interconnect.read8(0x2), 0xc0);
   }
 }

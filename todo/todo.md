@@ -11,7 +11,7 @@
 
 ## CPU Model
 
-- [ ] Fetch instruction from memory.
+- [] Fetch instruction from memory.
 
 ## Instruction
 

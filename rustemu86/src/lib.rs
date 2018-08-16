@@ -19,7 +19,9 @@ use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 pub struct CpuError {}
 
 pub fn start_emulation(program: &mut Vec<u8>, mode_option: EmulationMode) -> Result<(), CpuError> {
-  let interconnect = Interconnect::new(mode_option);
+  let mut interconnect = Interconnect::new(mode_option);
+  let should_remove_program = program.clone();
+  interconnect.init_memory(should_remove_program);
   let mut cpu = Cpu::new(interconnect);
 
   let result = match mode_option {
