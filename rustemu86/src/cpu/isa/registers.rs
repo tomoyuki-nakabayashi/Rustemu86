@@ -5,10 +5,10 @@ enum_from_primitive! {
     Rcx = 0x01,
     Rdx = 0x02,
     Rbx = 0x03,
-    Rsi = 0x04,
-    Rdi = 0x05,
-    Rbp = 0x06,
-    Rsp = 0x07,
+    Rsp = 0x04,
+    Rbp = 0x05,
+    Rsi = 0x06,
+    Rdi = 0x07,
     Unknown = 0xff,
   }
 }

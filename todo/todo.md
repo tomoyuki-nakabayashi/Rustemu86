@@ -15,7 +15,6 @@
 
 ## Instruction
 
-- [x] pop
 - [ ] callq/retq
 
 ## Peripheral
