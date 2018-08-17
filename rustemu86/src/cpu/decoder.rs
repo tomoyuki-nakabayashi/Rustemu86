@@ -58,6 +58,7 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
     Opcode::MovToReg => { insts.push(LoadStore(decode_load(&rf, &inst))); Ok(insts) },
     Opcode::MovToRm => { insts.push(LoadStore(decode_store(&rf, &inst))); Ok(insts) },
     Opcode::MovImm32 => { insts.push(ArithLogic(decode_reg_mov(&inst))); Ok(insts) },
+    Opcode::MovRmImm32 => Ok(decode_mov_rm_imm(&inst)),
     Opcode::PushR => Ok(decode_pushr(&rf, &inst)),
     Opcode::PopR => Ok(decode_popr(&rf, &inst)),
     Opcode::Ret => Ok(decode_ret(&rf, &inst)),
@@ -142,6 +143,14 @@ fn decode_reg_mov(inst: &FetchedInst) -> ExecuteInst {
   let op1 = inst.immediate;
   ExecuteInst { opcode: ExOpcode::Mov, dest: Some(dest), rip: None, 
     op1: Some(op1), op2: None, op3: None, op4: None }
+}
+
+fn decode_mov_rm_imm(inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let dest = inst.mod_rm.rm;
+  let imm = inst.immediate;
+  let uop1 = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(dest), rip: None, 
+    op1: Some(imm), op2: None, op3: None, op4: None };
+  vec![ExecuteInstType::ArithLogic(uop1)]
 }
 
 fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> ExecuteInst {

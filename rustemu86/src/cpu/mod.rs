@@ -137,6 +137,13 @@ mod test {
   }
 
   #[test]
+  fn execute_mov_rm_imm32() {
+    let program = vec![0x48, 0xc7, 0xc0, 0x00, 0x00, 0x00, 0x10, 0xf4];
+    let cpu = execute_program(program);
+    assert_eq!(cpu.rf.read64(Rax), 0x10000000);
+  }
+
+  #[test]
   fn execute_inc() {
     let program = vec![0x48, 0xff, 0xc0, 0xf4];
     let initializer = |cpu: &mut Cpu| cpu.rf.write64(Rax, 0);

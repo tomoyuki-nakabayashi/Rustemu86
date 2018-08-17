@@ -125,7 +125,8 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
-      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg => {
+      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
+      Opcode::MovRmImm32 => {
         self.mod_rm = ModRm::new(self.program[self.rip_offset]);
         self.rip_offset += 1;
       }
@@ -152,7 +153,7 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
-      Opcode::MovImm32 => {
+      Opcode::MovImm32 | Opcode::MovRmImm32 => {
         let mut imm = &self.program[self.rip_offset..self.rip_offset+4];
         self.immediate = imm.read_u32::<LittleEndian>().unwrap().into();
         self.rip_offset += 4
