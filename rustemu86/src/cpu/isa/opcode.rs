@@ -15,5 +15,6 @@ enum_from_primitive! {
     JmpRel8   = 0xeb,
     Halt      = 0xf4,
     Inc       = 0xff,
+    Ret       = 0xc3,
   }
 }

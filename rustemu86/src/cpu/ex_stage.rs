@@ -10,6 +10,7 @@ pub enum WriteBack {
   CpuState(CpuState),
   Store(u64, u64),
   Load(Reg64Id, u64),
+  Return(u64),
 }
 
 pub fn execute(inst: ExecuteInstType) -> Result<WriteBack, ()> {
@@ -51,6 +52,7 @@ fn execute_mov(inst: ExecuteInst) -> WriteBack {
 fn execute_branch(inst: ExecuteInst) -> Result<WriteBack, ()> {
     match inst.get_opcode() {
     ExOpcode::Jump => Ok(execute_jump(inst)),
+    ExOpcode::Return => Ok(execute_return(inst)),
     _ => Err(()),
   }
 }
@@ -58,6 +60,11 @@ fn execute_branch(inst: ExecuteInst) -> Result<WriteBack, ()> {
 fn execute_jump(inst: ExecuteInst) -> WriteBack {
   let result = inst.get_rip() + inst.get_op1();
   WriteBack::Rip(result)
+}
+
+fn execute_return(inst: ExecuteInst) -> WriteBack {
+  let sp = inst.get_op1();
+  WriteBack::Return(sp)
 }
 
 fn execute_load_store(inst: ExecuteInst) -> Result<WriteBack, ()> {

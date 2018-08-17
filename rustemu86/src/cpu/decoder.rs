@@ -40,6 +40,7 @@ pub enum ExOpcode {
   Inc,
   Mov,
   Jump,
+  Return,
   Load,
   Store,
   Halt,
@@ -59,8 +60,21 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
     Opcode::MovImm32 => { insts.push(ArithLogic(decode_reg_mov(&inst))); Ok(insts) },
     Opcode::PushR => Ok(decode_pushr(&rf, &inst)),
     Opcode::PopR => Ok(decode_popr(&rf, &inst)),
+    Opcode::Ret => Ok(decode_ret(&rf, &inst)),
     opcode @ _ => Err(InternalException::UndefinedInstruction {opcode}),
   }
+}
+
+fn decode_ret(rf: &RegisterFile, _inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let sp = rf.read64(Reg64Id::Rsp);
+  let ret = ExecuteInst { opcode: ExOpcode::Return, dest: None, rip: None,
+    op1: Some(sp), op2: None, op3: None, op4: None };
+
+  let new_sp = rf.read64(Reg64Id::Rsp) + 8;
+  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
+    op1: Some(new_sp), op2: None, op3: None, op4: None };
+
+  vec![ExecuteInstType::Branch(ret), ExecuteInstType::ArithLogic(update_sp)]
 }
 
 fn decode_call(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {

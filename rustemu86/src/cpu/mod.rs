@@ -19,7 +19,7 @@ pub struct Cpu {
   rf: RegisterFile,
   fetch_unit: FetchUnit,
   executed_insts: u64,
-  interconnect: Interconnect,
+  bus: Interconnect,
   state: CpuState,
 }
 
@@ -29,7 +29,7 @@ impl Cpu {
       rf: RegisterFile::new(),
       fetch_unit: FetchUnit::new(),
       executed_insts: 0,
-      interconnect: interconnect,
+      bus: interconnect,
       state: CpuState::Running,
     }
   }
@@ -39,7 +39,7 @@ impl Cpu {
     T: DebugMode,
   {
     while self.state == CpuState::Running {
-      let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
+      let inst_candidate = self.bus.fetch_inst_candidate(self.fetch_unit.get_rip());
       let inst = self.fetch_unit.fetch(&inst_candidate)?;
       let uops = decoder::decode(&self.rf, &inst)?;
       for uop in uops {
@@ -57,9 +57,10 @@ impl Cpu {
     match inst {
       WriteBack::GeneralRegister(dest, value) => self.rf.write64(dest, value),
       WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(next_rip),
-      WriteBack::Load(dest, addr) => self.rf.write64(dest, self.interconnect.read64(addr)),
-      WriteBack::Store(addr, data) => self.interconnect.write64(addr, data),
+      WriteBack::Load(dest, addr) => self.rf.write64(dest, self.bus.read64(addr)),
+      WriteBack::Store(addr, data) => self.bus.write64(addr, data),
       WriteBack::CpuState(next_state) => self.state = next_state,
+      WriteBack::Return(addr) => self.fetch_unit.set_rip(self.bus.read64(addr)),
     }
   }
 }
@@ -169,7 +170,7 @@ mod test {
       cpu.rf.write64(Rbx, 1);
     };
     let cpu = execute_program_after_init(program, &initializer);
-    assert_eq!(cpu.interconnect.read64(100), 1);
+    assert_eq!(cpu.bus.read64(100), 1);
     assert_eq!(cpu.rf.read64(Rcx), 1);
   }
 
@@ -181,19 +182,19 @@ mod test {
       cpu.rf.write64(Rax, 1);
     };
     let cpu = execute_program_after_init(program, &initializer);
-    assert_eq!(cpu.interconnect.read64(0x100-8), 1);
+    assert_eq!(cpu.bus.read64(0x100-8), 1);
     assert_eq!(cpu.rf.read64(Rbx), 1);
   }
 
   #[test]
   fn execute_call_ret() {
-    let program = vec![0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf4];
+    let program = vec![0xe8, 0x03, 0x00, 0x00, 0x00, 0xf4, 0x00, 0x00, 0xc3];
     let initializer = |cpu: &mut Cpu| {
       cpu.rf.write64(Rsp, 0x0100);
     };
     let cpu = execute_program_after_init(program, &initializer);
-    assert_eq!(cpu.interconnect.read64(0x100-8), 5);
-    //assert_eq!(cpu.rf.read64(Rbx), 1);
+    assert_eq!(cpu.bus.read64(0x100-8), 5);
+    assert_eq!(cpu.executed_insts, 3);
   }
 
 }
