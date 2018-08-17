@@ -13,12 +13,9 @@
 
 ## CPU Model
 
-- [x] RSP
-
 ## Instruction
 
-- [x] push
-- [ ] pop
+- [x] pop
 - [ ] callq/retq
 
 ## Peripheral

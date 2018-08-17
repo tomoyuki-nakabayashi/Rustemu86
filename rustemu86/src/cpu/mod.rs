@@ -175,14 +175,13 @@ mod test {
 
   #[test]
   fn execute_push_pop() {
-    //let program = vec![0x50, 0x5b];
-    let program = vec![0x50, 0xf4];
+    let program = vec![0x50, 0x5b, 0xf4];
     let initializer = |cpu: &mut Cpu| {
       cpu.rf.write64(Rsp, 0x0100);
       cpu.rf.write64(Rax, 1);
     };
     let cpu = execute_program_after_init(program, &initializer);
     assert_eq!(cpu.interconnect.read64(0x100-8), 1);
-    //assert_eq!(cpu.rf.read64(Rbx), 1);
+    assert_eq!(cpu.rf.read64(Rbx), 1);
   }
 }

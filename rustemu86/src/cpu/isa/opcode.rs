@@ -7,6 +7,7 @@ enum_from_primitive! {
     Add      = 0x01,
     Invalid  = 0x06,
     PushR    = 0x50,
+    PopR     = 0x58,
     MovToRm  = 0x89,
     MovToReg = 0x8b,
     MovImm32 = 0xb8,
