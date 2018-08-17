@@ -41,9 +41,12 @@ impl Cpu {
     while self.state == CpuState::Running {
       let inst_candidate = self.interconnect.fetch_inst_candidate(self.fetch_unit.get_rip());
       let inst = self.fetch_unit.fetch(&inst_candidate)?;
-      let inst = decoder::decode(&self.rf, &inst)?;
-      let inst = ex_stage::execute(inst).unwrap();
-      self.write_back(inst);
+      let uops = decoder::decode(&self.rf, &inst)?;
+      for uop in uops {
+        let uop = ex_stage::execute(uop).unwrap();
+        self.write_back(uop);
+      }
+      self.executed_insts += 1;
       debug_mode.do_cycle_end_action(&self);
     }
     println!("Finish emulation. {} instructions executed.", self.executed_insts);
@@ -58,7 +61,6 @@ impl Cpu {
       WriteBack::Store(addr, data) => self.interconnect.write64(addr, data),
       WriteBack::CpuState(next_state) => self.state = next_state,
     }
-    self.executed_insts += 1;
   }
 }
 
@@ -94,7 +96,7 @@ mod test {
   use rustemu86;
   use ::args::EmulationMode;
   use peripherals::interconnect::Interconnect;
-  use cpu::isa::registers::Reg64Id::{Rax, Rcx, Rbx};
+  use cpu::isa::registers::Reg64Id::{Rax, Rcx, Rbx, Rsp};
 
   fn execute_program(program: Vec<u8>) -> Cpu {
     let mut interconnect = Interconnect::new(EmulationMode::Normal);
@@ -169,5 +171,18 @@ mod test {
     let cpu = execute_program_after_init(program, &initializer);
     assert_eq!(cpu.interconnect.read64(100), 1);
     assert_eq!(cpu.rf.read64(Rcx), 1);
+  }
+
+  #[test]
+  fn execute_push_pop() {
+    //let program = vec![0x50, 0x5b];
+    let program = vec![0x50, 0xf4];
+    let initializer = |cpu: &mut Cpu| {
+      cpu.rf.write64(Rsp, 0x0100);
+      cpu.rf.write64(Rax, 1);
+    };
+    let cpu = execute_program_after_init(program, &initializer);
+    assert_eq!(cpu.interconnect.read64(0x100-8), 1);
+    //assert_eq!(cpu.rf.read64(Rbx), 1);
   }
 }

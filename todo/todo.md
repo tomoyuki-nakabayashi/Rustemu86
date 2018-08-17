@@ -4,7 +4,8 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [x] Define enum for WriteBackInst.
+- [ ] Register file has registers as vector.
+- [ ] FetchedInst has r as Reg64Id.
 
 ## Test & Debug
 
@@ -12,11 +13,12 @@
 
 ## CPU Model
 
-- [ ] RSP
+- [x] RSP
 
 ## Instruction
 
-- [ ] push/pop
+- [x] push
+- [ ] pop
 - [ ] callq/retq
 
 ## Peripheral
