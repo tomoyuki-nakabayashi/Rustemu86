@@ -140,6 +140,11 @@ impl<'a> FetchedInstBuilder<'a> {
         self.displacement = self.program[self.rip_offset] as u64;
         self.rip_offset += 1
       }
+      Opcode::CallRel32 => {
+        let mut disp = &self.program[self.rip_offset..self.rip_offset+4];
+        self.displacement = sign_extend_from_u32(disp.read_u32::<LittleEndian>().unwrap());
+        self.rip_offset += 4;
+      }
       _ => (),
     }
     self
@@ -169,5 +174,29 @@ impl<'a> FetchedInstBuilder<'a> {
       immediate: self.immediate,
       next_rip: self.rip_base + self.rip_offset,
     }
+  }
+}
+
+fn zero_extend_from_u32(i: u32) -> u64 {
+  i as u64
+}
+
+fn sign_extend_from_u32(i: u32) -> u64 {
+  let i = i as i32;
+  i as u64
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  #[test]
+  fn test_sign_extend() {
+    let i: u32 = 0xFFFF_FFFF;
+    let sign_extend = sign_extend_from_u32(i);
+    let zero_extend = zero_extend_from_u32(i);
+
+    assert_eq!(sign_extend, 0xFFFF_FFFF_FFFF_FFFF);
+    assert_eq!(zero_extend, 0x0000_0000_FFFF_FFFF);
   }
 }

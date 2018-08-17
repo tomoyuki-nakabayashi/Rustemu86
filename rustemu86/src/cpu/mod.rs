@@ -130,9 +130,9 @@ mod test {
 
   #[test]
   fn execute_mov32() {
-    let program = vec![0xb8, 0x00, 0x00, 0x00, 0x00, 0xf4];
+    let program = vec![0xb8, 0x01, 0x00, 0x00, 0x00, 0xf4];
     let cpu = execute_program(program);
-    assert_eq!(cpu.rf.read64(Rax), 0);
+    assert_eq!(cpu.rf.read64(Rax), 1);
   }
 
   #[test]
@@ -184,4 +184,16 @@ mod test {
     assert_eq!(cpu.interconnect.read64(0x100-8), 1);
     assert_eq!(cpu.rf.read64(Rbx), 1);
   }
+
+  #[test]
+  fn execute_call_ret() {
+    let program = vec![0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf4];
+    let initializer = |cpu: &mut Cpu| {
+      cpu.rf.write64(Rsp, 0x0100);
+    };
+    let cpu = execute_program_after_init(program, &initializer);
+    assert_eq!(cpu.interconnect.read64(0x100-8), 5);
+    //assert_eq!(cpu.rf.read64(Rbx), 1);
+  }
+
 }
