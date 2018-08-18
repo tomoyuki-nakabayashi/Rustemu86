@@ -107,16 +107,16 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_opcode(&mut self) -> &mut FetchedInstBuilder<'a> {
     let candidate = self.program[self.rip_offset];
-    let mut r: Option<u8> = Some(0);  // FIXME: initialized by None
+    let mut r: u8 = 0;
     {
-      let extract_r = |opcode| { r = Some(candidate.get_bits(0..3)); Some(opcode) };
+      let extract_r = |opcode| { r = candidate.get_bits(0..3); Some(opcode) };
       let plus_r_opcode = || { Opcode::from_u8(candidate & 0xf8).and_then(extract_r) };
       self.opcode = Opcode::from_u8(candidate)
                             .or_else(plus_r_opcode)
                             .or_else(|| Some(Opcode::Invalid))
                             .unwrap();
     }
-    self.r = r.unwrap();  // FIXME: self.r has r as Option<u8>
+    self.r = r;
     self.rip_offset += 1;
     self
   }

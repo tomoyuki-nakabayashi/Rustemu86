@@ -5,7 +5,6 @@
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
 - [ ] Register file has registers as vector.
-- [ ] FetchedInst has r as Reg64Id.
 
 ## Test & Debug
 
