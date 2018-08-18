@@ -64,61 +64,9 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
   }
 }
 
-fn decode_ret(rf: &RegisterFile, _inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let sp = rf.read64(Reg64Id::Rsp);
-  let ret = ExecuteInst { opcode: ExOpcode::Return, dest: None, rip: None,
-    op1: Some(sp), op2: None, op3: None, op4: None };
-
-  let new_sp = rf.read64(Reg64Id::Rsp) + 8;
-  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
-    op1: Some(new_sp), op2: None, op3: None, op4: None };
-
-  vec![ExecuteInstType::Branch(ret), ExecuteInstType::ArithLogic(update_sp)]
-}
-
-fn decode_call(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let new_sp = rf.read64(Reg64Id::Rsp) - 8;
-  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
-    op1: Some(new_sp), op2: None, op3: None, op4: None };
-
-  let ret_addr = inst.next_rip as u64;
-  let push = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
-    op1: Some(new_sp), op2: Some(ret_addr), op3: None, op4: None };
-
-  let disp = inst.displacement;
-  let rip = inst.next_rip as u64;
-  let call = ExecuteInst { opcode: ExOpcode::Jump, dest: None, rip: Some(rip),
-    op1: Some(disp), op2: None, op3: None, op4: None };
-
-  vec![ExecuteInstType::ArithLogic(update_sp), ExecuteInstType::LoadStore(push),
-      ExecuteInstType::Branch(call)]
-}
-
-fn decode_pushr(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let new_sp = rf.read64(Reg64Id::Rsp) - 8;
-  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
-    op1: Some(new_sp), op2: None, op3: None, op4: None };
-
-  let data = rf.read64(Reg64Id::from_u8(inst.r).unwrap());
-  let push = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
-    op1: Some(new_sp), op2: Some(data), op3: None, op4: None };
-
-  vec![ExecuteInstType::ArithLogic(update_sp), ExecuteInstType::LoadStore(push)]
-}
-
-fn decode_popr(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let dest = Reg64Id::from_u8(inst.r).unwrap();
-  let sp = rf.read64(Reg64Id::Rsp);
-  let pop = ExecuteInst { opcode: ExOpcode::Load, dest: Some(dest), rip: None,
-    op1: Some(sp), op2: None, op3: None, op4: None };
-
-  let new_sp = rf.read64(Reg64Id::Rsp) + 8;
-  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
-    op1: Some(new_sp), op2: None, op3: None, op4: None };
-
-  vec![ExecuteInstType::LoadStore(pop), ExecuteInstType::ArithLogic(update_sp)]
-}
-
+/////////////////////////////////////////////////////////////////////////////
+// Arithmetic and Logic instructions.
+/////////////////////////////////////////////////////////////////////////////
 fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let dest = inst.mod_rm.rm;
   let op1 = rf.read64(dest);
@@ -153,6 +101,9 @@ fn decode_mov_rm_imm(inst: &FetchedInst) -> Vec<ExecuteInstType> {
   vec![ExecuteInstType::ArithLogic(uop1)]
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Load and Store instructions.
+/////////////////////////////////////////////////////////////////////////////
 fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let dest = inst.mod_rm.reg;
   let addr = rf.read64(inst.mod_rm.rm);
@@ -169,6 +120,9 @@ fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   vec![ExecuteInstType::LoadStore(store)]
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Branch instructions.
+/////////////////////////////////////////////////////////////////////////////
 fn decode_jmp(inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let disp = inst.displacement;
   let rip = inst.next_rip as u64;
@@ -177,8 +131,69 @@ fn decode_jmp(inst: &FetchedInst) -> Vec<ExecuteInstType> {
   vec![ExecuteInstType::Branch(jmp)]
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Privileged instructions.
+/////////////////////////////////////////////////////////////////////////////
 fn decode_halt(_inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let hlt = ExecuteInst { opcode: ExOpcode::Halt, dest: None, rip: None,
     op1: None, op2: None, op3: None, op4: None };
   vec![ExecuteInstType::Privilege(hlt)]
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Complex instructions that require plural micro operations.
+/////////////////////////////////////////////////////////////////////////////
+fn decode_call(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let new_sp = rf.read64(Reg64Id::Rsp) - 8;
+  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
+    op1: Some(new_sp), op2: None, op3: None, op4: None };
+
+  let ret_addr = inst.next_rip as u64;
+  let push = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
+    op1: Some(new_sp), op2: Some(ret_addr), op3: None, op4: None };
+
+  let disp = inst.displacement;
+  let rip = inst.next_rip as u64;
+  let call = ExecuteInst { opcode: ExOpcode::Jump, dest: None, rip: Some(rip),
+    op1: Some(disp), op2: None, op3: None, op4: None };
+
+  vec![ExecuteInstType::ArithLogic(update_sp), ExecuteInstType::LoadStore(push),
+      ExecuteInstType::Branch(call)]
+}
+
+fn decode_ret(rf: &RegisterFile, _inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let sp = rf.read64(Reg64Id::Rsp);
+  let ret = ExecuteInst { opcode: ExOpcode::Return, dest: None, rip: None,
+    op1: Some(sp), op2: None, op3: None, op4: None };
+
+  let new_sp = rf.read64(Reg64Id::Rsp) + 8;
+  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
+    op1: Some(new_sp), op2: None, op3: None, op4: None };
+
+  vec![ExecuteInstType::Branch(ret), ExecuteInstType::ArithLogic(update_sp)]
+}
+
+fn decode_pushr(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let new_sp = rf.read64(Reg64Id::Rsp) - 8;
+  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
+    op1: Some(new_sp), op2: None, op3: None, op4: None };
+
+  let data = rf.read64(Reg64Id::from_u8(inst.r).unwrap());
+  let push = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
+    op1: Some(new_sp), op2: Some(data), op3: None, op4: None };
+
+  vec![ExecuteInstType::ArithLogic(update_sp), ExecuteInstType::LoadStore(push)]
+}
+
+fn decode_popr(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let dest = Reg64Id::from_u8(inst.r).unwrap();
+  let sp = rf.read64(Reg64Id::Rsp);
+  let pop = ExecuteInst { opcode: ExOpcode::Load, dest: Some(dest), rip: None,
+    op1: Some(sp), op2: None, op3: None, op4: None };
+
+  let new_sp = rf.read64(Reg64Id::Rsp) + 8;
+  let update_sp = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(Reg64Id::Rsp), rip: None,
+    op1: Some(new_sp), op2: None, op3: None, op4: None };
+
+  vec![ExecuteInstType::LoadStore(pop), ExecuteInstType::ArithLogic(update_sp)]
 }
