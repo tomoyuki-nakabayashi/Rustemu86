@@ -6,8 +6,8 @@ use std::io::prelude::*;
 #[test]
 fn test_hello_from_rust() {
   let mut reader = rustemu86::loader::load("./tests/bins/hello-x86_64.bin").unwrap();
-  let mut program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
-  let result = rustemu86::start_emulation(&mut program, EmulationMode::IntegrationTest);
+  let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+  let result = rustemu86::start_emulation(program, EmulationMode::IntegrationTest);
   assert!(result.is_ok());
 
   let created_file = File::open("test");

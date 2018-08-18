@@ -6,8 +6,8 @@ use std::io::prelude::*;
 #[test]
 fn test_hello() {
   let mut reader = rustemu86::loader::load("./tests/asms/hello").unwrap();
-  let mut program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
-  let result = rustemu86::start_emulation(&mut program, EmulationMode::IntegrationTest);
+  let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+  let result = rustemu86::start_emulation(program, EmulationMode::IntegrationTest);
   assert!(result.is_ok());
 
   let created_file = File::open("test");
@@ -21,8 +21,8 @@ fn test_hello() {
 #[test]
 fn test_push_pop() {
   let mut reader = rustemu86::loader::load("./tests/asms/push_pop").unwrap();
-  let mut program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
-  let result = rustemu86::start_emulation(&mut program, EmulationMode::IntegrationTest);
+  let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+  let result = rustemu86::start_emulation(program, EmulationMode::IntegrationTest);
   assert!(result.is_ok());
 
   let created_file = File::open("test");
