@@ -8,7 +8,7 @@
 
 ## Test & Debug
 
-- [ ] Fix flaky tests using file written by uart.
+- [x] Fix flaky tests using file written by uart.
 
 ## Emulator model
 

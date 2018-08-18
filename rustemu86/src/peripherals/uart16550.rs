@@ -15,13 +15,13 @@ impl Uart16550 {
 
 pub enum Target {
   Stdout,
-  File,
+  File(String),
 }
 
 pub fn uart_factory(target: Target) -> Uart16550 {
   match target {
     Target::Stdout => Uart16550 { tx_writer: Box::new(StdoutWriter::new()) },
-    Target::File => Uart16550 { tx_writer: Box::new(FileWriter::new()) },
+    Target::File(path) => Uart16550 { tx_writer: Box::new(FileWriter::new(&path)) },
   }
 }
 
@@ -45,8 +45,8 @@ struct FileWriter {
 }
 
 impl FileWriter {
-  fn new() -> FileWriter {
-    let file = fs::File::create("test").expect("Fail to create file.");
+  fn new(path: &str) -> FileWriter {
+    let file = fs::File::create(&path).expect("Fail to create file.");
     FileWriter {
       file: file,
     }
@@ -75,13 +75,14 @@ mod test {
 
   #[test]
   fn file_write() {
-    let mut uart = uart_factory(Target::File);
+    let mut uart = uart_factory(Target::File("test_file_write.txt".to_string()));
     uart.write(b'a');
 
-    let created_file = File::open("test");
+    let created_file = File::open("test_file_write.txt");
     assert!(created_file.is_ok());
     let mut contents = String::new();
     created_file.unwrap().read_to_string(&mut contents).unwrap();
     assert_eq!(contents, "a");
+    fs::remove_file("test_file_write.txt").unwrap();
   }
 }

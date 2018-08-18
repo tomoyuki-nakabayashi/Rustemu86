@@ -1,6 +1,7 @@
 use peripherals::memory::Memory;
 use peripherals::uart16550;
 use peripherals::uart16550::Uart16550;
+use peripherals::uart16550::Target;
 use ::args::EmulationMode;
 
 const MAX_INSTRUCTION_LENGTH: usize = 15;
@@ -15,8 +16,8 @@ impl Interconnect {
     Interconnect {
       memory: Memory::new(1024),
       serial: match mode {
-        EmulationMode::Normal => uart16550::uart_factory(uart16550::Target::Stdout),
-        _ => uart16550::uart_factory(uart16550::Target::File),
+        EmulationMode::Test(path) => uart16550::uart_factory(Target::File(path)),
+        _ => uart16550::uart_factory(uart16550::Target::Stdout),
       }
     }
   }
@@ -66,7 +67,7 @@ mod test {
 
   #[test]
   fn uart_write() {
-    let mut interconnect = Interconnect::new(EmulationMode::IntegrationTest);
+    let mut interconnect = Interconnect::new(EmulationMode::Test("test".to_string()));
     interconnect.write64(0x10000000, 'h' as u64);
     interconnect.write64(0x10000000, 'e' as u64);
     interconnect.write64(0x10000000, 'l' as u64);
@@ -83,7 +84,7 @@ mod test {
   #[test]
   fn test_init_memory() {
     let program = vec![0x48, 0xff, 0xc0];
-    let mut interconnect = Interconnect::new(EmulationMode::IntegrationTest);
+    let mut interconnect = Interconnect::new(EmulationMode::Test("test".to_string()));
     interconnect.init_memory(program);
 
     assert_eq!(interconnect.read8(0x0), 0x48);

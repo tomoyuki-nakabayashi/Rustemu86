@@ -1,10 +1,10 @@
 use getopts::Options;
 use std::{env, process};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum EmulationMode {
   Normal,
-  IntegrationTest,
+  Test(String),
   PerCycleDump,
   InteractiveMode,
 }
