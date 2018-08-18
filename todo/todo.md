@@ -9,13 +9,13 @@
 
 ## Test & Debug
 
+- [ ] Fix flaky tests using file written by uart.
+
 ## Emulator model
 
 ## CPU Model
 
 ## Instruction
-
-- [x] retq
 
 ## Peripheral
 
