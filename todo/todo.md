@@ -5,6 +5,7 @@
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
 - [ ] Register file has registers as vector.
+- [x] decoder.rs decode() has match group in which instructions are ordered in alphabetical order.
 
 ## Test & Debug
 
