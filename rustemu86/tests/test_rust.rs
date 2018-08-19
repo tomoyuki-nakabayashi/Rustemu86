@@ -15,6 +15,6 @@ fn test_hello_from_rust() {
   assert!(created_file.is_ok());
   let mut contents = String::new();
   created_file.unwrap().read_to_string(&mut contents).unwrap();
-  assert_eq!(contents, "Hello\n");
+  assert_eq!(contents, "Hello from Rust!");
   std::fs::remove_file("test_hello_from_rust").unwrap();
 }
