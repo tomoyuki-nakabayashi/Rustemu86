@@ -2,24 +2,14 @@ use num::FromPrimitive;
 use bit_field::BitField;
 use cpu::isa::registers::Reg64Id;
 
+enum_from_primitive! {
 #[derive(Debug, Clone, Copy)]
-pub enum ModRmModeField {
-  Indirect,
-  OneByteDisp,
-  FourByteDisp,
-  Direct,
-}
-
-use self::ModRmModeField::{Direct, FourByteDisp, Indirect, OneByteDisp};
-impl ModRmModeField {
-  fn from_u8(n: u8) -> Option<ModRmModeField> {
-    match n {
-      0 => Some(Indirect),
-      1 => Some(OneByteDisp),
-      2 => Some(FourByteDisp),
-      3 => Some(Direct),
-      _ => None,
-    }
+  pub enum ModRmModeField {
+    Indirect = 0b00,
+    OneByteDisp = 0b01,
+    FourByteDisp = 0b10,
+    Direct = 0b11,
+    Unused = 0xff,
   }
 }
 
@@ -45,9 +35,38 @@ impl ModRm {
 
   pub fn new_invalid() -> ModRm {
     ModRm {
-      mode: Direct,
+      mode: ModRmModeField::Unused,
       reg: Reg64Id::Unknown,
       rm: Reg64Id::Unknown,
+    }
+  }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Sib {
+  pub scale: u8,
+  pub index: Reg64Id,
+  pub base: Reg64Id,
+}
+
+impl Sib {
+  pub fn new(modrm: u8) -> Sib {
+    let scale = modrm.get_bits(6..8);
+    let index = modrm.get_bits(3..6);
+    let base = modrm.get_bits(0..3);
+
+    Sib {
+      scale: 2^scale,
+      index: Reg64Id::from_u8(index).unwrap(),
+      base: Reg64Id::from_u8(base).unwrap(),
+    }
+  }
+
+  pub fn new_invalid() -> Sib {
+    Sib {
+      scale: 0,
+      index: Reg64Id::Unknown,
+      base: Reg64Id::Unknown,
     }
   }
 }

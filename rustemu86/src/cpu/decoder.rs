@@ -58,6 +58,7 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
     // Load Store instructions.
     MovToReg => Ok(decode_load(&rf, &inst)),
     MovToRm => Ok(decode_store(&rf, &inst)),
+    MovRm8Imm8 => Ok(decode_store_with_sib(&rf, &inst)),
     // Priviledged instructions.
     Halt => Ok(decode_halt(&inst)),
     // Complex instructions.
@@ -115,6 +116,14 @@ fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let load = ExecuteInst { opcode: ExOpcode::Load, dest: Some(dest), rip: None,
     op1: Some(addr), op2: None, op3: None, op4: None };
   vec![ExecuteInstType::LoadStore(load)]
+}
+
+fn decode_store_with_sib(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  let addr = inst.displacement;
+  let result = inst.immediate;
+  let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
+    op1: Some(addr), op2: Some(result), op3: None, op4: None };
+  vec![ExecuteInstType::LoadStore(store)]
 }
 
 fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {

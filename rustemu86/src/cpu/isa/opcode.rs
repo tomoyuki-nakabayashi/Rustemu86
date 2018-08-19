@@ -13,6 +13,7 @@ enum_from_primitive! {
     MovToRm   = 0x89,
     MovToReg  = 0x8b,
     MovImm32  = 0xb8,
+    MovRm8Imm8 = 0xc6,
     MovRmImm32 = 0xc7,
     PushR     = 0x50,
     PopR      = 0x58,

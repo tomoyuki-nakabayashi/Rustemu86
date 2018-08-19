@@ -204,4 +204,10 @@ mod test {
     assert_eq!(cpu.executed_insts, 3);
   }
 
+  #[test]
+  fn execute_mov_rm8_imm8() {
+    let program = vec![0xC6, 0x04, 0x25, 0x01, 0x00, 0x00, 0x00, 0x48, 0xf4];
+    let cpu = execute_program(program);
+    assert_eq!(cpu.bus.read64(1), 0x48);
+  }
 }
