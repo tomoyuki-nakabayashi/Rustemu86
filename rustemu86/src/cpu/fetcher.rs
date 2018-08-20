@@ -20,7 +20,7 @@ impl FetchUnit {
   pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
     let inst = FetchedInstBuilder::new(self.rip as usize, &program)
                   .parse_rex_prefix()
-                  .parse_opcode()
+                  .parse_opcode()?
                   .parse_modrm()
                   .parse_sib()
                   .parse_disp()
@@ -107,7 +107,7 @@ impl<'a> FetchedInstBuilder<'a> {
     self
   }
 
-  fn parse_opcode(&mut self) -> &mut FetchedInstBuilder<'a> {
+  fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>, InternalException> {
     let candidate = self.program[self.rip_offset];
     let mut r: u8 = 0;
     {
@@ -115,12 +115,11 @@ impl<'a> FetchedInstBuilder<'a> {
       let plus_r_opcode = || { Opcode::from_u8(candidate & 0xf8).and_then(extract_r) };
       self.opcode = Opcode::from_u8(candidate)
                             .or_else(plus_r_opcode)
-                            .or_else(|| Some(Opcode::Invalid))
-                            .unwrap();
+                            .ok_or(InternalException::FetchError{opcode: candidate})?
     }
     self.r = r;
     self.rip_offset += 1;
-    self
+    Ok(self)
   }
 
   fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {

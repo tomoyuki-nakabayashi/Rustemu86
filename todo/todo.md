@@ -5,10 +5,8 @@
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
 - [ ] Register file has registers as vector.
-- [x] Fetch return Option included result.
-  - [x] SIB
-  - [x] ModRM
 - [ ] Improve Error handling.
+  - [x] Fetch unit.
 
 ## Test & Debug
 
