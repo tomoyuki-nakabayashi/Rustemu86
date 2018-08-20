@@ -1,8 +1,11 @@
+use cpu::InternalException;
+use cpu::Result;
 use cpu::isa::modrm::ModRm;
+use cpu::isa::modrm::ModRmModeField;
 use cpu::isa::modrm::Sib;
 use cpu::isa::opcode::{REX, REX_WRXB};
 use cpu::isa::opcode::Opcode;
-use cpu::InternalException;
+use cpu::isa::registers::Reg64Id;
 use byteorder::{LittleEndian, ReadBytesExt};
 use bit_field::BitField;
 use num::FromPrimitive;
@@ -17,7 +20,7 @@ impl FetchUnit {
     FetchUnit{ rip: 0 }
   }
 
-  pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst, InternalException> {
+  pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst> {
     let inst = FetchedInstBuilder::new(self.rip as usize, &program)
                   .parse_rex_prefix()
                   .parse_opcode()?
@@ -49,22 +52,6 @@ pub struct FetchedInst {
   pub displacement: u64,
   pub immediate: u64,
   pub next_rip: usize,
-}
-
-impl FetchedInst {
-  pub fn new(prefix: u32, rex_prefix: u8, opcode: Opcode, r: u8, mod_rm: Option<ModRm>, sib: Option<Sib>, disp: u64, imm: u64) -> FetchedInst {
-    FetchedInst {
-      lecacy_prefix: prefix,
-      rex_prefix: rex_prefix,
-      opcode: opcode,
-      r: r,
-      mod_rm: mod_rm,
-      sib: sib,
-      displacement: disp,
-      immediate: imm,
-      next_rip: 0,
-    }
-  }
 }
 
 struct FetchedInstBuilder<'a> {
@@ -101,13 +88,16 @@ impl<'a> FetchedInstBuilder<'a> {
   fn parse_rex_prefix(&mut self) -> &mut FetchedInstBuilder<'a> {
     let candidate = self.program[self.rip_offset];
     match candidate {
-      REX...REX_WRXB => { self.rex_prefix = candidate; self.rip_offset += 1 },
+      REX...REX_WRXB => {
+        self.rex_prefix = candidate;
+        self.rip_offset += 1
+      }
       _ => (),
     }
     self
   }
 
-  fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>, InternalException> {
+  fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
     let candidate = self.program[self.rip_offset];
     let mut r: u8 = 0;
     {
@@ -135,12 +125,16 @@ impl<'a> FetchedInstBuilder<'a> {
   }
 
   fn parse_sib(&mut self) -> &mut FetchedInstBuilder<'a> {
-    match self.opcode {
-      Opcode::MovRm8Imm8 => {
-        self.sib = Some(Sib::new(self.program[self.rip_offset]));
-        self.rip_offset += 1;
+    if let Some(modrm) = self.mod_rm.as_ref() {
+      if modrm.mode != ModRmModeField::Direct {
+        match modrm.rm /* Or R12 */ {
+          Reg64Id::Rsp => {
+            self.sib = Some(Sib::new(self.program[self.rip_offset]));
+            self.rip_offset += 1;
+          }
+          _ => (),
+        }
       }
-      _ => (),
     }
     self
   }

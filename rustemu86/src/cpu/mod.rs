@@ -15,6 +15,9 @@ use peripherals::interconnect::Interconnect;
 use rustemu86::DebugMode;
 use std::fmt;
 
+use std::result;
+pub type Result<T> = result::Result<T, InternalException>;
+
 pub struct Cpu {
   rf: RegisterFile,
   fetch_unit: FetchUnit,
@@ -34,7 +37,7 @@ impl Cpu {
     }
   }
 
-  pub fn run<T>(&mut self, debug_mode: &T) -> Result<(), InternalException>
+  pub fn run<T>(&mut self, debug_mode: &T) -> Result<()>
   where
     T: DebugMode,
   {

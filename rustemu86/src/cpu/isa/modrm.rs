@@ -3,7 +3,7 @@ use bit_field::BitField;
 use cpu::isa::registers::Reg64Id;
 
 enum_from_primitive! {
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
   pub enum ModRmModeField {
     Indirect = 0b00,
     OneByteDisp = 0b01,
