@@ -74,8 +74,9 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
 // Arithmetic and Logic instructions.
 /////////////////////////////////////////////////////////////////////////////
 fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let dest = inst.mod_rm.rm;
-  let src = inst.mod_rm.reg;
+  let modrm = inst.mod_rm.unwrap();
+  let dest = modrm.rm;
+  let src = modrm.reg;
   let op1 = rf.read64(dest);
   let op2 = rf.read64(src);
   let uop1 = ExecuteInst { opcode: ExOpcode::Add, dest: Some(dest), rip: None,
@@ -84,7 +85,7 @@ fn decode_add(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
 }
 
 fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let dest = inst.mod_rm.rm;
+  let dest = inst.mod_rm.unwrap().rm;
   let op1 = rf.read64(dest);
   let uop1 = ExecuteInst { opcode: ExOpcode::Inc, dest: Some(dest), rip: None,
     op1: Some(op1), op2: None, op3: None, op4: None };
@@ -92,7 +93,7 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
 }
 
 fn decode_mov_rm_imm(inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let dest = inst.mod_rm.rm;
+  let dest = inst.mod_rm.unwrap().rm;
   let imm = inst.immediate;
   let uop1 = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(dest), rip: None, 
     op1: Some(imm), op2: None, op3: None, op4: None };
@@ -111,14 +112,15 @@ fn decode_reg_mov(inst: &FetchedInst) -> Vec<ExecuteInstType> {
 // Load and Store instructions.
 /////////////////////////////////////////////////////////////////////////////
 fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let dest = inst.mod_rm.reg;
-  let addr = rf.read64(inst.mod_rm.rm);
+  let modrm = inst.mod_rm.unwrap();
+  let dest = modrm.reg;
+  let addr = rf.read64(modrm.rm);
   let load = ExecuteInst { opcode: ExOpcode::Load, dest: Some(dest), rip: None,
     op1: Some(addr), op2: None, op3: None, op4: None };
   vec![ExecuteInstType::LoadStore(load)]
 }
 
-fn decode_store_with_sib(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+fn decode_store_with_sib(_rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   let addr = inst.displacement;
   let result = inst.immediate;
   let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
@@ -127,8 +129,9 @@ fn decode_store_with_sib(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteIn
 }
 
 fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let addr = rf.read64(inst.mod_rm.rm);
-  let result = rf.read64(inst.mod_rm.reg);
+  let modrm = inst.mod_rm.unwrap();
+  let addr = rf.read64(modrm.rm);
+  let result = rf.read64(modrm.reg);
   let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
     op1: Some(addr), op2: Some(result), op3: None, op4: None };
   vec![ExecuteInstType::LoadStore(store)]

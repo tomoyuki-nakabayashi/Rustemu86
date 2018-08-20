@@ -44,15 +44,15 @@ pub struct FetchedInst {
   pub rex_prefix: u8,
   pub opcode: Opcode,
   pub r: u8,
-  pub mod_rm: ModRm,
-  pub sib: Sib,
+  pub mod_rm: Option<ModRm>,
+  pub sib: Option<Sib>,
   pub displacement: u64,
   pub immediate: u64,
   pub next_rip: usize,
 }
 
 impl FetchedInst {
-  pub fn new(prefix: u32, rex_prefix: u8, opcode: Opcode, r: u8, mod_rm: ModRm, sib: Sib, disp: u64, imm: u64) -> FetchedInst {
+  pub fn new(prefix: u32, rex_prefix: u8, opcode: Opcode, r: u8, mod_rm: Option<ModRm>, sib: Option<Sib>, disp: u64, imm: u64) -> FetchedInst {
     FetchedInst {
       lecacy_prefix: prefix,
       rex_prefix: rex_prefix,
@@ -72,8 +72,8 @@ struct FetchedInstBuilder<'a> {
   rex_prefix: u8,
   opcode: Opcode,  // Opcode enum.
   r: u8,
-  mod_rm: ModRm,
-  sib: Sib,
+  mod_rm: Option<ModRm>,
+  sib: Option<Sib>,
   displacement: u64,
   immediate: u64,
   rip_base: usize,
@@ -88,8 +88,8 @@ impl<'a> FetchedInstBuilder<'a> {
       rex_prefix: 0,
       opcode: Opcode::Invalid,
       r: 0,
-      mod_rm: ModRm::new_invalid(),
-      sib: Sib::new_invalid(),
+      mod_rm: None,
+      sib: None,
       displacement: 0,
       immediate: 0,
       rip_base: rip,
@@ -127,7 +127,7 @@ impl<'a> FetchedInstBuilder<'a> {
     match self.opcode {
       Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
       Opcode::MovRmImm32 | Opcode::MovRm8Imm8 => {
-        self.mod_rm = ModRm::new(self.program[self.rip_offset]);
+        self.mod_rm = Some(ModRm::new(self.program[self.rip_offset]));
         self.rip_offset += 1;
       }
       _ => (),
@@ -138,7 +138,7 @@ impl<'a> FetchedInstBuilder<'a> {
   fn parse_sib(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
       Opcode::MovRm8Imm8 => {
-        self.sib = Sib::new(self.program[self.rip_offset]);
+        self.sib = Some(Sib::new(self.program[self.rip_offset]));
         self.rip_offset += 1;
       }
       _ => (),
