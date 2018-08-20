@@ -57,8 +57,7 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
     JmpRel8 => Ok(decode_jmp(&inst)),
     // Load Store instructions.
     MovToReg => Ok(decode_load(&rf, &inst)),
-    MovToRm => Ok(decode_store(&rf, &inst)),
-    MovRm8Imm8 => Ok(decode_store_with_sib(&rf, &inst)),
+    MovToRm | MovRm8Imm8 => Ok(decode_store(&rf, &inst)),
     // Priviledged instructions.
     Halt => Ok(decode_halt(&inst)),
     // Complex instructions.
@@ -120,21 +119,24 @@ fn decode_load(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   vec![ExecuteInstType::LoadStore(load)]
 }
 
-fn decode_store_with_sib(_rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let addr = inst.displacement;
-  let result = inst.immediate;
-  let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
-    op1: Some(addr), op2: Some(result), op3: None, op4: None };
-  vec![ExecuteInstType::LoadStore(store)]
-}
-
 fn decode_store(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-  let modrm = inst.mod_rm.unwrap();
-  let addr = rf.read64(modrm.rm);
-  let result = rf.read64(modrm.reg);
-  let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
-    op1: Some(addr), op2: Some(result), op3: None, op4: None };
-  vec![ExecuteInstType::LoadStore(store)]
+  match inst.sib {
+    Some(_) => {
+      let addr = inst.displacement;
+      let result = inst.immediate;
+      let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
+        op1: Some(addr), op2: Some(result), op3: None, op4: None };
+      vec![ExecuteInstType::LoadStore(store)]
+    }
+    None => {
+      let modrm = inst.mod_rm.unwrap();
+      let addr = rf.read64(modrm.rm);
+      let result = rf.read64(modrm.reg);
+      let store = ExecuteInst { opcode: ExOpcode::Store, dest: None, rip: None,
+        op1: Some(addr), op2: Some(result), op3: None, op4: None };
+      vec![ExecuteInstType::LoadStore(store)]
+    }
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
