@@ -1,3 +1,5 @@
+use cpu::isa::modrm::ModRm;
+
 pub const REX: u8 = 0x40;
 pub const REX_WRXB: u8 = 0x4F;
 
@@ -18,5 +20,16 @@ enum_from_primitive! {
     PushR     = 0x50,
     PopR      = 0x58,
     Ret       = 0xc3,
+  }
+}
+
+impl Opcode {
+  pub fn modrm_if_required(&self, candidate: u8) -> Option<ModRm> {
+    match self {
+      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
+      Opcode::MovRmImm32 | Opcode::MovRm8Imm8
+        => return Some(ModRm::new(candidate)),
+      _ => return None,
+    }
   }
 }

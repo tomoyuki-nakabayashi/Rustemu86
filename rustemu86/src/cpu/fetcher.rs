@@ -113,14 +113,9 @@ impl<'a> FetchedInstBuilder<'a> {
   }
 
   fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
-    match self.opcode {
-      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
-      Opcode::MovRmImm32 | Opcode::MovRm8Imm8 => {
-        self.mod_rm = Some(ModRm::new(self.program[self.rip_offset]));
-        self.rip_offset += 1;
-      }
-      _ => (),
-    }
+    let candidate = self.program[self.rip_offset];
+    self.mod_rm = self.opcode.modrm_if_required(candidate);
+    if self.mod_rm.is_some() { self.rip_offset += 1; }
     self
   }
 
