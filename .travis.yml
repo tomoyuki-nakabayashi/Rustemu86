@@ -1,6 +1,6 @@
 language: rust
-
-sudo: false
+dist: trusty
+sudo: required
 
 notifications:
     email:
@@ -11,6 +11,8 @@ rust:
     - 1.28.0
 
 cache: cargo
+
+before_install: sudo apt install libgtk-3-dev
 
 before_script: cd rustemu86
 
