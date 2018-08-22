@@ -4,7 +4,6 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [x] Register file has registers as vector.
 
 ## Test & Debug
 
@@ -21,6 +20,7 @@
 - [ ] Register memory map.
 - [ ] VGA display.
   - [x] Create GTK Window.
+  - [x] Update CI.
 
 ## Load an x86 binary
 

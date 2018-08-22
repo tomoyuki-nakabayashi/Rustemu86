@@ -2,7 +2,8 @@ extern crate rustemu86;
 extern crate gtk;
 extern crate gio;
 
-use gtk::{ WidgetExt, WindowExt };
+use gtk::{ WidgetExt, WindowExt, ContainerExt };
+use gtk::LabelExt;
 use gio::{ ApplicationExt };
 
 fn start_rustemu86() {
@@ -19,6 +20,9 @@ fn main() {
       app.connect_activate(|app| {
         let win = gtk::ApplicationWindow::new(&app);
         win.set_title("Rustemu86");
+        let label = gtk::Label::new(None);
+        win.add(&label);
+        label.set_markup("<span foreground=\"blue\">Hello</span>");
         win.show_all();
         start_rustemu86();
       });
