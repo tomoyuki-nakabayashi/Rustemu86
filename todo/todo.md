@@ -4,9 +4,7 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [ ] Register file has registers as vector.
-- [ ] Improve Error handling.
-  - [x] Fetch unit.
+- [x] Register file has registers as vector.
 
 ## Test & Debug
 
