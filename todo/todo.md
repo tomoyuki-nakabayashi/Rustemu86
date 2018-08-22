@@ -19,6 +19,8 @@
 ## Peripheral
 
 - [ ] Register memory map.
+- [ ] VGA display.
+  - [x] Create GTK Window.
 
 ## Load an x86 binary
 
