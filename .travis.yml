@@ -12,7 +12,9 @@ rust:
 
 cache: cargo
 
-before_install: sudo apt install libgtk-3-dev
+before_install:
+- sudo apt update
+- sudo apt install -y libgtk-3-dev
 
 before_script: cd rustemu86
 
