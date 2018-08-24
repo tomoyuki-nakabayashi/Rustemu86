@@ -1,9 +1,24 @@
 extern crate gtk;
 extern crate gio;
 
+use gtk::Grid;
 use gtk::{ WidgetExt, WindowExt, ContainerExt };
 use gtk::{ LabelExt, GridExt };
 use gio::{ ApplicationExt };
+
+fn create_text_grid() -> Grid {
+  let grid = gtk::Grid::new();
+  let mut row: Vec<gtk::Label> = Vec::new();
+  for i in 0..80 {
+    row.push(gtk::Label::new("a"));
+  }
+
+  for (col, label) in row.iter().by_ref().enumerate() {
+    grid.attach(label, 10*(col as i32), 10, 10, 10);
+  }
+
+  grid
+}
 
 pub fn init_display(activate_cb: fn())
 {
@@ -13,12 +28,9 @@ pub fn init_display(activate_cb: fn())
         let win = gtk::ApplicationWindow::new(&app);
         win.set_default_size(640, 480);
         win.set_title("VGA text mode");
-        let grid = gtk::Grid::new();
+
+        let grid = create_text_grid();
         win.add(&grid);
-        let label1 = gtk::Label::new("a");
-        let label2 = gtk::Frame::new("b");
-        grid.attach(&label1, 10, 10, 10, 10);
-        grid.attach(&label2, 20, 10, 10, 10);
         win.show_all();
         activate_cb();
       });
