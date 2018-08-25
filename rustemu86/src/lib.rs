@@ -4,6 +4,7 @@ extern crate num;
 extern crate bit_field;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate enum_primitive;
+#[macro_use] extern crate conrod;
 
 pub mod args;
 pub mod cpu;
