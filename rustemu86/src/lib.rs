@@ -2,9 +2,10 @@ extern crate byteorder;
 extern crate getopts;
 extern crate num;
 extern crate bit_field;
+extern crate gtk;
+extern crate gio;
 #[macro_use] extern crate failure;
 #[macro_use] extern crate enum_primitive;
-#[macro_use] extern crate conrod;
 
 pub mod args;
 pub mod cpu;
