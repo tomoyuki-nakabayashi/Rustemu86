@@ -18,11 +18,12 @@ use args::EmulationMode;
 use cpu::Cpu;
 use peripherals::interconnect::Interconnect;
 use rustemu86::{Interactive, NoneDebug, PerCycleDump};
+use display::GtkVgaTextBuffer;
 
 pub struct CpuError {}
 
-pub fn start_emulation(program: Vec<u8>, mode_option: EmulationMode) -> Result<(), CpuError> {
-  let mut interconnect = Interconnect::new(mode_option.clone());
+pub fn start_emulation(program: Vec<u8>, mode_option: EmulationMode, vga_text_buffer: GtkVgaTextBuffer) -> Result<(), CpuError> {
+  let mut interconnect = Interconnect::new(mode_option.clone(), vga_text_buffer);
   interconnect.init_memory(program);
   let mut cpu = Cpu::new(interconnect);
 
@@ -41,12 +42,13 @@ pub fn start_emulation(program: Vec<u8>, mode_option: EmulationMode) -> Result<(
 #[cfg(test)]
 mod test {
   use super::*;
+  use display::GtkVgaTextBuffer;
 
   #[test]
   fn success_emulation() {
     let mut reader = loader::load("./tests/asms/simple_add").unwrap();
     let program = loader::map_to_memory(&mut reader).unwrap();
-    let result = start_emulation(program, EmulationMode::Normal);
+    let result = start_emulation(program, EmulationMode::Normal, GtkVgaTextBuffer::new());
     assert!(result.is_ok());
   }
 
@@ -54,7 +56,7 @@ mod test {
   fn success_emulation_with_per_cycle_dump() {
     let mut reader = loader::load("./tests/asms/simple_add").unwrap();
     let program = loader::map_to_memory(&mut reader).unwrap();
-    let result = start_emulation(program, EmulationMode::PerCycleDump);
+    let result = start_emulation(program, EmulationMode::PerCycleDump, GtkVgaTextBuffer::new());
     assert!(result.is_ok());
   }
 }

@@ -1,5 +1,6 @@
 extern crate rustemu86;
 use rustemu86::args::EmulationMode;
+use rustemu86::display::GtkVgaTextBuffer;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -8,7 +9,8 @@ fn test_hello_from_rust() {
   let mut reader = rustemu86::loader::load("./tests/bins/hello-x86_64.bin").unwrap();
   let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
   let result = rustemu86::start_emulation(
-    program, EmulationMode::Test("test_hello_from_rust".to_string()));
+    program, EmulationMode::Test("test_hello_from_rust".to_string()),
+    GtkVgaTextBuffer::new());
   assert!(result.is_ok());
 
   let created_file = File::open("test_hello_from_rust");

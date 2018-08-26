@@ -86,18 +86,23 @@ pub trait VgaTextMode {
   fn write(&self, address_offset: usize, screen_char: u16);
 }
 
-pub struct GtkVgaTextMode (Grid);
+pub struct GtkVgaTextBuffer (Option<Grid>);
 
-impl GtkVgaTextMode {
+impl GtkVgaTextBuffer {
+  pub fn new() -> GtkVgaTextBuffer {
+    GtkVgaTextBuffer(None)
+  }
+
   fn get_child_at(&self, address_offset: usize) -> gtk::Label {
     const SINGLE_CHAR_BYTE: usize = 2;
-    let x = (address_offset % (COL * SINGLE_CHAR_BYTE)) as i32;
+    let x = ((address_offset / SINGLE_CHAR_BYTE) % COL) as i32;
     let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
-    self.0.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
+    let buffer = self.0.as_ref().unwrap();
+    buffer.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
   }
 }
 
-impl VgaTextMode for GtkVgaTextMode {
+impl VgaTextMode for GtkVgaTextBuffer {
   fn write(&self, address_offset: usize, screen_char: u16) {
     use std::fmt::Write;
     let screen_char = ScreenChar::from(screen_char);
@@ -128,8 +133,7 @@ fn create_text_grid() -> Grid {
   screen
 }
 
-pub fn start_with_gtk(start_emulation: fn())
-{
+pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
   match gtk::Application::new("com.github.tomoyuki-nakabayashi.Rustemu86", gio::APPLICATION_HANDLES_OPEN) {
     Ok(app) => {
       app.connect_activate(move |app| {
@@ -140,9 +144,9 @@ pub fn start_with_gtk(start_emulation: fn())
         let screen = create_text_grid();
         win.add(&screen);
         win.show_all();
-        let text_mode = GtkVgaTextMode(screen);
+        let text_mode = GtkVgaTextBuffer(Some(screen));
         text_mode.write(0, 'a' as u16 | (Color::Yellow as u16) << 8);
-        start_emulation();
+        start_emulation(text_mode);
       });
 
       app.run(&[""]);

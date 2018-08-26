@@ -101,9 +101,10 @@ mod test {
   use ::args::EmulationMode;
   use peripherals::interconnect::Interconnect;
   use cpu::isa::registers::Reg64Id::{Rax, Rcx, Rbx, Rsp};
+  use ::display::GtkVgaTextBuffer;
 
   fn execute_program(program: Vec<u8>) -> Cpu {
-    let mut interconnect = Interconnect::new(EmulationMode::Normal);
+    let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
     interconnect.init_memory(program);
     let mut cpu = Cpu::new(interconnect);
     let result = cpu.run(&rustemu86::NoneDebug{});
@@ -113,7 +114,7 @@ mod test {
   }
 
   fn execute_program_after_init(program: Vec<u8>, initializer: &Fn(&mut Cpu)) -> Cpu {
-    let mut interconnect = Interconnect::new(EmulationMode::Normal);
+    let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
     interconnect.init_memory(program);
     let mut cpu = Cpu::new(interconnect);
     initializer(&mut cpu);
@@ -213,4 +214,12 @@ mod test {
     let cpu = execute_program(program);
     assert_eq!(cpu.bus.read64(0x100), 0x48);
   }
+/* 
+  #[test]
+  fn execute_mov_rm16_imm16() {
+    let program = vec![0x66, 0xC7, 0x04, 0x25, 0x00, 0x01, 0x00, 0x00, 0x48, 0x0e, 0xf4];
+    let cpu = execute_program(program);
+    assert_eq!(cpu.bus.read64(0x100), 0x0e48);
+  }
+ */
 }
