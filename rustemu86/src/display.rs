@@ -5,6 +5,7 @@ use gtk::Grid;
 use gtk::{ WidgetExt, WindowExt, ContainerExt, Cast };
 use gtk::{ LabelExt, GridExt };
 use gio::{ ApplicationExt };
+use std::fmt;
 use std::convert::From;
 use num::FromPrimitive;
 use bit_field::BitField;
@@ -35,12 +36,39 @@ enum_from_primitive! {
   }
 }
 
+impl fmt::Display for Color {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(
+      f,
+      "{}",
+      match self {
+        Color::Black => "black",
+        Color::Blue => "blue",
+        Color::Green => "green",
+        Color::Cyan => "cyan",
+        Color::Red => "red",
+        Color::Magenta => "magenta",
+        Color::Brown => "brown",
+        Color::LightGray => "lightgray",
+        Color::DarkGray => "darkgray",
+        Color::LightBlue => "lightblue",
+        Color::LightGreen => "lightgreen",
+        Color::LightCyan => "lightcyan",
+        Color::LightRed => "lightred",
+        Color::Pink => "pink",
+        Color::Yellow => "yellow",
+        Color::White => "white",
+      }
+    )
+  }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 struct ScreenChar {
     ascii_character: u8,
     background: Color,
-    forground: Color,
+    foreground: Color,
 }
 
 impl From<u16> for ScreenChar {
@@ -49,7 +77,7 @@ impl From<u16> for ScreenChar {
     ScreenChar {
       ascii_character: item as u8,
       background: Color::from_u8(color_code.get_bits(4..8)).unwrap(),
-      forground: Color::from_u8(color_code.get_bits(0..4)).unwrap(),
+      foreground: Color::from_u8(color_code.get_bits(0..4)).unwrap(),
     }
   }
 }
@@ -60,12 +88,27 @@ pub trait VgaTextMode {
 
 pub struct GtkVgaTextMode (Grid);
 
+impl GtkVgaTextMode {
+  fn get_child_at(&self, address_offset: usize) -> gtk::Label {
+    const SINGLE_CHAR_BYTE: usize = 2;
+    let x = (address_offset % (COL * SINGLE_CHAR_BYTE)) as i32;
+    let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
+    self.0.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
+  }
+}
+
 impl VgaTextMode for GtkVgaTextMode {
   fn write(&self, address_offset: usize, screen_char: u16) {
     use std::fmt::Write;
+    let screen_char = ScreenChar::from(screen_char);
     let mut markup = String::new();
-    let child = self.0.get_child_at(0, 0).unwrap().downcast::<gtk::Label>().ok().unwrap();
-    write!(markup, "<span font_family=\"monospace\" size=\"13000\" background=\"black\">{}</span>", screen_char as u8 as char).unwrap();
+    write!(markup,
+      "<span font_family=\"monospace\" size=\"13000\" foreground=\"{}\" background=\"{}\">{}</span>",
+      screen_char.foreground,
+      screen_char.background,
+      screen_char.ascii_character as char).unwrap();
+
+    let child = self.get_child_at(address_offset);
     child.set_markup(&markup);
   }
 }
@@ -98,7 +141,7 @@ pub fn start_with_gtk(start_emulation: fn())
         win.add(&screen);
         win.show_all();
         let text_mode = GtkVgaTextMode(screen);
-        text_mode.write(0, 'a' as u16);
+        text_mode.write(0, 'a' as u16 | (Color::Yellow as u16) << 8);
         start_emulation();
       });
 
@@ -121,6 +164,6 @@ mod test {
 
     assert_eq!(decoded.ascii_character, 'a' as u8);
     assert_eq!(decoded.background, Color::Blue);
-    assert_eq!(decoded.forground, Color::White);
+    assert_eq!(decoded.foreground, Color::White);
   }
 }
