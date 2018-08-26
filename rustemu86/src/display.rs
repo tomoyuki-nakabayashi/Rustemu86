@@ -9,6 +9,29 @@ use gio::{ ApplicationExt };
 const ROW: usize = 25;
 const COL: usize = 80;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+pub struct ScreenChar {
+    ascii_character: u8,
+    color_code: u8,
+}
+
+pub trait VgaTextMode {
+  fn write(&self, pos: usize, screen_char: ScreenChar);
+}
+
+pub struct GtkVgaTextMode (Grid);
+
+impl VgaTextMode for GtkVgaTextMode {
+  fn write(&self, pos: usize, screen_char: ScreenChar) {
+    use std::fmt::Write;
+    let mut markup = String::new();
+    let child = self.0.get_child_at(0, 0).unwrap().downcast::<gtk::Label>().ok().unwrap();
+    write!(markup, "<span font_family=\"monospace\" size=\"13000\" background=\"black\">{}</span>", screen_char.ascii_character as char).unwrap();
+    child.set_markup(&markup);
+  }
+}
+
 fn create_text_grid() -> Grid {
   let screen = gtk::Grid::new();
   let mut text: Vec<Vec<gtk::Label>> = Vec::new();
@@ -24,15 +47,7 @@ fn create_text_grid() -> Grid {
   screen
 }
 
-fn update_screen_char(screen_buffer: &gtk::Grid, pos: usize, screen_char: u8) {
-  use std::fmt::Write;
-  let mut markup = String::new();
-  let child = screen_buffer.get_child_at(0, 0).unwrap().downcast::<gtk::Label>().ok().unwrap();
-  write!(markup, "<span font_family=\"monospace\" size=\"13000\" background=\"black\">{}</span>", screen_char as char).unwrap();
-  child.set_markup(&markup);
-}
-
-pub fn init_display(activate_cb: fn())
+pub fn start_with_gtk(start_emulation: fn())
 {
   match gtk::Application::new("com.github.tomoyuki-nakabayashi.Rustemu86", gio::APPLICATION_HANDLES_OPEN) {
     Ok(app) => {
@@ -44,8 +59,9 @@ pub fn init_display(activate_cb: fn())
         let screen = create_text_grid();
         win.add(&screen);
         win.show_all();
-        update_screen_char(&screen, 0, 'a' as u8);
-        activate_cb();
+        let text_mode = GtkVgaTextMode(screen);
+        text_mode.write(0, ScreenChar{ ascii_character: 'a' as u8, color_code: 0, });
+        start_emulation();
       });
 
       app.run(&[""]);

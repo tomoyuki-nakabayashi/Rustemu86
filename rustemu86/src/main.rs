@@ -11,5 +11,5 @@ fn start_rustemu86() {
 }
 
 fn main() {
-  display::init_display(start_rustemu86);
+  display::start_with_gtk(start_rustemu86);
 }
