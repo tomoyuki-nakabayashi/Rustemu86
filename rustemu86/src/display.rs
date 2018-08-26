@@ -54,7 +54,7 @@ impl fmt::Display for Color {
         Color::LightBlue => "lightblue",
         Color::LightGreen => "lightgreen",
         Color::LightCyan => "lightcyan",
-        Color::LightRed => "lightred",
+        Color::LightRed => "red",
         Color::Pink => "pink",
         Color::Yellow => "yellow",
         Color::White => "white",

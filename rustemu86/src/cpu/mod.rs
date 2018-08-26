@@ -214,12 +214,12 @@ mod test {
     let cpu = execute_program(program);
     assert_eq!(cpu.bus.read64(0x100), 0x48);
   }
-/* 
+
   #[test]
   fn execute_mov_rm16_imm16() {
     let program = vec![0x66, 0xC7, 0x04, 0x25, 0x00, 0x01, 0x00, 0x00, 0x48, 0x0e, 0xf4];
     let cpu = execute_program(program);
     assert_eq!(cpu.bus.read64(0x100), 0x0e48);
   }
- */
+
 }

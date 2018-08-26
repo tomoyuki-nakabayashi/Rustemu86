@@ -4,7 +4,7 @@ use cpu::isa::modrm::ModRm;
 use cpu::isa::modrm::ModRmModeField;
 use cpu::isa::modrm::Sib;
 use cpu::isa::opcode::{REX, REX_WRXB};
-use cpu::isa::opcode::Opcode;
+use cpu::isa::opcode::{self, Opcode};
 use cpu::isa::registers::Reg64Id;
 use byteorder::{LittleEndian, ReadBytesExt};
 use bit_field::BitField;
@@ -22,6 +22,7 @@ impl FetchUnit {
 
   pub fn fetch(&mut self, program: &[u8]) -> Result<FetchedInst> {
     let inst = FetchedInstBuilder::new(self.rip as usize, &program)
+                  .parse_mandatory_prefix()
                   .parse_rex_prefix()
                   .parse_opcode()?
                   .parse_modrm()
@@ -44,7 +45,7 @@ impl FetchUnit {
 
 pub struct FetchedInst {
   pub lecacy_prefix: u32,
-  pub rex_prefix: u8,
+  pub rex_prefix: Option<u8>,
   pub opcode: Opcode,
   pub r: u8,
   pub mod_rm: Option<ModRm>,
@@ -56,7 +57,8 @@ pub struct FetchedInst {
 
 struct FetchedInstBuilder<'a> {
   lecacy_prefix: u32,
-  rex_prefix: u8,
+  mandatory_prefix: Option<u8>,
+  rex_prefix: Option<u8>,
   opcode: Opcode,  // Opcode enum.
   r: u8,
   mod_rm: Option<ModRm>,
@@ -72,7 +74,8 @@ impl<'a> FetchedInstBuilder<'a> {
   fn new(rip: usize, program: &[u8]) -> FetchedInstBuilder {
     FetchedInstBuilder {
       lecacy_prefix: 0,
-      rex_prefix: 0,
+      mandatory_prefix: None,
+      rex_prefix: None,
       opcode: Opcode::Invalid,
       r: 0,
       mod_rm: None,
@@ -85,11 +88,23 @@ impl<'a> FetchedInstBuilder<'a> {
     }
   }
 
+  fn parse_mandatory_prefix(&mut self) -> &mut FetchedInstBuilder<'a> {
+    let candidate = self.program[self.rip_offset];
+    match candidate {
+      opcode::OVERRIDE_OP_SIZE => {
+        self.mandatory_prefix = Some(candidate);
+        self.rip_offset += 1
+      }
+      _ => (),
+    }
+    self
+  }
+
   fn parse_rex_prefix(&mut self) -> &mut FetchedInstBuilder<'a> {
     let candidate = self.program[self.rip_offset];
     match candidate {
       REX...REX_WRXB => {
-        self.rex_prefix = candidate;
+        self.rex_prefix = Some(candidate);
         self.rip_offset += 1
       }
       _ => (),
@@ -145,6 +160,11 @@ impl<'a> FetchedInstBuilder<'a> {
         self.displacement = sign_extend_from_u32(disp.read_u32::<LittleEndian>().unwrap());
         self.rip_offset += 4;
       }
+      Opcode::MovRmImm32 if self.rex_prefix.is_none() => {
+        let mut disp = &self.program[self.rip_offset..self.rip_offset+4];
+        self.displacement = sign_extend_from_u32(disp.read_u32::<LittleEndian>().unwrap());
+        self.rip_offset += 4;
+      }
       _ => (),
     }
     self
@@ -152,6 +172,11 @@ impl<'a> FetchedInstBuilder<'a> {
 
   fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
     match self.opcode {
+      Opcode::MovRmImm32 if self.mandatory_prefix.is_some() => {
+        let mut imm = &self.program[self.rip_offset..self.rip_offset+2];
+        self.immediate = imm.read_u16::<LittleEndian>().unwrap().into();
+        self.rip_offset += 2
+      }
       Opcode::MovImm32 | Opcode::MovRmImm32 => {
         let mut imm = &self.program[self.rip_offset..self.rip_offset+4];
         self.immediate = imm.read_u32::<LittleEndian>().unwrap().into();

@@ -4,6 +4,7 @@
 
 - [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
+- [ ] Mov instruction decode.
 
 ## Test & Debug
 
@@ -18,11 +19,11 @@
 ## Peripheral
 
 - [ ] Register memory map.
-- [ ] VGA text mode.
+- [x] VGA text mode.
   - [x] Create GTK Window.
   - [x] Update CI.
-  - [ ] Create 25x80 text area.
-  - [ ] Color.
+  - [x] Create 25x80 text area.
+  - [x] Color.
 
 ## Load an x86 binary
 

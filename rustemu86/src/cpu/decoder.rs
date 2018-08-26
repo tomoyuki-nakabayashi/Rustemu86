@@ -52,7 +52,7 @@ pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstTy
     Add =>  Ok(decode_add(&rf, &inst)),
     Inc => Ok(decode_inc(&rf, &inst)),
     MovImm32 => Ok(decode_reg_mov(&inst)),
-    MovRmImm32 => Ok(decode_mov_rm_imm(&inst)),
+    MovRmImm32 => Ok(decode_mov_rm_imm(&rf, &inst)),
     // Branch instructions.
     JmpRel8 => Ok(decode_jmp(&inst)),
     // Load Store instructions.
@@ -91,7 +91,11 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
   vec![ExecuteInstType::ArithLogic(uop1)]
 }
 
-fn decode_mov_rm_imm(inst: &FetchedInst) -> Vec<ExecuteInstType> {
+fn decode_mov_rm_imm(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
+  use cpu::isa::modrm;
+  if inst.mod_rm.unwrap().mode != modrm::ModRmModeField::Direct {
+    return decode_store(&rf, &inst)
+  }
   let dest = inst.mod_rm.unwrap().rm;
   let imm = inst.immediate;
   let uop1 = ExecuteInst { opcode: ExOpcode::Mov, dest: Some(dest), rip: None, 
