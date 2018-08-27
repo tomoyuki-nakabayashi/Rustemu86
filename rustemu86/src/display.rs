@@ -86,18 +86,27 @@ pub trait VgaTextMode {
   fn write(&self, address_offset: usize, screen_char: u16);
 }
 
-pub struct GtkVgaTextBuffer (Option<Grid>);
+pub struct GtkVgaTextBuffer {
+  gtk_grid: Option<Grid>,
+  buffer: [[ScreenChar; 80]; 25],
+}
 
 impl GtkVgaTextBuffer {
   pub fn new() -> GtkVgaTextBuffer {
-    GtkVgaTextBuffer(None)
+    GtkVgaTextBuffer{
+      gtk_grid: None,
+      buffer: [[ScreenChar {
+        ascii_character: 0,
+        background: Color::Black,
+        foreground: Color::Black }; 80]; 25],
+    }
   }
 
   fn get_child_at(&self, address_offset: usize) -> gtk::Label {
     const SINGLE_CHAR_BYTE: usize = 2;
     let x = ((address_offset / SINGLE_CHAR_BYTE) % COL) as i32;
     let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
-    let buffer = self.0.as_ref().unwrap();
+    let buffer = self.gtk_grid.as_ref().unwrap();
     buffer.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
   }
 }
@@ -144,7 +153,8 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
         let screen = create_text_grid();
         win.add(&screen);
         win.show_all();
-        let text_mode = GtkVgaTextBuffer(Some(screen));
+        let mut text_mode = GtkVgaTextBuffer::new();
+        text_mode.gtk_grid = Some(screen);
         text_mode.write(0, 'a' as u16 | (Color::Yellow as u16) << 8);
         start_emulation(text_mode);
       });
