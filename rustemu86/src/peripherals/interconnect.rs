@@ -49,7 +49,7 @@ impl Interconnect {
   pub fn write64(&mut self, addr: u64, data: u64) {
     match addr {
       0x0...0x200 => self.memory.write64(addr as usize, data),
-      0xb8000...0xb8FA0 => self.vga_text_buffer.write((addr & 0xfff) as usize, data as u16),
+      0xb8000...0xb8FA0 => self.vga_text_buffer.write_u16((addr & 0xfff) as usize, data as u16),
       0x10000000 => self.serial.write(data as u8),
       _ => (),
     }

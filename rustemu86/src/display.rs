@@ -12,6 +12,7 @@ use bit_field::BitField;
 
 const ROW: usize = 25;
 const COL: usize = 80;
+const SINGLE_CHAR_BYTE: usize = 2;
 
 enum_from_primitive! {
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -94,7 +95,8 @@ impl From<u16> for ScreenChar {
 }
 
 pub trait VgaTextMode {
-  fn write(&self, address_offset: usize, screen_char: u16);
+  fn write_u8(&self, addr: usize, byte: u8);
+  fn write_u16(&self, addr: usize, screen_char: u16);
 }
 
 pub struct GtkVgaTextBuffer {
@@ -114,7 +116,7 @@ impl GtkVgaTextBuffer {
   }
 
   fn get_child_at(&self, address_offset: usize) -> gtk::Label {
-    const SINGLE_CHAR_BYTE: usize = 2;
+//    let (y, x) = get_child_position(address_offset);
     let x = ((address_offset / SINGLE_CHAR_BYTE) % COL) as i32;
     let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
     let buffer = self.gtk_grid.as_ref().unwrap();
@@ -138,7 +140,11 @@ impl GtkVgaTextBuffer {
 }
 
 impl VgaTextMode for GtkVgaTextBuffer {
-  fn write(&self, address_offset: usize, screen_char: u16) {
+  fn write_u8(&self, addr: usize, byte: u8) {
+    let (row, col) = get_child_position(addr);
+  }
+
+  fn write_u16(&self, addr: usize, screen_char: u16) {
     use std::fmt::Write;
     let screen_char = ScreenChar::from(screen_char);
     let mut markup = String::new();
@@ -148,9 +154,15 @@ impl VgaTextMode for GtkVgaTextBuffer {
       screen_char.background,
       screen_char.ascii_character as char).unwrap();
 
-    let child = self.get_child_at(address_offset);
+    let child = self.get_child_at(addr);
     child.set_markup(&markup);
   }
+}
+
+fn get_child_position(addr: usize) -> (i32, i32) {
+  let row = (addr / (COL * SINGLE_CHAR_BYTE)) as i32;
+  let col = ((addr / SINGLE_CHAR_BYTE) % COL) as i32;
+  (row, col)
 }
 
 fn create_text_grid() -> Grid {
