@@ -66,9 +66,20 @@ impl fmt::Display for Color {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 struct ScreenChar {
-    ascii_character: u8,
-    background: Color,
-    foreground: Color,
+  ascii_character: u8,
+  background: Color,
+  foreground: Color,
+}
+
+impl ScreenChar {
+  fn set_ascii(&mut self, character: u8) {
+    self.ascii_character = character;
+  }
+
+  fn set_color(&mut self, color_code: u8) {
+    self.background = Color::from_u8(color_code.get_bits(4..8)).unwrap();
+    self.foreground = Color::from_u8(color_code.get_bits(0..4)).unwrap();
+  }
 }
 
 impl From<u16> for ScreenChar {
@@ -96,7 +107,7 @@ impl GtkVgaTextBuffer {
     GtkVgaTextBuffer{
       gtk_grid: None,
       buffer: [[ScreenChar {
-        ascii_character: 0,
+        ascii_character: ' ' as u8,
         background: Color::Black,
         foreground: Color::Black }; 80]; 25],
     }
@@ -108,6 +119,21 @@ impl GtkVgaTextBuffer {
     let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
     let buffer = self.gtk_grid.as_ref().unwrap();
     buffer.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
+  }
+
+  fn draw(&self, row: usize, col: usize) {
+    use std::fmt::Write;
+    let ref screen_char = self.buffer[row][col];
+
+    let mut markup = String::new();
+    write!(markup,
+      "<span font_family=\"monospace\" size=\"13000\" foreground=\"{}\" background=\"{}\">{}</span>",
+      screen_char.foreground,
+      screen_char.background,
+      screen_char.ascii_character as char).unwrap();
+
+    let child = self.get_child_at((col + row*ROW) * 2);
+    child.set_markup(&markup);
   }
 }
 
@@ -134,7 +160,6 @@ fn create_text_grid() -> Grid {
     text.push(Vec::new());
     for col in 0..COL {
       text[row].push(gtk::Label::new(None));
-      text[row][col].set_markup("<span font_family=\"monospace\" size=\"13000\" background=\"black\"> </span>");
       screen.attach(&text[row][col], col as i32, row as i32, 1, 1);
     }
   }
@@ -155,7 +180,11 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
         win.show_all();
         let mut text_mode = GtkVgaTextBuffer::new();
         text_mode.gtk_grid = Some(screen);
-        text_mode.write(0, 'a' as u16 | (Color::Yellow as u16) << 8);
+        for row in 0..ROW {
+          for col in 0..COL {
+            text_mode.draw(row, col);
+          }
+        }
         start_emulation(text_mode);
       });
 

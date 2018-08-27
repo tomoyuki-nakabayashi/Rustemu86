@@ -19,11 +19,7 @@
 ## Peripheral
 
 - [ ] Register memory map.
-- [x] VGA text mode.
-  - [x] Create GTK Window.
-  - [x] Update CI.
-  - [x] Create 25x80 text area.
-  - [x] Color.
+- [ ] Write a byte into VGA text buffer.
 
 ## Load an x86 binary
 
