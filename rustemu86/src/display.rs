@@ -134,7 +134,7 @@ impl GtkVgaTextBuffer {
       screen_char.background,
       screen_char.ascii_character as char).unwrap();
 
-    let child = self.get_child_at((col + row*ROW) * 2);
+    let child = self.get_child_at((col + row*COL) * 2);
     child.set_markup(&markup);
   }
 }
