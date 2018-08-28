@@ -96,7 +96,7 @@ impl From<u16> for ScreenChar {
 
 pub trait VgaTextMode {
   fn write_u8(&self, addr: usize, byte: u8);
-  fn write_u16(&self, addr: usize, screen_char: u16);
+  fn write_u16(&mut self, addr: usize, screen_char: u16);
 }
 
 pub struct GtkVgaTextBuffer {
@@ -115,12 +115,9 @@ impl GtkVgaTextBuffer {
     }
   }
 
-  fn get_child_at(&self, address_offset: usize) -> gtk::Label {
-//    let (y, x) = get_child_position(address_offset);
-    let x = ((address_offset / SINGLE_CHAR_BYTE) % COL) as i32;
-    let y = (address_offset / (COL * SINGLE_CHAR_BYTE)) as i32;
-    let buffer = self.gtk_grid.as_ref().unwrap();
-    buffer.get_child_at(x, y).unwrap().downcast::<gtk::Label>().ok().unwrap()
+  fn get_child_at(&self, row: i32, col: i32) -> gtk::Label {
+    let screen = self.gtk_grid.as_ref().unwrap();
+    screen.get_child_at(col, row).unwrap().downcast::<gtk::Label>().ok().unwrap()
   }
 
   fn draw(&self, row: usize, col: usize) {
@@ -134,7 +131,7 @@ impl GtkVgaTextBuffer {
       screen_char.background,
       screen_char.ascii_character as char).unwrap();
 
-    let child = self.get_child_at((col + row*COL) * 2);
+    let child = self.get_child_at(row as i32, col as i32);
     child.set_markup(&markup);
   }
 }
@@ -144,24 +141,17 @@ impl VgaTextMode for GtkVgaTextBuffer {
     let (row, col) = get_child_position(addr);
   }
 
-  fn write_u16(&self, addr: usize, screen_char: u16) {
-    use std::fmt::Write;
-    let screen_char = ScreenChar::from(screen_char);
-    let mut markup = String::new();
-    write!(markup,
-      "<span font_family=\"monospace\" size=\"13000\" foreground=\"{}\" background=\"{}\">{}</span>",
-      screen_char.foreground,
-      screen_char.background,
-      screen_char.ascii_character as char).unwrap();
-
-    let child = self.get_child_at(addr);
-    child.set_markup(&markup);
+  fn write_u16(&mut self, addr: usize, screen_char: u16) {
+    let (row, col) = get_child_position(addr);
+    self.buffer[row][col].set_ascii(screen_char as u8);
+    self.buffer[row][col].set_color((screen_char >> 8) as u8);
+    self.draw(row, col);
   }
 }
 
-fn get_child_position(addr: usize) -> (i32, i32) {
-  let row = (addr / (COL * SINGLE_CHAR_BYTE)) as i32;
-  let col = ((addr / SINGLE_CHAR_BYTE) % COL) as i32;
+fn get_child_position(addr: usize) -> (usize, usize) {
+  let row = (addr / (COL * SINGLE_CHAR_BYTE));
+  let col = ((addr / SINGLE_CHAR_BYTE) % COL);
   (row, col)
 }
 
@@ -190,14 +180,16 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
         let screen = create_text_grid();
         win.add(&screen);
         win.show_all();
-        let mut text_mode = GtkVgaTextBuffer::new();
-        text_mode.gtk_grid = Some(screen);
+
+        let mut text_buffer = GtkVgaTextBuffer::new();
+        text_buffer.gtk_grid = Some(screen);
         for row in 0..ROW {
           for col in 0..COL {
-            text_mode.draw(row, col);
+            text_buffer.draw(row, col);
           }
         }
-        start_emulation(text_mode);
+
+        start_emulation(text_buffer);
       });
 
       app.run(&[""]);
