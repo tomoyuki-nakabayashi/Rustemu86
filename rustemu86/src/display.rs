@@ -6,7 +6,6 @@ use gtk::{ WidgetExt, WindowExt, ContainerExt, Cast };
 use gtk::{ LabelExt, GridExt };
 use gio::{ ApplicationExt };
 use std::fmt;
-use std::convert::From;
 use num::FromPrimitive;
 use bit_field::BitField;
 
@@ -83,17 +82,6 @@ impl ScreenChar {
   }
 }
 
-impl From<u16> for ScreenChar {
-  fn from(item: u16) -> Self {
-    let color_code = (item >> 8) as u8;
-    ScreenChar {
-      ascii_character: item as u8,
-      background: Color::from_u8(color_code.get_bits(4..8)).unwrap(),
-      foreground: Color::from_u8(color_code.get_bits(0..4)).unwrap(),
-    }
-  }
-}
-
 pub trait VgaTextMode {
   fn write_u8(&self, addr: usize, byte: u8);
   fn write_u16(&mut self, addr: usize, screen_char: u16);
@@ -115,9 +103,13 @@ impl GtkVgaTextBuffer {
     }
   }
 
-  fn get_child_at(&self, row: i32, col: i32) -> gtk::Label {
-    let screen = self.gtk_grid.as_ref().unwrap();
-    screen.get_child_at(col, row).unwrap().downcast::<gtk::Label>().ok().unwrap()
+  fn get_child_at(&self, row: i32, col: i32) -> Option<gtk::Label> {
+    let screen = self.gtk_grid.as_ref().expect("Buffer is not initialized.");
+    if let Some(child) = screen.get_child_at(col, row) {
+      Some(child.downcast::<gtk::Label>().unwrap())  // TODO: deal with result.
+    } else {
+      None
+    }
   }
 
   fn draw(&self, row: usize, col: usize) {
@@ -131,7 +123,7 @@ impl GtkVgaTextBuffer {
       screen_char.background,
       screen_char.ascii_character as char).unwrap();
 
-    let child = self.get_child_at(row as i32, col as i32);
+    let child = self.get_child_at(row as i32, col as i32).unwrap();
     child.set_markup(&markup);
   }
 }
@@ -203,14 +195,4 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
 #[cfg(test)]
 mod test {
   use super::*;
-
-  #[test]
-  fn create_screen_char() {
-    let data: u16 = (Color::Blue as u16) << 12 | (Color::White as u16) << 8 | 'a' as u16;
-    let decoded = ScreenChar::from(data);
-
-    assert_eq!(decoded.ascii_character, 'a' as u8);
-    assert_eq!(decoded.background, Color::Blue);
-    assert_eq!(decoded.foreground, Color::White);
-  }
 }
