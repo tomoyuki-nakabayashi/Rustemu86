@@ -104,12 +104,12 @@ impl GtkVgaTextBuffer {
     }
   }
 
-  fn get_child_at(&self, row: i32, col: i32) -> Option<gtk::Label> {
+  fn get_child_at(&self, row: i32, col: i32) -> Result<gtk::Label, &str> {
     let screen = self.gtk_grid.as_ref().expect("Buffer is not initialized.");
     if let Some(child) = screen.get_child_at(col, row) {
-      child.downcast::<gtk::Label>().ok()
+      child.downcast::<gtk::Label>().or(Err("Fail to retreave Label."))
     } else {
-      None
+      Err("Child not found.")
     }
   }
 
@@ -126,6 +126,14 @@ impl GtkVgaTextBuffer {
 
     let child = self.get_child_at(row as i32, col as i32).unwrap();
     child.set_markup(&markup);
+  }
+
+  fn draw_all(&self) {
+    for row in 0..ROW {
+      for col in 0..COL {
+        self.draw(row, col);
+      }
+    }
   }
 }
 
@@ -180,11 +188,7 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
 
         let mut text_buffer = GtkVgaTextBuffer::new();
         text_buffer.gtk_grid = Some(screen);
-        for row in 0..ROW {
-          for col in 0..COL {
-            text_buffer.draw(row, col);
-          }
-        }
+        text_buffer.draw_all();
 
         start_emulation(text_buffer);
       });
@@ -200,4 +204,12 @@ pub fn start_with_gtk(start_emulation: fn(GtkVgaTextBuffer)) {
 #[cfg(test)]
 mod test {
   use super::*;
+
+  #[test]
+  fn convert_addr() {
+    assert_eq!(convert_addr_to_axis(0), (0, 0));
+    assert_eq!(convert_addr_to_axis(1), (0, 0));
+    assert_eq!(convert_addr_to_axis(2), (0, 1));
+    assert_eq!(convert_addr_to_axis(COL*SINGLE_CHAR_BYTE), (1, 0));
+  }
 }
