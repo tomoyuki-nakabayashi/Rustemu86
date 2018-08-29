@@ -7,6 +7,7 @@ use gtk::{ LabelExt, GridExt };
 use gio::{ ApplicationExt };
 use std::fmt;
 use num::FromPrimitive;
+use num::Integer;
 use bit_field::BitField;
 
 const ROW: usize = 25;
@@ -83,13 +84,13 @@ impl ScreenChar {
 }
 
 pub trait VgaTextMode {
-  fn write_u8(&self, addr: usize, byte: u8);
+  fn write_u8(&mut self, addr: usize, byte: u8);
   fn write_u16(&mut self, addr: usize, screen_char: u16);
 }
 
 pub struct GtkVgaTextBuffer {
   gtk_grid: Option<Grid>,
-  buffer: [[ScreenChar; 80]; 25],
+  buffer: [[ScreenChar; COL]; ROW],
 }
 
 impl GtkVgaTextBuffer {
@@ -99,14 +100,14 @@ impl GtkVgaTextBuffer {
       buffer: [[ScreenChar {
         ascii_character: ' ' as u8,
         background: Color::Black,
-        foreground: Color::Black }; 80]; 25],
+        foreground: Color::Black }; COL]; ROW],
     }
   }
 
   fn get_child_at(&self, row: i32, col: i32) -> Option<gtk::Label> {
     let screen = self.gtk_grid.as_ref().expect("Buffer is not initialized.");
     if let Some(child) = screen.get_child_at(col, row) {
-      Some(child.downcast::<gtk::Label>().unwrap())  // TODO: deal with result.
+      child.downcast::<gtk::Label>().ok()
     } else {
       None
     }
@@ -129,21 +130,25 @@ impl GtkVgaTextBuffer {
 }
 
 impl VgaTextMode for GtkVgaTextBuffer {
-  fn write_u8(&self, addr: usize, byte: u8) {
-    let (row, col) = get_child_position(addr);
+  fn write_u8(&mut self, addr: usize, byte: u8) {
+    let (row, col) = convert_addr_to_axis(addr);
+    if addr.is_even() {
+      self.buffer[row][col].set_ascii(byte);
+    } else {
+      self.buffer[row][col].set_color(byte);
+    }
+    self.draw(row, col);
   }
 
   fn write_u16(&mut self, addr: usize, screen_char: u16) {
-    let (row, col) = get_child_position(addr);
-    self.buffer[row][col].set_ascii(screen_char as u8);
-    self.buffer[row][col].set_color((screen_char >> 8) as u8);
-    self.draw(row, col);
+    self.write_u8(addr, screen_char as u8);
+    self.write_u8(addr+1, (screen_char >> 8) as u8);
   }
 }
 
-fn get_child_position(addr: usize) -> (usize, usize) {
-  let row = (addr / (COL * SINGLE_CHAR_BYTE));
-  let col = ((addr / SINGLE_CHAR_BYTE) % COL);
+fn convert_addr_to_axis(addr: usize) -> (usize, usize) {
+  let row = addr / (COL * SINGLE_CHAR_BYTE);
+  let col = (addr / SINGLE_CHAR_BYTE) % COL;
   (row, col)
 }
 
