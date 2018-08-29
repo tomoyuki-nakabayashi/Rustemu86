@@ -9,6 +9,7 @@ use std::fmt;
 use num::FromPrimitive;
 use num::Integer;
 use bit_field::BitField;
+use peripherals::memory_access;
 
 const ROW: usize = 25;
 const COL: usize = 80;
