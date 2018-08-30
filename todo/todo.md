@@ -7,7 +7,7 @@
 - [ ] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
 - [ ] MemoryAccess trait.
-  - [] Read
+  - [x] Read
   - [ ] Write
 
 ## Test & Debug
