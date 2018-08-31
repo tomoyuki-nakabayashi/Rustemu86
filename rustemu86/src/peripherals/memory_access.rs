@@ -39,7 +39,10 @@ mod test {
   struct TestMemory(Vec<u8>);
   impl MemoryAccess for TestMemory {
     fn read_u8(&self, addr: usize) -> Result<u8, MemoryAccessError> {
-      Ok(self.0[addr])
+      match addr {
+        0...7 => Ok(self.0[addr]),
+        _ => Err(MemoryAccessError{}),
+      }
     }
   }
 
@@ -53,5 +56,14 @@ mod test {
     assert_eq!(memory.read_u16(0).unwrap(), 0x0100);
     assert_eq!(memory.read_u32(0).unwrap(), 0x03020100);
     assert_eq!(memory.read_u64(0).unwrap(), 0x0706050403020100);
+  }
+
+  fn test_read_error() {
+    let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+    let memory = TestMemory(buffer);
+    assert!(memory.read_u8(8).is_err());
+    assert!(memory.read_u16(8).is_err());
+    assert!(memory.read_u32(8).is_err());
+    assert!(memory.read_u64(8).is_err());
   }
 }
