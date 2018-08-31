@@ -6,9 +6,9 @@
 - [ ] Execute stage uses command pattern.
 - [ ] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
-- [ ] MemoryAccess trait.
+- [x] MemoryAccess trait.
   - [x] Read
-  - [ ] Write
+  - [x] Write
 
 ## Test & Debug
 

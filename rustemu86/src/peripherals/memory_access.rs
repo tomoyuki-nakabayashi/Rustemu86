@@ -1,4 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
+use std::mem;
 
 #[derive(Debug)]
 pub struct MemoryAccessError;
@@ -24,12 +25,23 @@ pub trait MemoryAccess {
       Err(err) => Err(err,)
     }
   }
-/* 
-  fn write_u8(&self, addr: usize, data: u8) -> Result<(), MemoryAccessError>;
-  fn write_u16(&self, addr: usize, data: u16) -> Result<(), MemoryAccessError>;
-  fn write_u32(&self, addr: usize, data: u32) -> Result<(), MemoryAccessError>;
-  fn write_u64(&self, addr: usize, data: u64) -> Result<(), MemoryAccessError>;
- */
+
+  fn write_u8(&mut self, addr: usize, data: u8) -> Result<(), MemoryAccessError>;
+
+  fn write_u16(&mut self, addr: usize, data: u16) -> Result<(), MemoryAccessError> {
+    let bytes: [u8; mem::size_of::<u16>()] = unsafe{ mem::transmute(data) };
+    (0..2).map(|x| self.write_u8(addr + x, bytes[x])).collect::<Result<(), _>>()
+  }
+
+  fn write_u32(&mut self, addr: usize, data: u32) -> Result<(), MemoryAccessError> {
+    let bytes: [u8; mem::size_of::<u32>()] = unsafe{ mem::transmute(data) };
+    (0..4).map(|x| self.write_u8(addr + x, bytes[x])).collect::<Result<(), _>>()
+  }
+
+  fn write_u64(&mut self, addr: usize, data: u64) -> Result<(), MemoryAccessError> {
+    let bytes: [u8; mem::size_of::<u64>()] = unsafe{ mem::transmute(data) };
+    (0..8).map(|x| self.write_u8(addr + x, bytes[x])).collect::<Result<(), _>>()
+  }
 }
 
 #[cfg(test)]
@@ -42,6 +54,13 @@ mod test {
       match addr {
         0...7 => Ok(self.0[addr]),
         _ => Err(MemoryAccessError{}),
+      }
+    }
+
+    fn write_u8(&mut self, addr: usize, data: u8) -> Result<(), MemoryAccessError> {
+      match addr {
+        0...7 => { self.0[addr] = data; Ok(()) },
+        _ => Err(MemoryAccessError{ }),
       }
     }
   }
@@ -58,6 +77,7 @@ mod test {
     assert_eq!(memory.read_u64(0).unwrap(), 0x0706050403020100);
   }
 
+  #[test]
   fn test_read_error() {
     let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
     let memory = TestMemory(buffer);
@@ -65,5 +85,17 @@ mod test {
     assert!(memory.read_u16(8).is_err());
     assert!(memory.read_u32(8).is_err());
     assert!(memory.read_u64(8).is_err());
+  }
+
+  #[test]
+  fn test_write() {
+    let buffer = vec![0x00; 8];
+    let mut memory = TestMemory(buffer);
+
+    assert!(memory.write_u8(1, 0x01).is_ok());
+    assert!(memory.write_u16(2, 0x0302).is_ok());
+    assert!(memory.write_u32(4, 0x07060504).is_ok());
+
+    assert_eq!(memory.read_u64(0).unwrap(), 0x0706050403020100);
   }
 }
