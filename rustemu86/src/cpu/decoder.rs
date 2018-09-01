@@ -71,7 +71,7 @@ pub fn decode(
         // Mov instructions may be Arithmetic/Logic, Load, or Store.
         MovImm32 => Ok(decode_reg_mov(&inst)),
         MovRmImm32 => Ok(decode_mov_rm_imm(&rf, &inst)),
-        MovToReg => Ok(decode_load(&rf, &inst)),
+        MovToReg => decode_mov_rm(&rf, inst),
         MovToRm => decode_mov_mr(&rf, inst),
         MovRm8Imm8 => Ok(decode_store(&rf, &inst)),
         // Priviledged instructions.
@@ -119,6 +119,9 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
     vec![ExecuteInstType::ArithLogic(uop1)]
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// Mov instructions.
+/////////////////////////////////////////////////////////////////////////////
 fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
         use cpu::isa::modrm::ModRmModeField::*;
@@ -137,6 +140,30 @@ fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
                 Ok(vec![ExecuteInstType::ArithLogic(uop)])
             },
             _ => Ok(decode_store(&rf, &inst)),
+        }
+    } else {
+        Err(InternalException::ModRmRequired { opcode: inst.opcode } )
+    }
+}
+
+fn decode_mov_rm(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
+    if let Some(modrm) = inst.mod_rm {
+        use cpu::isa::modrm::ModRmModeField::*;
+        match modrm.mode {
+            Direct => {
+                let dest = modrm.reg;
+                let src = rf.read64(modrm.rm);
+                let uop = ExecuteInst {
+                    opcode: ExOpcode::Mov,
+                    dest: Some(dest),
+                    rip: None,
+                    op1: Some(src),
+                    op2: None,
+                    op3: None,
+                };
+                Ok(vec![ExecuteInstType::ArithLogic(uop)])
+            },
+            _ => Ok(decode_load(&rf, &inst)),
         }
     } else {
         Err(InternalException::ModRmRequired { opcode: inst.opcode } )
