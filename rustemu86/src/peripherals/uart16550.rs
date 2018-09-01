@@ -1,3 +1,4 @@
+use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use std::fmt;
 use std::fmt::Write;
 use std::fs;
@@ -7,9 +8,16 @@ pub struct Uart16550 {
     tx_writer: Box<Write>,
 }
 
-impl Uart16550 {
-    pub fn write(&mut self, c: u8) {
-        write!(self.tx_writer, "{}", c as char).expect("Printing to serial failed")
+impl MemoryAccess for Uart16550 {
+    /// Not implemented yet.
+    fn read_u8(&self, _addr: usize) -> Result<u8> {
+        Err(MemoryAccessError {})
+    }
+
+    /// TODO: Allow write only to tx buffer.
+    fn write_u8(&mut self, _addr: usize, data: u8) -> Result<()> {
+        write!(self.tx_writer, "{}", data as char).expect("Printing to serial failed");
+        Ok(())
     }
 }
 
@@ -68,17 +76,18 @@ mod test {
     use super::*;
     use std::fs::File;
     use std::io::prelude::*;
+    use peripherals::memory_access::MemoryAccess;
 
     #[test]
     fn stdout_write() {
         let mut uart = uart_factory(Target::Stdout);
-        uart.write(b'a');
+        assert!(uart.write_u8(0, b'a').is_ok());
     }
 
     #[test]
     fn file_write() {
         let mut uart = uart_factory(Target::File("test_file_write.txt".to_string()));
-        uart.write(b'a');
+        assert!(uart.write_u8(0, b'a').is_ok());
 
         let created_file = File::open("test_file_write.txt");
         assert!(created_file.is_ok());

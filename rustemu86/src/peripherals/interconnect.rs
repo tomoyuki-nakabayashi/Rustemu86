@@ -53,7 +53,7 @@ impl Interconnect {
                 .vga_text_buffer
                 .write_u16((addr & 0xfff) as usize, data as u16)
                 .unwrap(),  // TODO: Error handle
-            0x10000000 => self.serial.write(data as u8),
+            0x10000000 => self.serial.write_u8(0, data as u8).unwrap(),
             _ => (),
         }
     }
