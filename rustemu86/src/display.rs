@@ -3,12 +3,10 @@ extern crate gtk;
 
 use bit_field::BitField;
 use gio::ApplicationExt;
-use gtk::Grid;
-use gtk::{Cast, ContainerExt, WidgetExt, WindowExt};
-use gtk::{GridExt, LabelExt};
-use num::FromPrimitive;
-use num::Integer;
-use peripherals::memory_access;
+use gtk::{Grid, Cast};
+use gtk::{ContainerExt, WidgetExt, WindowExt, GridExt, LabelExt};
+use num::{FromPrimitive, Integer};
+use peripherals::memory_access::{self, MemoryAccess, MemoryAccessError};
 use std::fmt;
 
 const ROW: usize = 25;
@@ -17,7 +15,6 @@ const SINGLE_CHAR_BYTE: usize = 2;
 
 enum_from_primitive! {
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-  #[repr(u8)]
   enum Color {
     Black = 0,
     Blue = 1,
@@ -66,7 +63,6 @@ impl fmt::Display for Color {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(C)]
 struct ScreenChar {
     ascii_character: u8,
     background: Color,
@@ -82,11 +78,6 @@ impl ScreenChar {
         self.background = Color::from_u8(color_code.get_bits(4..8)).unwrap();
         self.foreground = Color::from_u8(color_code.get_bits(0..4)).unwrap();
     }
-}
-
-pub trait VgaTextMode {
-    fn write_u8(&mut self, addr: usize, byte: u8);
-    fn write_u16(&mut self, addr: usize, screen_char: u16);
 }
 
 pub struct GtkVgaTextBuffer {
@@ -141,8 +132,13 @@ impl GtkVgaTextBuffer {
     }
 }
 
-impl VgaTextMode for GtkVgaTextBuffer {
-    fn write_u8(&mut self, addr: usize, byte: u8) {
+impl MemoryAccess for GtkVgaTextBuffer {
+    /// Cannot read a while.
+    fn read_u8(&self, _addr: usize) -> Result<u8, MemoryAccessError> {
+        Err(MemoryAccessError {})
+    }
+
+    fn write_u8(&mut self, addr: usize, byte: u8) -> Result<(), MemoryAccessError> {
         let (row, col) = convert_addr_to_axis(addr);
         if addr.is_even() {
             self.buffer[row][col].set_ascii(byte);
@@ -150,11 +146,7 @@ impl VgaTextMode for GtkVgaTextBuffer {
             self.buffer[row][col].set_color(byte);
         }
         self.draw(row, col);
-    }
-
-    fn write_u16(&mut self, addr: usize, screen_char: u16) {
-        self.write_u8(addr, screen_char as u8);
-        self.write_u8(addr + 1, (screen_char >> 8) as u8);
+        Ok(())
     }
 }
 

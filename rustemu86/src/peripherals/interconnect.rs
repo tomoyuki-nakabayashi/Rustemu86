@@ -1,6 +1,6 @@
 use args::EmulationMode;
 use display::GtkVgaTextBuffer;
-use display::VgaTextMode;
+use peripherals::memory_access::{MemoryAccess};
 use peripherals::memory::Memory;
 use peripherals::uart16550;
 use peripherals::uart16550::Target;
@@ -51,7 +51,8 @@ impl Interconnect {
             0x0...0x200 => self.memory.write64(addr as usize, data),
             0xb8000...0xb8FA0 => self
                 .vga_text_buffer
-                .write_u16((addr & 0xfff) as usize, data as u16),
+                .write_u16((addr & 0xfff) as usize, data as u16)
+                .unwrap(),  // TODO: Error handle
             0x10000000 => self.serial.write(data as u8),
             _ => (),
         }
