@@ -160,12 +160,12 @@ impl<'a> FetchedInstBuilder<'a> {
                 self.displacement = self.program[self.rip_offset] as u64;
                 self.rip_offset += 1
             }
-            Opcode::CallRel32 | Opcode::MovRm8Imm8 => {
+            Opcode::CallRel32 | Opcode::MovRmImm8 => {
                 let mut disp = &self.program[self.rip_offset..self.rip_offset + 4];
                 self.displacement = sign_extend_from_u32(disp.read_u32::<LittleEndian>().unwrap());
                 self.rip_offset += 4;
             }
-            Opcode::MovRmImm32 if self.rex_prefix.is_none() => {
+            Opcode::MovRmImm if self.rex_prefix.is_none() => {
                 let mut disp = &self.program[self.rip_offset..self.rip_offset + 4];
                 self.displacement = sign_extend_from_u32(disp.read_u32::<LittleEndian>().unwrap());
                 self.rip_offset += 4;
@@ -177,17 +177,17 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
         match self.opcode {
-            Opcode::MovRmImm32 if self.mandatory_prefix.is_some() => {
+            Opcode::MovRmImm if self.mandatory_prefix.is_some() => {
                 let mut imm = &self.program[self.rip_offset..self.rip_offset + 2];
                 self.immediate = imm.read_u16::<LittleEndian>().unwrap().into();
                 self.rip_offset += 2
             }
-            Opcode::MovImm32 | Opcode::MovRmImm32 => {
+            Opcode::MovImm | Opcode::MovRmImm => {
                 let mut imm = &self.program[self.rip_offset..self.rip_offset + 4];
                 self.immediate = imm.read_u32::<LittleEndian>().unwrap().into();
                 self.rip_offset += 4
             }
-            Opcode::MovRm8Imm8 => {
+            Opcode::MovRmImm8 => {
                 self.immediate = self.program[self.rip_offset] as u64;
                 self.rip_offset += 1
             }

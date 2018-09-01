@@ -2,15 +2,13 @@
 
 ## Refactor
 
-- [ ] Fetcher's match of parse_mod_rm().
 - [ ] Execute stage uses command pattern.
-- [ ] Mov instruction decode.
+- [x] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
 
 ## Test & Debug
 
 - [ ] Simplify integration tests.
-- [ ] Add tests for display.
 
 ## Emulator model
 
@@ -27,5 +25,3 @@
 - [ ] Load Elf format.
 
 ## Documents
-
-- [x] Learn how to write docs of Rust.

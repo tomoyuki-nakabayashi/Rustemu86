@@ -13,11 +13,15 @@ enum_from_primitive! {
     Inc       = 0xff,
     Invalid   = 0x06,
     JmpRel8   = 0xeb,
+    // Operand encoding: MR
     MovToRm   = 0x89,
+    // Operand encoding: RM
     MovToReg  = 0x8b,
-    MovImm32  = 0xb8,
-    MovRm8Imm8 = 0xc6,
-    MovRmImm32 = 0xc7,
+    // Operand encoding: OI
+    MovImm    = 0xb8,
+    // Operand encoding: MI
+    MovRmImm8 = 0xc6,
+    MovRmImm  = 0xc7,
     PushR     = 0x50,
     PopR      = 0x58,
     Ret       = 0xc3,
@@ -28,7 +32,7 @@ impl Opcode {
   pub fn modrm_if_required(&self, candidate: u8) -> Option<ModRm> {
     match self {
       Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
-      Opcode::MovRmImm32 | Opcode::MovRm8Imm8
+      Opcode::MovRmImm | Opcode::MovRmImm8
         => return Some(ModRm::new(candidate)),
       _ => return None,
     }

@@ -1,7 +1,6 @@
 use cpu::exceptions::InternalException;
 use cpu::fetcher::FetchedInst;
 use cpu::isa::registers::Reg64Id;
-use cpu::isa::modrm;
 use cpu::register_file::RegisterFile;
 use cpu::Result;
 use num::FromPrimitive;
@@ -69,11 +68,10 @@ pub fn decode(
         // Branch instructions.
         JmpRel8 => Ok(decode_jmp(&inst)),
         // Mov instructions may be Arithmetic/Logic, Load, or Store.
-        MovImm32 => Ok(decode_reg_mov(&inst)),
-        MovRmImm32 => Ok(decode_mov_rm_imm(&rf, &inst)),
-        MovToReg => decode_mov_rm(&rf, inst),
         MovToRm => decode_mov_mr(&rf, inst),
-        MovRm8Imm8 => Ok(decode_store(&rf, &inst)),
+        MovToReg => decode_mov_rm(&rf, inst),
+        MovImm => decode_mov_oi(&inst),
+        MovRmImm8 | MovRmImm => decode_mov_mi(&rf, &inst),
         // Priviledged instructions.
         Halt => Ok(decode_halt(&inst)),
         // Complex instructions.
@@ -170,27 +168,8 @@ fn decode_mov_rm(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
     }
 }
 
-fn decode_mov_rm_imm(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
-    if let Some(modrm) = inst.mod_rm {
-        if modrm.mode != modrm::ModRmModeField::Direct {
-            return decode_store(&rf, &inst);
-        }
-    }
-    let dest = inst.mod_rm.unwrap().rm;
-    let imm = inst.immediate;
-    let uop1 = ExecuteInst {
-        opcode: ExOpcode::Mov,
-        dest: Some(dest),
-        rip: None,
-        op1: Some(imm),
-        op2: None,
-        op3: None,
-    };
-    vec![ExecuteInstType::ArithLogic(uop1)]
-}
-
-fn decode_reg_mov(inst: &FetchedInst) -> Vec<ExecuteInstType> {
-    let dest = Reg64Id::from_u8(inst.r).unwrap();
+fn decode_mov_oi(inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
+    let dest = Reg64Id::from_u8(inst.r).expect("Invalid register number.");
     let op1 = inst.immediate;
     let mov = ExecuteInst {
         opcode: ExOpcode::Mov,
@@ -200,7 +179,31 @@ fn decode_reg_mov(inst: &FetchedInst) -> Vec<ExecuteInstType> {
         op2: None,
         op3: None,
     };
-    vec![ExecuteInstType::ArithLogic(mov)]
+    Ok(vec![ExecuteInstType::ArithLogic(mov)])
+}
+
+fn decode_mov_mi(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
+    if let Some(modrm) = inst.mod_rm {
+        use cpu::isa::modrm::ModRmModeField::*;
+        match modrm.mode {
+            Direct => {
+                let dest = modrm.rm;
+                let imm = inst.immediate;
+                let uop = ExecuteInst {
+                    opcode: ExOpcode::Mov,
+                    dest: Some(dest),
+                    rip: None,
+                    op1: Some(imm),
+                    op2: None,
+                    op3: None,
+                };
+                Ok(vec![ExecuteInstType::ArithLogic(uop)])
+            },
+            _ => Ok(decode_store(&rf, &inst)),
+        }
+    } else {
+        Err(InternalException::ModRmRequired { opcode: inst.opcode } )
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
