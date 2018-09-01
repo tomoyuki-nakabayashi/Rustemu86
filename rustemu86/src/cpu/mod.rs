@@ -12,6 +12,7 @@ use self::exceptions::InternalException;
 use self::fetcher::FetchUnit;
 use self::register_file::RegisterFile;
 use peripherals::interconnect::Interconnect;
+use peripherals::memory_access::MemoryAccess;
 use rustemu86::DebugMode;
 use std::fmt;
 
@@ -63,10 +64,10 @@ impl Cpu {
         match inst {
             WriteBack::GeneralRegister(dest, value) => self.rf.write64(dest, value),
             WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(next_rip),
-            WriteBack::Load(dest, addr) => self.rf.write64(dest, self.bus.read64(addr)),
-            WriteBack::Store(addr, data) => self.bus.write64(addr, data),
+            WriteBack::Load(dest, addr) => self.rf.write64(dest, self.bus.read_u64(addr as usize).unwrap()),
+            WriteBack::Store(addr, data) => self.bus.write_u64(addr as usize, data).unwrap(),
             WriteBack::CpuState(next_state) => self.state = next_state,
-            WriteBack::Return(addr) => self.fetch_unit.set_rip(self.bus.read64(addr)),
+            WriteBack::Return(addr) => self.fetch_unit.set_rip(self.bus.read_u64(addr as usize).unwrap()),
         }
     }
 }
@@ -190,7 +191,7 @@ mod test {
             cpu.rf.write64(Rbx, 1);
         };
         let cpu = execute_program_after_init(program, &initializer);
-        assert_eq!(cpu.bus.read64(100), 1);
+        assert_eq!(cpu.bus.read_u64(100).unwrap(), 1);
         assert_eq!(cpu.rf.read64(Rcx), 1);
     }
 
@@ -202,7 +203,7 @@ mod test {
             cpu.rf.write64(Rax, 1);
         };
         let cpu = execute_program_after_init(program, &initializer);
-        assert_eq!(cpu.bus.read64(0x100 - 8), 1);
+        assert_eq!(cpu.bus.read_u64(0x100 - 8).unwrap(), 1);
         assert_eq!(cpu.rf.read64(Rbx), 1);
     }
 
@@ -213,7 +214,7 @@ mod test {
             cpu.rf.write64(Rsp, 0x0100);
         };
         let cpu = execute_program_after_init(program, &initializer);
-        assert_eq!(cpu.bus.read64(0x100 - 8), 5);
+        assert_eq!(cpu.bus.read_u64(0x100 - 8).unwrap(), 5);
         assert_eq!(cpu.executed_insts, 3);
     }
 
@@ -221,7 +222,7 @@ mod test {
     fn execute_mov_rm8_imm8() {
         let program = vec![0xC6, 0x04, 0x25, 0x00, 0x01, 0x00, 0x00, 0x48, 0xf4];
         let cpu = execute_program(program);
-        assert_eq!(cpu.bus.read64(0x100), 0x48);
+        assert_eq!(cpu.bus.read_u64(0x100).unwrap(), 0x48);
     }
 
     #[test]
@@ -230,7 +231,7 @@ mod test {
             0x66, 0xC7, 0x04, 0x25, 0x00, 0x01, 0x00, 0x00, 0x48, 0x0e, 0xf4,
         ];
         let cpu = execute_program(program);
-        assert_eq!(cpu.bus.read64(0x100), 0x0e48);
+        assert_eq!(cpu.bus.read_u64(0x100).unwrap(), 0x0e48);
     }
 
 }

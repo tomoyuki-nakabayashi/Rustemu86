@@ -1,6 +1,6 @@
 use args::EmulationMode;
 use display::GtkVgaTextBuffer;
-use peripherals::memory_access::{MemoryAccess};
+use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use peripherals::memory::Memory;
 use peripherals::uart16550;
 use peripherals::uart16550::Target;
@@ -31,37 +31,39 @@ impl Interconnect {
     }
 
     pub fn fetch_inst_candidate(&self, rip: u64) -> Vec<u8> {
-        let mut inst_candidate = Vec::with_capacity(MAX_INSTRUCTION_LENGTH);
-        for i in 0..MAX_INSTRUCTION_LENGTH {
-            inst_candidate.push(self.read8(rip + i as u64));
-        }
+        (0..MAX_INSTRUCTION_LENGTH)
+            .map(|x| self.read_u8(rip as usize + x))
+            .collect::<Result<Vec<u8>>>().unwrap()
+    }
+}
 
-        inst_candidate
+impl MemoryAccess for Interconnect {
+    fn read_u8(&self, addr: usize) -> Result<u8> {
+        match addr {
+            0x0...0x200 => self.memory.read_u8(addr as usize),
+            _ => Err(MemoryAccessError {}),
+        }
     }
 
-    pub fn read8(&self, addr: u64) -> u8 {
+    fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         match addr {
-            0x0...0x200 => self.memory.read_u8(addr as usize).unwrap(),
-            _ => 0,
-        }
-    }
-
-    pub fn write64(&mut self, addr: u64, data: u64) {
-        match addr {
-            0x0...0x200 => self.memory.write_u64(addr as usize, data).unwrap(),
+            0x0...0x200 => self.memory.write_u8(addr as usize, data),
             0xb8000...0xb8FA0 => self
                 .vga_text_buffer
-                .write_u16((addr & 0xfff) as usize, data as u16)
-                .unwrap(),  // TODO: Error handle
-            0x10000000 => self.serial.write_u8(0, data as u8).unwrap(),
-            _ => (),
+                .write_u8((addr & 0xfff) as usize, data),
+            0x10000000 => self.serial.write_u8(0, data),
+            _ => Err(MemoryAccessError {}),
         }
     }
 
-    pub fn read64(&self, addr: u64) -> u64 {
+    fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
-            0x0...0x200 => self.memory.read_u64(addr as usize).unwrap(),
-            _ => 0,
+            0x0...0x200 => self.memory.write_u64(addr as usize, data),
+            0xb8000...0xb8FA0 => self
+                .vga_text_buffer
+                .write_u16((addr & 0xfff) as usize, data as u16),
+            0x10000000 => self.serial.write_u8(0, data as u8),
+            _ => Err(MemoryAccessError {}),
         }
     }
 }
@@ -80,11 +82,11 @@ mod test {
             EmulationMode::Test("test".to_string()),
             GtkVgaTextBuffer::new(),
         );
-        interconnect.write64(0x10000000, 'h' as u64);
-        interconnect.write64(0x10000000, 'e' as u64);
-        interconnect.write64(0x10000000, 'l' as u64);
-        interconnect.write64(0x10000000, 'l' as u64);
-        interconnect.write64(0x10000000, 'o' as u64);
+        assert!(interconnect.write_u8(0x10000000, 'h' as u8).is_ok());
+        assert!(interconnect.write_u8(0x10000000, 'e' as u8).is_ok());
+        assert!(interconnect.write_u8(0x10000000, 'l' as u8).is_ok());
+        assert!(interconnect.write_u8(0x10000000, 'l' as u8).is_ok());
+        assert!(interconnect.write_u8(0x10000000, 'o' as u8).is_ok());
 
         let created_file = File::open("test");
         assert!(created_file.is_ok());
@@ -102,8 +104,8 @@ mod test {
         );
         interconnect.init_memory(program);
 
-        assert_eq!(interconnect.read8(0x0), 0x48);
-        assert_eq!(interconnect.read8(0x1), 0xff);
-        assert_eq!(interconnect.read8(0x2), 0xc0);
+        assert_eq!(interconnect.read_u8(0x0).unwrap(), 0x48);
+        assert_eq!(interconnect.read_u8(0x1).unwrap(), 0xff);
+        assert_eq!(interconnect.read_u8(0x2).unwrap(), 0xc0);
     }
 }

@@ -6,8 +6,7 @@
 - [ ] Execute stage uses command pattern.
 - [ ] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
-- [x] UART16550 implements MemoryAccess trait.
-- [ ] Interconnect implements MemoryAccess trait.
+- [x] Interconnect implements MemoryAccess trait.
 
 ## Test & Debug
 
