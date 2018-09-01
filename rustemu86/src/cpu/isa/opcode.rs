@@ -28,6 +28,14 @@ enum_from_primitive! {
   }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum OperandSize {
+  Byte,
+  Word,
+  DoubleWord,
+  QuadWord,
+}
+
 impl Opcode {
   pub fn modrm_if_required(&self, candidate: u8) -> Option<ModRm> {
     match self {

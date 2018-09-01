@@ -3,7 +3,6 @@
 ## Refactor
 
 - [ ] Execute stage uses command pattern.
-- [x] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
 
 ## Test & Debug

@@ -2,15 +2,23 @@ use cpu::decoder::ExOpcode;
 use cpu::decoder::ExecuteInst;
 use cpu::decoder::ExecuteInstType;
 use cpu::isa::registers::Reg64Id;
+use cpu::isa::opcode::OperandSize;
 use cpu::CpuState;
 
 pub enum WriteBack {
     Rip(u64),
     GeneralRegister(Reg64Id, u64),
     CpuState(CpuState),
-    Store(u64, u64),
+    Store(u64, WriteBackData),
     Load(Reg64Id, u64),
     Return(u64),
+}
+
+pub enum WriteBackData {
+    Byte(u8),
+    Word(u16),
+    DWord(u32),
+    QWord(u64),
 }
 
 pub fn execute(inst: ExecuteInstType) -> Result<WriteBack, ()> {
@@ -84,6 +92,12 @@ fn execute_load(inst: ExecuteInst) -> WriteBack {
 fn execute_store(inst: ExecuteInst) -> WriteBack {
     let addr = inst.get_op1();
     let data = inst.get_op2();
+    let data = match inst.get_op_size() {
+        OperandSize::Byte => WriteBackData::Byte(data as u8),
+        OperandSize::Word => WriteBackData::Word(data as u16),
+        OperandSize::DoubleWord => WriteBackData::DWord(data as u32),
+        OperandSize::QuadWord => WriteBackData::QWord(data as u64),
+    };
     WriteBack::Store(addr, data)
 }
 

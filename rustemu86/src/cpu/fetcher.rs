@@ -1,13 +1,10 @@
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
-use cpu::isa::modrm::ModRm;
-use cpu::isa::modrm::ModRmModeField;
-use cpu::isa::modrm::Sib;
-use cpu::isa::opcode::{self, Opcode};
+use cpu::isa::modrm::{ModRm, ModRmModeField, Sib};
+use cpu::isa::opcode::{self, Opcode, OperandSize};
 use cpu::isa::opcode::{REX, REX_WRXB};
 use cpu::isa::registers::Reg64Id;
-use cpu::InternalException;
-use cpu::Result;
+use cpu::{InternalException, Result};
 use num::FromPrimitive;
 
 #[derive(Debug)]
@@ -29,6 +26,7 @@ impl FetchUnit {
             .parse_sib()
             .parse_disp()
             .parse_imm()
+            .parse_op_size()
             .build();
         self.rip = inst.next_rip;
         Ok(inst)
@@ -53,6 +51,7 @@ pub struct FetchedInst {
     pub displacement: u64,
     pub immediate: u64,
     pub next_rip: usize,
+    pub op_size: Option<OperandSize>,
 }
 
 struct FetchedInstBuilder<'a> {
@@ -65,6 +64,7 @@ struct FetchedInstBuilder<'a> {
     sib: Option<Sib>,
     displacement: u64,
     immediate: u64,
+    op_size: Option<OperandSize>,
     rip_base: usize,
     rip_offset: usize,
     program: &'a [u8],
@@ -82,6 +82,7 @@ impl<'a> FetchedInstBuilder<'a> {
             sib: None,
             displacement: 0,
             immediate: 0,
+            op_size: None,
             rip_base: rip,
             rip_offset: 0,
             program: program,
@@ -177,6 +178,10 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
         match self.opcode {
+            Opcode::MovRmImm8 => {
+                self.immediate = self.program[self.rip_offset] as u64;
+                self.rip_offset += 1
+            }
             Opcode::MovRmImm if self.mandatory_prefix.is_some() => {
                 let mut imm = &self.program[self.rip_offset..self.rip_offset + 2];
                 self.immediate = imm.read_u16::<LittleEndian>().unwrap().into();
@@ -187,11 +192,23 @@ impl<'a> FetchedInstBuilder<'a> {
                 self.immediate = imm.read_u32::<LittleEndian>().unwrap().into();
                 self.rip_offset += 4
             }
-            Opcode::MovRmImm8 => {
-                self.immediate = self.program[self.rip_offset] as u64;
-                self.rip_offset += 1
-            }
             _ => (),
+        }
+        self
+    }
+
+    fn parse_op_size(&mut self) -> &mut FetchedInstBuilder<'a> {
+        match self.opcode {
+            Opcode::MovRmImm8 => self.op_size = Some(OperandSize::Byte),
+            _ => {
+                if let Some(_) = self.rex_prefix {
+                    self.op_size = Some(OperandSize::QuadWord);
+                } else if let Some(opcode::OVERRIDE_OP_SIZE) = self.mandatory_prefix {
+                    self.op_size = Some(OperandSize::Word);
+                } else {
+                    self.op_size = Some(OperandSize::DoubleWord);
+                }
+            }
         }
         self
     }
@@ -207,6 +224,7 @@ impl<'a> FetchedInstBuilder<'a> {
             displacement: self.displacement,
             immediate: self.immediate,
             next_rip: self.rip_base + self.rip_offset,
+            op_size: self.op_size,
         }
     }
 }

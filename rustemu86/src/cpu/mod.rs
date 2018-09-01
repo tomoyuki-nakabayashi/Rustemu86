@@ -7,7 +7,7 @@ mod fetcher;
 mod isa;
 mod register_file;
 
-use self::ex_stage::WriteBack;
+use self::ex_stage::{WriteBack, WriteBackData};
 use self::exceptions::InternalException;
 use self::fetcher::FetchUnit;
 use self::register_file::RegisterFile;
@@ -65,7 +65,14 @@ impl Cpu {
             WriteBack::GeneralRegister(dest, value) => self.rf.write64(dest, value),
             WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(next_rip),
             WriteBack::Load(dest, addr) => self.rf.write64(dest, self.bus.read_u64(addr as usize).unwrap()),
-            WriteBack::Store(addr, data) => self.bus.write_u64(addr as usize, data).unwrap(),
+            WriteBack::Store(addr, data) => {
+                match data{
+                    WriteBackData::Byte(data) => self.bus.write_u8(addr as usize, data).unwrap(),
+                    WriteBackData::Word(data) => self.bus.write_u16(addr as usize, data).unwrap(),
+                    WriteBackData::DWord(data) => self.bus.write_u32(addr as usize, data).unwrap(),
+                    WriteBackData::QWord(data) => self.bus.write_u64(addr as usize, data).unwrap(),
+                }
+            }
             WriteBack::CpuState(next_state) => self.state = next_state,
             WriteBack::Return(addr) => self.fetch_unit.set_rip(self.bus.read_u64(addr as usize).unwrap()),
         }
