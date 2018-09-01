@@ -41,14 +41,14 @@ impl Interconnect {
 
     pub fn read8(&self, addr: u64) -> u8 {
         match addr {
-            0x0...0x200 => self.memory.read8(addr as usize),
+            0x0...0x200 => self.memory.read_u8(addr as usize).unwrap(),
             _ => 0,
         }
     }
 
     pub fn write64(&mut self, addr: u64, data: u64) {
         match addr {
-            0x0...0x200 => self.memory.write64(addr as usize, data),
+            0x0...0x200 => self.memory.write_u64(addr as usize, data).unwrap(),
             0xb8000...0xb8FA0 => self
                 .vga_text_buffer
                 .write_u16((addr & 0xfff) as usize, data as u16)
@@ -60,7 +60,7 @@ impl Interconnect {
 
     pub fn read64(&self, addr: u64) -> u64 {
         match addr {
-            0x0...0x200 => self.memory.read64(addr as usize),
+            0x0...0x200 => self.memory.read_u64(addr as usize).unwrap(),
             _ => 0,
         }
     }

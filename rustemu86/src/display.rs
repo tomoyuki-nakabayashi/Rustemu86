@@ -6,7 +6,7 @@ use gio::ApplicationExt;
 use gtk::{Grid, Cast};
 use gtk::{ContainerExt, WidgetExt, WindowExt, GridExt, LabelExt};
 use num::{FromPrimitive, Integer};
-use peripherals::memory_access::{self, MemoryAccess, MemoryAccessError};
+use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use std::fmt;
 
 const ROW: usize = 25;
