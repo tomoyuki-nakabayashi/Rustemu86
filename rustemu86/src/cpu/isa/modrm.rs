@@ -32,14 +32,6 @@ impl ModRm {
             rm: Reg64Id::from_u8(rm).unwrap(),
         }
     }
-
-    pub fn new_invalid() -> ModRm {
-        ModRm {
-            mode: ModRmModeField::Unused,
-            reg: Reg64Id::Unknown,
-            rm: Reg64Id::Unknown,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -59,14 +51,6 @@ impl Sib {
             scale: 2 ^ scale,
             index: Reg64Id::from_u8(index).unwrap(),
             base: Reg64Id::from_u8(base).unwrap(),
-        }
-    }
-
-    pub fn new_invalid() -> Sib {
-        Sib {
-            scale: 0,
-            index: Reg64Id::Unknown,
-            base: Reg64Id::Unknown,
         }
     }
 }

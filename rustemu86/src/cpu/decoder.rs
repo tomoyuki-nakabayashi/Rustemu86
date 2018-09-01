@@ -11,6 +11,7 @@ pub enum ExecuteInstType {
     Privilege(ExecuteInst),
 }
 
+#[allow(dead_code)]
 pub struct ExecuteInst {
     opcode: ExOpcode,
     dest: Option<Reg64Id>,
@@ -37,9 +38,11 @@ impl ExecuteInst {
     pub fn get_op2(&self) -> u64 {
         self.op2.expect("Operand2 was not decoded.")
     }
+    #[allow(dead_code)]
     pub fn get_op3(&self) -> u64 {
         self.op3.expect("Operand3 was not decoded.")
     }
+    #[allow(dead_code)]
     pub fn get_op4(&self) -> u64 {
         self.op4.expect("Operand4 was not decoded.")
     }

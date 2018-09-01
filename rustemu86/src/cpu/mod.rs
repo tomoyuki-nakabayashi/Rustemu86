@@ -1,11 +1,11 @@
 extern crate bit_field;
 
-pub mod decoder;
-pub mod ex_stage;
-pub mod exceptions;
-pub mod fetcher;
-pub mod isa;
-pub mod register_file;
+mod decoder;
+mod ex_stage;
+mod exceptions;
+mod fetcher;
+mod isa;
+mod register_file;
 
 use self::ex_stage::WriteBack;
 use self::exceptions::InternalException;

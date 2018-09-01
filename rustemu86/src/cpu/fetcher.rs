@@ -211,6 +211,7 @@ impl<'a> FetchedInstBuilder<'a> {
     }
 }
 
+#[allow(dead_code)]
 fn zero_extend_from_u32(i: u32) -> u64 {
     i as u64
 }
