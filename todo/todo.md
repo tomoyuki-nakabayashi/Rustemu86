@@ -6,7 +6,6 @@
 - [ ] Execute stage uses command pattern.
 - [ ] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
-- [x] Interconnect implements MemoryAccess trait.
 
 ## Test & Debug
 
@@ -29,4 +28,4 @@
 
 ## Documents
 
-- [ ] Learn how to write docs of Rust.
+- [x] Learn how to write docs of Rust.
