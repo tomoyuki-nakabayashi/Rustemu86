@@ -6,9 +6,6 @@
 - [ ] Execute stage uses command pattern.
 - [ ] Mov instruction decode.
 - [ ] Remove inappropriate unwrap().
-- [x] MemoryAccess trait.
-  - [x] Read
-  - [x] Write
 
 ## Test & Debug
 
@@ -24,7 +21,6 @@
 ## Peripheral
 
 - [ ] Register memory map.
-- [x] Write a byte into VGA text buffer.
 
 ## Load an x86 binary
 
