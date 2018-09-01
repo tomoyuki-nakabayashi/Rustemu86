@@ -9,7 +9,6 @@ enum_from_primitive! {
     OneByteDisp = 0b01,
     FourByteDisp = 0b10,
     Direct = 0b11,
-    Unused = 0xff,
   }
 }
 
