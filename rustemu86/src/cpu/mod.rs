@@ -66,11 +66,13 @@ impl Cpu {
             WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(next_rip),
             WriteBack::Load(dest, addr) => self.rf.write64(dest, self.bus.read_u64(addr as usize).unwrap()),
             WriteBack::Store(addr, data) => {
+                let addr = addr as usize;
+                use self::WriteBackData::*;
                 match data{
-                    WriteBackData::Byte(data) => self.bus.write_u8(addr as usize, data).unwrap(),
-                    WriteBackData::Word(data) => self.bus.write_u16(addr as usize, data).unwrap(),
-                    WriteBackData::DWord(data) => self.bus.write_u32(addr as usize, data).unwrap(),
-                    WriteBackData::QWord(data) => self.bus.write_u64(addr as usize, data).unwrap(),
+                    Byte(data) => self.bus.write_u8(addr, data).unwrap(),
+                    Word(data) => self.bus.write_u16(addr, data).unwrap(),
+                    DWord(data) => self.bus.write_u32(addr, data).unwrap(),
+                    QWord(data) => self.bus.write_u64(addr, data).unwrap(),
                 }
             }
             WriteBack::CpuState(next_state) => self.state = next_state,

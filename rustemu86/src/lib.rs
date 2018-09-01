@@ -41,7 +41,10 @@ pub fn start_emulation(
 
     match result {
         Ok(_) => Ok(()),
-        Err(_) => Err(CpuError {}),
+        Err(err) => {
+            println!("Emulation stopped at error: {:?}", err);
+            Err(CpuError {})
+        },
     }
 }
 
