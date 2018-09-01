@@ -7,6 +7,7 @@ use peripherals::uart16550::Target;
 use peripherals::uart16550::Uart16550;
 
 const MAX_INSTRUCTION_LENGTH: usize = 15;
+const MEMORY_SIZE: usize = 0x2000;
 
 pub struct Interconnect {
     memory: Memory,
@@ -17,7 +18,7 @@ pub struct Interconnect {
 impl Interconnect {
     pub fn new(mode: EmulationMode, vga_text_buffer: GtkVgaTextBuffer) -> Interconnect {
         Interconnect {
-            memory: Memory::new(1024),
+            memory: Memory::new(MEMORY_SIZE),
             serial: match mode {
                 EmulationMode::Test(path) => uart16550::uart_factory(Target::File(path)),
                 _ => uart16550::uart_factory(uart16550::Target::Stdout),
@@ -40,14 +41,14 @@ impl Interconnect {
 impl MemoryAccess for Interconnect {
     fn read_u8(&self, addr: usize) -> Result<u8> {
         match addr {
-            0x0...0x200 => self.memory.read_u8(addr as usize),
+            0x0...MEMORY_SIZE => self.memory.read_u8(addr as usize),
             _ => Err(MemoryAccessError {}),
         }
     }
 
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         match addr {
-            0x0...0x200 => self.memory.write_u8(addr as usize, data),
+            0x0...MEMORY_SIZE => self.memory.write_u8(addr as usize, data),
             0xb8000...0xb8FA0 => self
                 .vga_text_buffer
                 .write_u8((addr & 0xfff) as usize, data),
@@ -58,7 +59,7 @@ impl MemoryAccess for Interconnect {
 
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
-            0x0...0x200 => self.memory.write_u64(addr as usize, data),
+            0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data),
             0xb8000...0xb8FA0 => self
                 .vga_text_buffer
                 .write_u16((addr & 0xfff) as usize, data as u16),

@@ -97,7 +97,7 @@ impl fmt::Display for Cpu {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "=== CPU status ({} instructions executed.)===\nRIP: {}\nRegisters:\n{}",
+            "=== CPU status ({} instructions executed.)===\nRIP: 0x{:>08X}\nRegisters:\n{}",
             self.executed_insts,
             self.fetch_unit.get_rip(),
             self.rf
