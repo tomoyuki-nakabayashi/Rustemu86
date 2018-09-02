@@ -16,6 +16,13 @@ impl DebugMode for PerCycleDump {
     }
 }
 
+pub struct JsonDump {}
+impl DebugMode for JsonDump {
+    fn do_cycle_end_action(&self, cpu: &Cpu) {
+        cpu.dump_json();
+    }
+}
+
 use std::io;
 pub struct Interactive {}
 impl DebugMode for Interactive {

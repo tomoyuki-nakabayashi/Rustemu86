@@ -7,7 +7,7 @@ use cpu::isa::registers::Reg64Id;
 use cpu::{InternalException, Result};
 use num::FromPrimitive;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FetchUnit {
     rip: usize,
 }

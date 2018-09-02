@@ -1,7 +1,7 @@
 use cpu::isa::registers::Reg64Id;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct RegisterFile {
   ram: Vec<u64>,
 }

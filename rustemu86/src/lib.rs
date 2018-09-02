@@ -8,6 +8,10 @@ extern crate num;
 extern crate failure;
 #[macro_use]
 extern crate enum_primitive;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 
 pub mod args;
 pub mod cpu;
