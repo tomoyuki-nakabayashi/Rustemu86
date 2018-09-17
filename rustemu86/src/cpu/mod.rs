@@ -1,4 +1,5 @@
 extern crate bit_field;
+extern crate qemu_from;
 
 mod decoder;
 mod ex_stage;
@@ -14,7 +15,6 @@ use self::register_file::RegisterFile;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
 use rustemu86::DebugMode;
-use serde_json;
 use std::fmt;
 use std::result;
 pub type Result<T> = result::Result<T, InternalException>;
@@ -36,11 +36,6 @@ impl Cpu {
             bus: interconnect,
             state: CpuState::Running,
         }
-    }
-
-    pub fn dump_json(&self) {
-        let json_str = serde_json::to_string(&self.rf).unwrap();
-        println!("{}", json_str);
     }
 
     pub fn run<T>(&mut self, debug_mode: &T) -> Result<()>

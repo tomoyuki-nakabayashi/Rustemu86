@@ -7,7 +7,7 @@
 
 ## Test & Debug
 
-- [ ] Simplify integration tests.
+- [ ] Integrates qemu-from.
 
 ## Emulator model
 
