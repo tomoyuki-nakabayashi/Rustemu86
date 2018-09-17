@@ -7,9 +7,13 @@
 
 ## Test & Debug
 
-- [ ] Integrates qemu-from.
+- [x] Integrates qemu-from.
 
 ## Emulator model
+
+### Compatible mode
+
+- [x] First test.
 
 ## CPU Model
 

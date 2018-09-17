@@ -11,6 +11,7 @@ extern crate enum_primitive;
 
 pub mod args;
 pub mod cpu;
+pub mod compatible;
 pub mod display;
 pub mod loader;
 pub mod peripherals;

@@ -1,5 +1,4 @@
 extern crate bit_field;
-extern crate qemu_from;
 
 mod decoder;
 mod ex_stage;
