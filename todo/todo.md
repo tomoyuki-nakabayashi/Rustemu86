@@ -7,13 +7,14 @@
 
 ## Test & Debug
 
-- [x] Integrates qemu-from.
-
 ## Emulator model
 
 ### Compatible mode
 
-- [x] First test.
+- [ ] hlt
+- [ ] xor
+
+### BIOS
 
 ## CPU Model
 
