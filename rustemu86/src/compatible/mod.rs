@@ -1,15 +1,19 @@
 extern crate qemu_from;
 
 mod gpr;
+mod fetcher;
 mod isa;
 
 use self::gpr::RegisterFile;
 use self::isa::opcode::OpcodeCompat;
 use peripherals::interconnect::Interconnect;
 use num::FromPrimitive;
+use std::result;
+
+pub type Result<T> = result::Result<T, CompatibleException>;
 
 pub struct CompatibleMode {
-    ip: usize,
+    ip: u64,
     bus: Interconnect,
     rf: RegisterFile,
 }
@@ -23,8 +27,8 @@ impl CompatibleMode {
         }
     }
 
-    pub fn run(&mut self) -> Result<(), CompatibleException> {
-        let inst_candidate = self.bus.fetch_inst_candidate(self.ip as u64);
+    pub fn run(&mut self) -> Result<()> {
+        let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
         match OpcodeCompat::from_u8(inst_candidate[0]).unwrap() {
             OpcodeCompat::Hlt => Ok(()),
             OpcodeCompat::Xor => { self.rf.write_u64(0, 0); Ok(()) },
