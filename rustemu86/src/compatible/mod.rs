@@ -1,9 +1,12 @@
 extern crate qemu_from;
 
 mod gpr;
+mod isa;
 
 use self::gpr::RegisterFile;
+use self::isa::opcode::OpcodeCompat;
 use peripherals::interconnect::Interconnect;
+use num::FromPrimitive;
 
 pub struct CompatibleMode {
     ip: usize,
@@ -22,9 +25,9 @@ impl CompatibleMode {
 
     pub fn run(&mut self) -> Result<(), CompatibleException> {
         let inst_candidate = self.bus.fetch_inst_candidate(self.ip as u64);
-        match inst_candidate[0] {
-            0xf4 => Ok(()),
-            0x31 => { self.rf.write_u64(0, 0); Ok(()) },
+        match OpcodeCompat::from_u8(inst_candidate[0]).unwrap() {
+            OpcodeCompat::Hlt => Ok(()),
+            OpcodeCompat::Xor => { self.rf.write_u64(0, 0); Ok(()) },
             _ => Err(CompatibleException("Invalid instruction.".to_string())),
         }
     }
