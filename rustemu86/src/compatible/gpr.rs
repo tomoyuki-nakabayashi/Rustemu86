@@ -15,4 +15,8 @@ impl RegisterFile {
     pub fn read_u64(self, index: usize) -> u64 {
         self.rams[index]
     }
+
+    pub fn write_u64(&mut self, index: usize, value: u64) {
+        self.rams[index] = value;
+    }
 }
