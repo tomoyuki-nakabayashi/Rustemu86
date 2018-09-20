@@ -4,7 +4,13 @@ use num::FromPrimitive;
 
 pub(super) struct FetchedInst {
     opcode: OpcodeCompat,
-    next_ip: Box<dyn FnOnce(u64) -> u64>,
+    next_ip: Box<dyn Fn(u64) -> u64>,
+}
+
+impl FetchedInst {
+    pub(super) fn increment_ip(&self, ip: u64) -> u64 {
+        (self.next_ip)(ip)
+    }
 }
 
 pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {

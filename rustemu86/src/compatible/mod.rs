@@ -29,6 +29,8 @@ impl CompatibleMode {
 
     pub fn run(&mut self) -> Result<()> {
         let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
+        let fetched_inst = fetcher::fetch(&inst_candidate);
+        self.ip = fetched_inst.unwrap().increment_ip(self.ip);
         match OpcodeCompat::from_u8(inst_candidate[0]).unwrap() {
             OpcodeCompat::Hlt => Ok(()),
             OpcodeCompat::Xor => { self.rf.write_u64(0, 0); Ok(()) },
