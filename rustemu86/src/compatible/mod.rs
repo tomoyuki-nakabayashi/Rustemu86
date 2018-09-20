@@ -2,12 +2,13 @@ extern crate qemu_from;
 
 mod gpr;
 mod fetcher;
+mod decoder;
 mod isa;
 
 use self::gpr::RegisterFile;
+use self::decoder::{ExecuteInst};
 use self::isa::opcode::OpcodeCompat;
 use peripherals::interconnect::Interconnect;
-use num::FromPrimitive;
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -28,13 +29,20 @@ impl CompatibleMode {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
-        let fetched_inst = fetcher::fetch(&inst_candidate);
-        self.ip = fetched_inst.unwrap().increment_ip(self.ip);
-        match OpcodeCompat::from_u8(inst_candidate[0]).unwrap() {
-            OpcodeCompat::Hlt => Ok(()),
-            OpcodeCompat::Xor => { self.rf.write_u64(0, 0); Ok(()) },
-            _ => Err(CompatibleException("Invalid instruction.".to_string())),
+        loop {
+            let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
+            let fetched_inst = fetcher::fetch(&inst_candidate)?;
+            self.ip = fetched_inst.increment_ip(self.ip);
+            if fetched_inst.get_opcode() == OpcodeCompat::Hlt {
+                return Ok(())
+            }
+
+            let decoded_inst = decoder::decode(fetched_inst)?;
+            match decoded_inst {
+                ExecuteInst::ArithLogic(inst) => {
+                    self.rf.write_u64(0, inst.execute());
+                }
+            }
         }
     }
 }
