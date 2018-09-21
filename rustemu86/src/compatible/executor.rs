@@ -2,8 +2,8 @@ use compatible::{Result, CompatibleException};
 use compatible::decoder::{ExecuteInst, ArithLogicInst};
 
 pub struct WriteBackPacket {
-    usize: index,
-    u64: value,
+    pub(super) index: usize,
+    pub(super) value: u64,
 }
 
 pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackPacket> {

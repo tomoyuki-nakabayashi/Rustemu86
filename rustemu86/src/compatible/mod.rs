@@ -3,10 +3,11 @@ extern crate qemu_from;
 mod gpr;
 mod fetcher;
 mod decoder;
+mod executor;
 mod isa;
 
 use self::gpr::RegisterFile;
-use self::decoder::{ExecuteInst};
+use self::executor::WriteBackPacket;
 use self::isa::opcode::OpcodeCompat;
 use peripherals::interconnect::Interconnect;
 use std::result;
@@ -38,12 +39,14 @@ impl CompatibleMode {
             }
 
             let decoded_inst = decoder::decode(fetched_inst)?;
-            match decoded_inst {
-                ExecuteInst::ArithLogic(inst) => {
-                    self.rf.write_u64(0, inst.execute());
-                }
-            }
+            let write_back_packet = executor::execute(decoded_inst)?;
+            self.write_back(write_back_packet)?;
         }
+    }
+
+    fn write_back(&mut self, packet: WriteBackPacket) -> Result<()> {
+        self.rf.write_u64(packet.index, packet.value);
+        Ok(())
     }
 }
 
