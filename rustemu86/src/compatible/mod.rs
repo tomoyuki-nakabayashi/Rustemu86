@@ -1,14 +1,14 @@
-extern crate qemu_from;
-
 mod gpr;
 mod fetcher;
 mod decoder;
 mod executor;
+mod status_regs;
 mod isa;
 
 use self::gpr::RegisterFile;
-use self::executor::WriteBackPacket;
+use self::executor::WriteBackType;
 use self::isa::opcode::OpcodeCompat;
+use self::status_regs::CpuState;
 use peripherals::interconnect::Interconnect;
 use std::result;
 
@@ -18,6 +18,7 @@ pub struct CompatibleMode {
     ip: u64,
     bus: Interconnect,
     rf: RegisterFile,
+    state: CpuState,
 }
 
 impl CompatibleMode {
@@ -26,26 +27,32 @@ impl CompatibleMode {
             ip: 0,
             bus: peripheral_bus,
             rf: RegisterFile::new(),
+            state: CpuState::Running,
         }
     }
 
     pub fn run(&mut self) -> Result<()> {
-        loop {
+ 
+        while self.state == CpuState::Running {
             let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
             let fetched_inst = fetcher::fetch(&inst_candidate)?;
             self.ip = fetched_inst.increment_ip(self.ip);
-            if fetched_inst.get_opcode() == OpcodeCompat::Hlt {
-                return Ok(())
-            }
-
             let decoded_inst = decoder::decode(fetched_inst)?;
             let write_back_packet = executor::execute(decoded_inst)?;
             self.write_back(write_back_packet)?;
         }
+        Ok(())
     }
 
-    fn write_back(&mut self, packet: WriteBackPacket) -> Result<()> {
-        self.rf.write_u64(packet.index, packet.value);
+    fn write_back(&mut self, packet: WriteBackType) -> Result<()> {
+        match packet {
+            WriteBackType::Gpr(packet) => {
+                self.rf.write_u64(packet.index, packet.value);
+            }
+            WriteBackType::Status(packet) => {
+                self.state = CpuState::Halted;
+            }
+        }
         Ok(())
     }
 }
@@ -72,7 +79,9 @@ mod test {
     #[test]
     fn stop_at_hlt() {
         let program = vec![0xf4];
-        let _cpu = execute_program(program);
+        let cpu = execute_program(program);
+
+        assert_eq!(cpu.state, CpuState::Halted)
     }
 
     #[test]
