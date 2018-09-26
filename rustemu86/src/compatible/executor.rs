@@ -1,5 +1,6 @@
 use compatible::{Result, CompatibleException};
 use compatible::decoder::{ExecuteInst, ArithLogicInst};
+use compatible::status_regs::CpuState;
 
 pub(super) enum WriteBackType {
     Gpr(GprWriteBack),
@@ -11,7 +12,9 @@ pub struct GprWriteBack {
     pub(super) value: u64,
 }
 
-pub struct StatusWriteBack {}
+pub struct StatusWriteBack {
+    pub(super) state: CpuState,
+}
 
 pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
     match inst {
@@ -19,7 +22,7 @@ pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
             Ok( WriteBackType::Gpr(GprWriteBack { index: 0, value: inst.execute() }))
         }
         ExecuteInst::Privileged(inst) => {
-            Ok( WriteBackType::Status( StatusWriteBack{} ))
+            Ok( WriteBackType::Status( StatusWriteBack{ state: CpuState::Halted } ))
         }
     }
 }

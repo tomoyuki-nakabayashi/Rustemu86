@@ -50,7 +50,7 @@ impl CompatibleMode {
                 self.rf.write_u64(packet.index, packet.value);
             }
             WriteBackType::Status(packet) => {
-                self.state = CpuState::Halted;
+                self.state = packet.state;
             }
         }
         Ok(())
