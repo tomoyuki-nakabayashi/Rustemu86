@@ -31,3 +31,32 @@ pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {
         Err(CompatibleException ("Undefined opcode.".to_string()) )
     }
 }
+
+struct FetchedInstBuilder<'a> {
+    opcode: OpcodeCompat,
+    modrm: Option<u8>,
+    program: &'a [u8],
+    parsed_bytes: usize,
+}
+
+impl<'a> FetchedInstBuilder<'a> {
+    fn new(program: &[u8]) -> FetchedInstBuilder {
+        FetchedInstBuilder {
+            opcode: OpcodeCompat::Hlt,
+            modrm: None,
+            program: program,
+            parsed_bytes: 0,
+        }
+    }
+
+    fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
+        let candidate = self.program[self.parsed_bytes];
+        if let Some(opcode) = OpcodeCompat::from_u8(candidate) {
+            self.opcode = opcode;
+            self.parsed_bytes += 1;
+        } else {
+            return Err(CompatibleException(format!("Undefined opcode '{}'.", candidate)))
+        }
+        Ok(self)
+    }
+}
