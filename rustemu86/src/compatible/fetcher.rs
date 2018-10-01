@@ -1,5 +1,6 @@
 use compatible::{Result, CompatibleException};
-use compatible::isa::opcode::OpcodeCompat;
+use compatible::isa::opcode::{self, OpcodeCompat};
+use compatible::isa::modrm::ModRm;
 use num::FromPrimitive;
 
 pub(crate) struct FetchedInst {
@@ -18,25 +19,18 @@ impl FetchedInst {
 }
 
 pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {
-    if let Some(opcode) = OpcodeCompat::from_u8(program[0]) {
-        match opcode {
-            OpcodeCompat::Hlt => {
-                Ok( FetchedInst{ opcode: OpcodeCompat::Hlt, inst_bytes: 1, } )
-            }
-            OpcodeCompat::Xor => {
-                Ok( FetchedInst{ opcode: OpcodeCompat::Xor, inst_bytes: 2, } )
-            }
-        }
-    } else {
-        Err(CompatibleException ("Undefined opcode.".to_string()) )
-    }
+    let inst = FetchedInstBuilder::new(program)
+        .parse_opcode()?
+        .parse_modrm()
+        .build();
+    Ok(inst)
 }
 
 struct FetchedInstBuilder<'a> {
     opcode: OpcodeCompat,
-    modrm: Option<u8>,
+    modrm: Option<ModRm>,
     program: &'a [u8],
-    parsed_bytes: usize,
+    current_offset: usize,
 }
 
 impl<'a> FetchedInstBuilder<'a> {
@@ -45,18 +39,34 @@ impl<'a> FetchedInstBuilder<'a> {
             opcode: OpcodeCompat::Hlt,
             modrm: None,
             program: program,
-            parsed_bytes: 0,
+            current_offset: 0,
         }
     }
 
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
-        let candidate = self.program[self.parsed_bytes];
+        let candidate = self.program[self.current_offset];
         if let Some(opcode) = OpcodeCompat::from_u8(candidate) {
             self.opcode = opcode;
-            self.parsed_bytes += 1;
+            self.current_offset += 1;
         } else {
             return Err(CompatibleException(format!("Undefined opcode '{}'.", candidate)))
         }
         Ok(self)
+    }
+
+    fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
+        let candidate = self.program[self.current_offset];
+        if opcode::inst_use_modrm(self.opcode) {
+            self.modrm = Some(ModRm::new(candidate));
+            self.current_offset += 1;
+        }
+        self
+    }
+
+    fn build(&self) -> FetchedInst {
+        FetchedInst {
+            opcode: self.opcode,
+            inst_bytes: self.current_offset as u64,
+        }
     }
 }
