@@ -7,7 +7,6 @@ mod isa;
 
 use self::gpr::RegisterFile;
 use self::executor::WriteBackType;
-use self::isa::opcode::OpcodeCompat;
 use self::status_regs::CpuState;
 use peripherals::interconnect::Interconnect;
 use std::result;
@@ -37,7 +36,7 @@ impl CompatibleMode {
             let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
             let fetched_inst = fetcher::fetch(&inst_candidate)?;
             self.ip = fetched_inst.increment_ip(self.ip);
-            let decoded_inst = decoder::decode(fetched_inst)?;
+            let decoded_inst = decoder::decode(&fetched_inst, &self.rf)?;
             let write_back_packet = executor::execute(decoded_inst)?;
             self.write_back(write_back_packet)?;
         }

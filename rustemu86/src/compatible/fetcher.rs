@@ -5,6 +5,7 @@ use num::FromPrimitive;
 
 pub(crate) struct FetchedInst {
     opcode: OpcodeCompat,
+    modrm: Option<ModRm>,
     inst_bytes: u64,
 }
 
@@ -15,6 +16,11 @@ impl FetchedInst {
 
     pub(super) fn increment_ip(&self, ip: u64) -> u64 {
         ip + self.inst_bytes
+    }
+
+    pub(crate) fn get_modrm(&self) -> ModRm {
+        let modrm = self.modrm.expect("Mod RM filed was not fetched.");
+        modrm
     }
 }
 
@@ -66,6 +72,7 @@ impl<'a> FetchedInstBuilder<'a> {
     fn build(&self) -> FetchedInst {
         FetchedInst {
             opcode: self.opcode,
+            modrm: self.modrm,
             inst_bytes: self.current_offset as u64,
         }
     }

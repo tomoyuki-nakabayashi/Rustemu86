@@ -1,5 +1,5 @@
-use compatible::{Result, CompatibleException};
-use compatible::decoder::{ExecuteInst, ArithLogicInst};
+use compatible::Result;
+use compatible::decoder::ExecuteInst;
 use compatible::status_regs::CpuState;
 
 pub(super) enum WriteBackType {
@@ -21,7 +21,7 @@ pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
         ExecuteInst::ArithLogic(inst) => {
             Ok( WriteBackType::Gpr(GprWriteBack { index: 0, value: inst.execute() }))
         }
-        ExecuteInst::Privileged(inst) => {
+        ExecuteInst::Privileged(_inst) => {
             Ok( WriteBackType::Status( StatusWriteBack{ state: CpuState::Halted } ))
         }
     }

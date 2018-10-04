@@ -12,7 +12,7 @@ impl RegisterFile {
         }
     }
 
-    pub fn read_u64(self, index: usize) -> u64 {
+    pub fn read_u64(&self, index: usize) -> u64 {
         self.rams[index]
     }
 

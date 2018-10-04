@@ -1,6 +1,7 @@
-use compatible::{Result, CompatibleException};
+use compatible::Result;
 use compatible::isa::opcode::OpcodeCompat;
 use compatible::fetcher::FetchedInst;
+use compatible::gpr::RegisterFile;
 use std::default::Default;
 
 pub(crate) enum ExecuteInst {
@@ -32,10 +33,15 @@ impl Default for ArithLogicInst {
 
 pub(crate) struct PrivilegedInst {}
 
-pub(super) fn decode(inst: FetchedInst) -> Result<ExecuteInst> {
+pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
     match inst.get_opcode() {
         OpcodeCompat::Xor => {
-            let inst = ArithLogicInst{expr: Box::new(|a, b| a ^ b ), ..Default::default()};
+            let (reg, rm) = inst.get_modrm().get_reg_rm();
+            let inst = ArithLogicInst{
+                left: gpr.read_u64(reg),
+                right: gpr.read_u64(rm),
+                expr: Box::new(|a, b| a ^ b ),
+            };
             Ok(ExecuteInst::ArithLogic(inst))
         }
         OpcodeCompat::Hlt => {
