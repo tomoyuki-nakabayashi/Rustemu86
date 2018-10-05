@@ -17,11 +17,12 @@ pub struct StatusWriteBack {
 }
 
 pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
+    use self::ExecuteInst::{ArithLogic, Privileged};
     match inst {
-        ExecuteInst::ArithLogic(inst) => {
+        ArithLogic(inst) => {
             Ok( WriteBackType::Gpr(GprWriteBack { index: 0, value: inst.execute() }))
         }
-        ExecuteInst::Privileged(_inst) => {
+        Privileged(_inst) => {
             Ok( WriteBackType::Status( StatusWriteBack{ state: CpuState::Halted } ))
         }
     }

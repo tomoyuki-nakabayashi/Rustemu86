@@ -6,6 +6,7 @@ enum_from_primitive! {
     }
 }
 
+use self::OpcodeCompat::*;
 pub fn inst_use_modrm(opcode: OpcodeCompat) -> bool {
-    opcode == OpcodeCompat::Xor
+    opcode == Xor
 }
