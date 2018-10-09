@@ -2,6 +2,8 @@ use compatible::Result;
 use compatible::isa::opcode::OpcodeCompat;
 use compatible::fetcher::FetchedInst;
 use compatible::gpr::RegisterFile;
+use compatible::status_regs::CpuState;
+use compatible::executor::Execute;
 use std::default::Default;
 
 pub(crate) enum ExecuteInst {
@@ -15,9 +17,10 @@ pub(crate) struct ArithLogicInst {
     expr: Box<dyn Fn(u64, u64) -> u64>,
 }
 
-impl ArithLogicInst {
-    pub(crate) fn execute(&self) -> u64 {
-        (self.expr)(0, 0)
+impl Execute for ArithLogicInst {
+    type ResultValue = u64;
+    fn execute(&self) -> Self::ResultValue {
+        (self.expr)(self.right, self.left)
     }
 }
 
@@ -32,6 +35,13 @@ impl Default for ArithLogicInst {
 }
 
 pub(crate) struct PrivilegedInst {}
+
+impl Execute for PrivilegedInst {
+    type ResultValue = CpuState;
+    fn execute(&self) -> Self::ResultValue {
+        CpuState::Halted
+    }
+}
 
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
     match inst.get_opcode() {

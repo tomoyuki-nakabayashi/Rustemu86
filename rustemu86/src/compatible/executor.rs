@@ -2,6 +2,11 @@ use compatible::Result;
 use compatible::decoder::ExecuteInst;
 use compatible::status_regs::CpuState;
 
+pub trait Execute {
+    type ResultValue;
+    fn execute(&self) -> Self::ResultValue;
+}
+
 pub(super) enum WriteBackType {
     Gpr(GprWriteBack),
     Status(StatusWriteBack),
@@ -22,8 +27,8 @@ pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
         ArithLogic(inst) => {
             Ok( WriteBackType::Gpr(GprWriteBack { index: 0, value: inst.execute() }))
         }
-        Privileged(_inst) => {
-            Ok( WriteBackType::Status( StatusWriteBack{ state: CpuState::Halted } ))
+        Privileged(inst) => {
+            Ok( WriteBackType::Status( StatusWriteBack{ state: inst.execute() } ))
         }
     }
 }
