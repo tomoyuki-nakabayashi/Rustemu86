@@ -9,6 +9,7 @@ use self::gpr::RegisterFile;
 use self::executor::WriteBackType;
 use self::status_regs::CpuState;
 use peripherals::interconnect::Interconnect;
+use cpu::model::{CpuModel, Pipeline, EmulationError};
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;

@@ -10,10 +10,10 @@ pub trait CpuModel {
     fn new(interconnect: Interconnect) -> Self;
 
     /// Initialize cpu state and register including program counter.
-    fn init(&self mut);
+    fn init(&mut self);
 
     /// Start execution of the program from the entry point.
-    fn run(&self mut) -> Result<(), EmulationError>;
+    fn run(&mut self) -> Result<(), EmulationError>;
 }
 
 /// Instruction pipeline.
@@ -24,25 +24,26 @@ pub trait Pipeline {
 
     /// Execute an instruction from the program.
     fn execute_an_instruction(&mut self, program: &[u8]) -> Result<(), EmulationError> {
-        let result = Self.fetch(program)
-            .map(|inst| Self.decode(&inst))
-            .map(|inst| Self.execute(&inst))?;
+        let result = Self::fetch(program)
+            .map(|inst| Self::decode(&inst))?
+            .map(|inst| Self::execute(&inst))?;
 
+        let result = result?;
         self.write_back(&result)
     }
 
     /// Fetch an instruction from the program.
-    fn fetch(program: &[u8]) -> Result<Fetched, EmulationError>;
+    fn fetch(program: &[u8]) -> Result<Self::Fetched, EmulationError>;
 
     /// Decode a fethced instruction.
-    fn decode(inst: &Fetched) -> Result<Decoded, EmulationError>;
+    fn decode(inst: &Self::Fetched) -> Result<Self::Decoded, EmulationError>;
 
     /// Execute a decoded instruction.
-    fn execute(inst: &Decoded) -> Result<Executed, EmulationError>;
+    fn execute(inst: &Self::Decoded) -> Result<Self::Executed, EmulationError>;
 
     /// Write back the result of execution.
     /// Only this method updates the CPU state.
-    fn write_back(&mut self, inst: Executed) -> Result<(), EmulationError>;
+    fn write_back(&mut self, inst: &Self::Executed) -> Result<(), EmulationError>;
 }
 
 /// Emulation Error.
