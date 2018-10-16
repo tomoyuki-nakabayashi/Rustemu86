@@ -22,28 +22,6 @@ pub struct CompatibleMode {
 }
 
 impl CompatibleMode {
-    pub fn new(peripheral_bus: Interconnect) -> CompatibleMode {
-        CompatibleMode {
-            ip: 0,
-            bus: peripheral_bus,
-            rf: RegisterFile::new(),
-            state: CpuState::Running,
-        }
-    }
-
-    pub fn run(&mut self) -> Result<()> {
- 
-        while self.state == CpuState::Running {
-            let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
-            let fetched_inst = fetcher::fetch(&inst_candidate)?;
-            self.ip = fetched_inst.increment_ip(self.ip);
-            let decoded_inst = decoder::decode(&fetched_inst, &self.rf)?;
-            let write_back_packet = executor::execute(decoded_inst)?;
-            self.write_back(write_back_packet)?;
-        }
-        Ok(())
-    }
-
     fn write_back(&mut self, packet: WriteBackType) -> Result<()> {
         match packet {
             WriteBackType::Gpr(packet) => {
@@ -52,6 +30,35 @@ impl CompatibleMode {
             WriteBackType::Status(packet) => {
                 self.state = packet.state;
             }
+        }
+        Ok(())
+    }
+}
+
+impl CpuModel for CompatibleMode {
+    type Error = CompatibleException;
+
+    fn new(peripheral_bus: Interconnect) -> CompatibleMode {
+        CompatibleMode {
+            ip: 0,
+            bus: peripheral_bus,
+            rf: RegisterFile::new(),
+            state: CpuState::Running,
+        }
+    }
+
+    fn init(&mut self) {
+        unimplemented!()
+    }
+
+    fn run(&mut self) -> Result<()> {
+        while self.state == CpuState::Running {
+            let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
+            let fetched_inst = fetcher::fetch(&inst_candidate)?;
+            self.ip = fetched_inst.increment_ip(self.ip);
+            let decoded_inst = decoder::decode(&fetched_inst, &self.rf)?;
+            let write_back_packet = executor::execute(decoded_inst)?;
+            self.write_back(write_back_packet)?;
         }
         Ok(())
     }

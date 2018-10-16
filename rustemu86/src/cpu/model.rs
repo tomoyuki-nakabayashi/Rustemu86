@@ -3,8 +3,7 @@ use std::fmt;
 
 /// All CPUs must implement CpuModel trait.
 pub trait CpuModel {
-    /// Each CPU has own execution pipeline.
-    type Pipeline;
+    type Error;
 
     /// Create instance which holds an interface to the interconnect.
     fn new(interconnect: Interconnect) -> Self;
@@ -13,7 +12,7 @@ pub trait CpuModel {
     fn init(&mut self);
 
     /// Start execution of the program from the entry point.
-    fn run(&mut self) -> Result<(), EmulationError>;
+    fn run(&mut self) -> Result<(), Self::Error>;
 }
 
 /// Instruction pipeline.
