@@ -6,12 +6,12 @@ use compatible::status_regs::CpuState;
 use compatible::executor::Execute;
 use std::default::Default;
 
-pub(crate) enum ExecuteInst {
+pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),
     Privileged(PrivilegedInst),
 }
 
-pub(crate) struct ArithLogicInst {
+pub struct ArithLogicInst {
     left: u64,
     right: u64,
     expr: Box<dyn Fn(u64, u64) -> u64>,
@@ -34,7 +34,7 @@ impl Default for ArithLogicInst {
     }
 }
 
-pub(crate) struct PrivilegedInst {}
+pub struct PrivilegedInst {}
 
 impl Execute for PrivilegedInst {
     type ResultValue = CpuState;

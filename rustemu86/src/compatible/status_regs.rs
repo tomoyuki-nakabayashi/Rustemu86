@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub(crate) enum CpuState {
+pub enum CpuState {
     Halted,
     Running
 }

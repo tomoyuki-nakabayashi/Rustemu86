@@ -3,7 +3,7 @@ use compatible::isa::opcode::{self, OpcodeCompat};
 use compatible::isa::modrm::ModRm;
 use num::FromPrimitive;
 
-pub(crate) struct FetchedInst {
+pub struct FetchedInst {
     opcode: OpcodeCompat,
     modrm: Option<ModRm>,
     inst_bytes: u64,

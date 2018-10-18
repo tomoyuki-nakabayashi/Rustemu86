@@ -6,10 +6,12 @@ mod status_regs;
 mod isa;
 
 use self::gpr::RegisterFile;
-use self::executor::WriteBackType;
 use self::status_regs::CpuState;
+use self::fetcher::FetchedInst;
+use self::decoder::ExecuteInst;
+use self::executor::WriteBackType;
 use peripherals::interconnect::Interconnect;
-use cpu::model::{CpuModel, Pipeline, EmulationError};
+use cpu::model::{CpuModel, Pipeline};
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -19,20 +21,6 @@ pub struct CompatibleMode {
     bus: Interconnect,
     rf: RegisterFile,
     state: CpuState,
-}
-
-impl CompatibleMode {
-    fn write_back(&mut self, packet: WriteBackType) -> Result<()> {
-        match packet {
-            WriteBackType::Gpr(packet) => {
-                self.rf.write_u64(packet.index, packet.value);
-            }
-            WriteBackType::Status(packet) => {
-                self.state = packet.state;
-            }
-        }
-        Ok(())
-    }
 }
 
 impl CpuModel for CompatibleMode {
@@ -54,11 +42,47 @@ impl CpuModel for CompatibleMode {
     fn run(&mut self) -> Result<()> {
         while self.state == CpuState::Running {
             let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
-            let fetched_inst = fetcher::fetch(&inst_candidate)?;
-            self.ip = fetched_inst.increment_ip(self.ip);
-            let decoded_inst = decoder::decode(&fetched_inst, &self.rf)?;
-            let write_back_packet = executor::execute(decoded_inst)?;
-            self.write_back(write_back_packet)?;
+            self.execute_an_instruction(&inst_candidate)?;
+        }
+        Ok(())
+    }
+}
+
+impl Pipeline for CompatibleMode {
+    type Error = CompatibleException;
+    type Fetched = FetchedInst;
+    type Decoded = ExecuteInst;
+    type Executed = WriteBackType;
+
+    fn execute_an_instruction(&mut self, program: &[u8]) -> Result<()> {
+        let fetched_inst = fetcher::fetch(&program)?;
+        self.ip = fetched_inst.increment_ip(self.ip);
+        let decoded_inst = decoder::decode(&fetched_inst, &self.rf)?;
+        let write_back_packet = executor::execute(&decoded_inst)?;
+
+        self.write_back(&write_back_packet)
+    }
+
+    fn fetch(&self, program: &[u8]) -> Result<Self::Fetched> {
+        fetcher::fetch(program)
+    }
+
+    fn decode(&self, inst: &Self::Fetched) -> Result<Self::Decoded> {
+        decoder::decode(&inst, &self.rf)
+    }
+
+    fn execute(&self, inst: &Self::Decoded) -> Result<Self::Executed> {
+        executor::execute(&inst)
+    }
+
+    fn write_back(&mut self, inst: &Self::Executed) -> Result<()> {
+        match inst {
+            WriteBackType::Gpr(inst) => {
+                self.rf.write_u64(inst.index, inst.value);
+            }
+            WriteBackType::Status(inst) => {
+                self.state = inst.state;
+            }
         }
         Ok(())
     }

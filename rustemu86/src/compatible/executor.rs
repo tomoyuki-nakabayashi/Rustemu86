@@ -7,7 +7,7 @@ pub trait Execute {
     fn execute(&self) -> Self::ResultValue;
 }
 
-pub(super) enum WriteBackType {
+pub enum WriteBackType {
     Gpr(GprWriteBack),
     Status(StatusWriteBack),
 }
@@ -21,7 +21,7 @@ pub struct StatusWriteBack {
     pub(super) state: CpuState,
 }
 
-pub(super) fn execute(inst: ExecuteInst) -> Result<WriteBackType> {
+pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
     use self::ExecuteInst::{ArithLogic, Privileged};
     match inst {
         ArithLogic(inst) => {
