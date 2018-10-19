@@ -6,6 +6,7 @@ mod status_regs;
 mod isa;
 
 use self::gpr::RegisterFile;
+use self::gpr::Reg32::*;
 use self::status_regs::CpuState;
 use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
@@ -16,11 +17,28 @@ use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
 
+/// x86 32-bit mode.
 pub struct CompatibleMode {
     ip: u64,
     bus: Interconnect,
     rf: RegisterFile,
     state: CpuState,
+}
+
+impl CompatibleMode {
+    /// Creates instance just after booting bios.
+    /// IP starts with 0x7c00.
+    pub fn boot_bios(peripheral_bus: Interconnect) -> CompatibleMode {
+        let mut rf = RegisterFile::new();
+        rf.write_u64(Eax as usize, 0xaa55u64);
+        rf.write_u64(Esp as usize, 0x6f2cu64);
+        CompatibleMode {
+            ip: 0x7c00u64,
+            bus: peripheral_bus,
+            rf: rf,
+            state: CpuState::Running,
+        }
+    }
 }
 
 impl CpuModel for CompatibleMode {
@@ -96,15 +114,28 @@ mod test {
     use super::*;
     use args::EmulationMode;
     use display::GtkVgaTextBuffer;
+    use cpu::model::cpu_factory;
 
     fn execute_program(program: Vec<u8>) -> CompatibleMode {
-        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
+        let mut interconnect = Interconnect::new(
+            EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program);
-        let mut cpu = CompatibleMode::new(interconnect);
+        let mut cpu: CompatibleMode = cpu_factory(interconnect);
         let result = cpu.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
         cpu
+    }
+
+    #[test]
+    fn skip_bios() {
+        let mut interconnect = Interconnect::new(
+            EmulationMode::Normal, GtkVgaTextBuffer::new());
+        let cpu = CompatibleMode::boot_bios(interconnect);
+
+        assert_eq!(cpu.rf.read_u64(Eax as usize), 0xaa55u64);
+        assert_eq!(cpu.rf.read_u64(Esp as usize), 0x6f2cu64);
+        assert_eq!(cpu.ip, 0x7c00u64);
     }
 
     #[test]

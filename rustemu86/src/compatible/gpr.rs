@@ -20,3 +20,17 @@ impl RegisterFile {
         self.rams[index] = value;
     }
 }
+
+enum_from_primitive! {
+  #[derive(Debug, Clone, Copy, PartialEq)]
+  pub enum Reg32 {
+    Eax = 0x00,
+    Ecx = 0x01,
+    Edx = 0x02,
+    Ebx = 0x03,
+    Esp = 0x04,
+    Ebp = 0x05,
+    Esi = 0x06,
+    Edi = 0x07,
+  }
+}
