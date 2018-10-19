@@ -30,8 +30,8 @@ impl CompatibleMode {
     /// IP starts with 0x7c00.
     pub fn boot_bios(peripheral_bus: Interconnect) -> CompatibleMode {
         let mut rf = RegisterFile::new();
-        rf.write_u64(Eax as usize, 0xaa55u64);
-        rf.write_u64(Esp as usize, 0x6f2cu64);
+        rf.write_u64(Eax, 0xaa55u64);
+        rf.write_u64(Esp, 0x6f2cu64);
         CompatibleMode {
             ip: 0x7c00u64,
             bus: peripheral_bus,
@@ -117,7 +117,7 @@ mod test {
     use cpu::model::cpu_factory;
 
     fn execute_program(program: Vec<u8>) -> CompatibleMode {
-        let mut interconnect = Interconnect::new(
+        let interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program);
         let mut cpu: CompatibleMode = cpu_factory(interconnect);
@@ -133,8 +133,8 @@ mod test {
             EmulationMode::Normal, GtkVgaTextBuffer::new());
         let cpu = CompatibleMode::boot_bios(interconnect);
 
-        assert_eq!(cpu.rf.read_u64(Eax as usize), 0xaa55u64);
-        assert_eq!(cpu.rf.read_u64(Esp as usize), 0x6f2cu64);
+        assert_eq!(cpu.rf.read_u64(Eax), 0xaa55u64);
+        assert_eq!(cpu.rf.read_u64(Esp), 0x6f2cu64);
         assert_eq!(cpu.ip, 0x7c00u64);
     }
 
@@ -151,6 +151,6 @@ mod test {
         let program = vec![0x31, 0xc0, 0xf4];
         let cpu = execute_program(program);
 
-        assert_eq!(cpu.rf.read_u64(0), 0);
+        assert_eq!(cpu.rf.read_u64(Eax), 0);
     }
 }

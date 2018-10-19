@@ -1,5 +1,6 @@
 /// General Purpose Register File.
-/// 
+
+const REGISTER_NUM : usize = 8;
 
 pub(crate) struct RegisterFile{
     rams: Vec<u64>,
@@ -8,29 +9,30 @@ pub(crate) struct RegisterFile{
 impl RegisterFile {
     pub fn new() -> RegisterFile {
         RegisterFile {
-            rams: vec![0xffff_ffff_ffff_ffff; 8],
+            rams: vec![0xffff_ffff_ffff_ffff; REGISTER_NUM],
         }
     }
 
-    pub fn read_u64(&self, index: usize) -> u64 {
-        self.rams[index]
+    pub fn read_u64(&self, index: Reg32) -> u64 {
+        self.rams[index as usize]
     }
 
-    pub fn write_u64(&mut self, index: usize, value: u64) {
-        self.rams[index] = value;
+    pub fn write_u64(&mut self, index: Reg32, value: u64) {
+        self.rams[index as usize] = value;
     }
 }
 
 enum_from_primitive! {
-  #[derive(Debug, Clone, Copy, PartialEq)]
-  pub enum Reg32 {
-    Eax = 0x00,
-    Ecx = 0x01,
-    Edx = 0x02,
-    Ebx = 0x03,
-    Esp = 0x04,
-    Ebp = 0x05,
-    Esi = 0x06,
-    Edi = 0x07,
-  }
+    /// Register index for x86 32bit mode.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Reg32 {
+        Eax = 0x00,
+        Ecx = 0x01,
+        Edx = 0x02,
+        Ebx = 0x03,
+        Esp = 0x04,
+        Ebp = 0x05,
+        Esi = 0x06,
+        Edi = 0x07,
+    }
 }
