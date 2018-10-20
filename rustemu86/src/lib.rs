@@ -11,11 +11,11 @@ extern crate enum_primitive;
 
 pub mod args;
 pub mod cpu;
-pub mod compatible;
 pub mod display;
 pub mod loader;
 pub mod peripherals;
 pub mod rustemu86;
+mod targets;
 
 use args::EmulationMode;
 use cpu::Cpu;

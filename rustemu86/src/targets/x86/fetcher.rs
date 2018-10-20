@@ -1,6 +1,6 @@
-use compatible::{Result, CompatibleException};
-use compatible::isa::opcode::{self, OpcodeCompat};
-use compatible::isa::modrm::ModRm;
+use targets::x86::{Result, CompatibleException};
+use targets::x86::isa::opcode::{self, OpcodeCompat};
+use targets::x86::isa::modrm::ModRm;
 use num::FromPrimitive;
 
 pub struct FetchedInst {

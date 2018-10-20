@@ -1,8 +1,8 @@
-use compatible::Result;
-use compatible::decoder::ExecuteInst;
-use compatible::status_regs::CpuState;
-use compatible::gpr::Reg32;
-use compatible::gpr::Reg32::*;
+use targets::x86::Result;
+use targets::x86::decoder::ExecuteInst;
+use targets::x86::status_regs::CpuState;
+use targets::x86::gpr::Reg32;
+use targets::x86::gpr::Reg32::*;
 
 pub trait Execute {
     type ResultValue;

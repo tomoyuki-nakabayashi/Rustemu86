@@ -1,5 +1,5 @@
 use bit_field::BitField;
-use compatible::gpr::Reg32;
+use targets::x86::gpr::Reg32;
 use num::FromPrimitive;
 
 /// Mod R/M.

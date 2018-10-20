@@ -1,9 +1,9 @@
-use compatible::Result;
-use compatible::isa::opcode::OpcodeCompat;
-use compatible::fetcher::FetchedInst;
-use compatible::gpr::RegisterFile;
-use compatible::status_regs::CpuState;
-use compatible::executor::Execute;
+use targets::x86::Result;
+use targets::x86::isa::opcode::OpcodeCompat;
+use targets::x86::fetcher::FetchedInst;
+use targets::x86::gpr::RegisterFile;
+use targets::x86::status_regs::CpuState;
+use targets::x86::executor::Execute;
 use std::default::Default;
 
 pub enum ExecuteInst {

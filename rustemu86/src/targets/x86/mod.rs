@@ -117,7 +117,7 @@ mod test {
     use cpu::model::cpu_factory;
 
     fn execute_program(program: Vec<u8>) -> CompatibleMode {
-        let interconnect = Interconnect::new(
+        let mut interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program);
         let mut cpu: CompatibleMode = cpu_factory(interconnect);
