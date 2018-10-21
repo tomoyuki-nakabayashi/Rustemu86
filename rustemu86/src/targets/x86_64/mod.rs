@@ -6,7 +6,6 @@ mod exceptions;
 mod fetcher;
 mod isa;
 mod register_file;
-pub mod model;
 
 use self::ex_stage::{WriteBack, WriteBackData};
 use self::exceptions::InternalException;

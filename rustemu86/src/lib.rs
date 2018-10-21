@@ -14,6 +14,7 @@ pub mod display;
 pub mod loader;
 pub mod peripherals;
 pub mod rustemu86;
+mod cpu;
 mod targets;
 
 use args::EmulationMode;

@@ -12,7 +12,7 @@ use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
 use self::executor::WriteBackType;
 use peripherals::interconnect::Interconnect;
-use x86_64::model::{CpuModel, Pipeline};
+use cpu::model::{CpuModel, Pipeline};
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -114,7 +114,7 @@ mod test {
     use super::*;
     use args::EmulationMode;
     use display::GtkVgaTextBuffer;
-    use x86_64::model::cpu_factory;
+    use cpu::model::cpu_factory;
 
     fn execute_program(program: Vec<u8>) -> X86 {
         let mut interconnect = Interconnect::new(
