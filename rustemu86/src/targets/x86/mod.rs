@@ -12,27 +12,27 @@ use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
 use self::executor::WriteBackType;
 use peripherals::interconnect::Interconnect;
-use cpu::model::{CpuModel, Pipeline};
+use x86_64::model::{CpuModel, Pipeline};
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
 
 /// x86 32-bit mode.
-pub struct CompatibleMode {
+pub struct X86 {
     ip: u64,
     bus: Interconnect,
     rf: RegisterFile,
     state: CpuState,
 }
 
-impl CompatibleMode {
+impl X86 {
     /// Creates instance just after booting bios.
     /// IP starts with 0x7c00.
-    pub fn boot_bios(peripheral_bus: Interconnect) -> CompatibleMode {
+    pub fn boot_bios(peripheral_bus: Interconnect) -> X86 {
         let mut rf = RegisterFile::new();
         rf.write_u64(Eax, 0xaa55u64);
         rf.write_u64(Esp, 0x6f2cu64);
-        CompatibleMode {
+        X86 {
             ip: 0x7c00u64,
             bus: peripheral_bus,
             rf: rf,
@@ -41,11 +41,11 @@ impl CompatibleMode {
     }
 }
 
-impl CpuModel for CompatibleMode {
+impl CpuModel for X86 {
     type Error = CompatibleException;
 
-    fn new(peripheral_bus: Interconnect) -> CompatibleMode {
-        CompatibleMode {
+    fn new(peripheral_bus: Interconnect) -> X86 {
+        X86 {
             ip: 0,
             bus: peripheral_bus,
             rf: RegisterFile::new(),
@@ -66,7 +66,7 @@ impl CpuModel for CompatibleMode {
     }
 }
 
-impl Pipeline for CompatibleMode {
+impl Pipeline for X86 {
     type Error = CompatibleException;
     type Fetched = FetchedInst;
     type Decoded = ExecuteInst;
@@ -114,43 +114,43 @@ mod test {
     use super::*;
     use args::EmulationMode;
     use display::GtkVgaTextBuffer;
-    use cpu::model::cpu_factory;
+    use x86_64::model::cpu_factory;
 
-    fn execute_program(program: Vec<u8>) -> CompatibleMode {
+    fn execute_program(program: Vec<u8>) -> X86 {
         let mut interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program);
-        let mut cpu: CompatibleMode = cpu_factory(interconnect);
-        let result = cpu.run();
+        let mut x86_64: X86 = cpu_factory(interconnect);
+        let result = x86_64.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
-        cpu
+        x86_64
     }
 
     #[test]
     fn skip_bios() {
-        let mut interconnect = Interconnect::new(
+        let interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
-        let cpu = CompatibleMode::boot_bios(interconnect);
+        let x86_64 = X86::boot_bios(interconnect);
 
-        assert_eq!(cpu.rf.read_u64(Eax), 0xaa55u64);
-        assert_eq!(cpu.rf.read_u64(Esp), 0x6f2cu64);
-        assert_eq!(cpu.ip, 0x7c00u64);
+        assert_eq!(x86_64.rf.read_u64(Eax), 0xaa55u64);
+        assert_eq!(x86_64.rf.read_u64(Esp), 0x6f2cu64);
+        assert_eq!(x86_64.ip, 0x7c00u64);
     }
 
     #[test]
     fn stop_at_hlt() {
         let program = vec![0xf4];
-        let cpu = execute_program(program);
+        let x86_64 = execute_program(program);
 
-        assert_eq!(cpu.state, CpuState::Halted)
+        assert_eq!(x86_64.state, CpuState::Halted)
     }
 
     #[test]
     fn clear_register_by_xor() {
         let program = vec![0x31, 0xc0, 0xf4];
-        let cpu = execute_program(program);
+        let x86_64 = execute_program(program);
 
-        assert_eq!(cpu.rf.read_u64(Eax), 0);
+        assert_eq!(x86_64.rf.read_u64(Eax), 0);
     }
 }

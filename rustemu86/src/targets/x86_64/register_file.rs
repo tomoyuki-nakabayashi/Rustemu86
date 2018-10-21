@@ -1,4 +1,4 @@
-use cpu::isa::registers::Reg64Id;
+use x86_64::isa::registers::Reg64Id;
 use std::fmt;
 
 #[derive(Debug)]

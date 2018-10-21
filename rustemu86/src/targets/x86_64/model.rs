@@ -15,7 +15,7 @@ pub trait CpuModel {
     /// Create instance which holds an interface to the interconnect.
     fn new(interconnect: Interconnect) -> Self;
 
-    /// Initialize cpu state and register including program counter.
+    /// Initialize x86_64 state and register including program counter.
     fn init(&mut self);
 
     /// Start execution of the program from the entry point.

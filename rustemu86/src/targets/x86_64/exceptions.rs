@@ -1,4 +1,4 @@
-use cpu::isa::opcode::Opcode;
+use x86_64::isa::opcode::Opcode;
 
 #[derive(Debug, Fail)]
 pub enum InternalException {

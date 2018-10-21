@@ -10,7 +10,6 @@ extern crate failure;
 extern crate enum_primitive;
 
 pub mod args;
-pub mod cpu;
 pub mod display;
 pub mod loader;
 pub mod peripherals;
@@ -18,12 +17,20 @@ pub mod rustemu86;
 mod targets;
 
 use args::EmulationMode;
-use cpu::Cpu;
+use targets::x86_64::{self, Cpu};
 use display::GtkVgaTextBuffer;
 use peripherals::interconnect::Interconnect;
 use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 
 pub struct CpuError {}
+
+/* Pseudo code for switching target isa.
+fn run(target: TargetArch, interconnect: Interconnect, mode: EmulationMode) {
+    match target {
+        X86 => { let x86_64: X86 = cpu_factory(interconnect); x86_64.run(&mode); }
+    }
+}
+*/
 
 pub fn start_emulation(
     program: Vec<u8>,
@@ -32,12 +39,12 @@ pub fn start_emulation(
 ) -> Result<(), CpuError> {
     let mut interconnect = Interconnect::new(mode_option.clone(), vga_text_buffer);
     interconnect.init_memory(program);
-    let mut cpu = Cpu::new(interconnect);
+    let mut x86_64 = Cpu::new(interconnect);
 
     let result = match mode_option {
-        EmulationMode::Normal | EmulationMode::Test(_) => cpu.run(&NoneDebug {}),
-        EmulationMode::PerCycleDump => cpu.run(&PerCycleDump {}),
-        EmulationMode::InteractiveMode => cpu.run(&Interactive {}),
+        EmulationMode::Normal | EmulationMode::Test(_) => x86_64.run(&NoneDebug {}),
+        EmulationMode::PerCycleDump => x86_64.run(&PerCycleDump {}),
+        EmulationMode::InteractiveMode => x86_64.run(&Interactive {}),
     };
 
     match result {

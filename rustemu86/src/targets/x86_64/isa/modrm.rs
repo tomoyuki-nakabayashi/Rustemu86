@@ -1,5 +1,5 @@
 use bit_field::BitField;
-use cpu::isa::registers::Reg64Id;
+use x86_64::isa::registers::Reg64Id;
 use num::FromPrimitive;
 
 enum_from_primitive! {

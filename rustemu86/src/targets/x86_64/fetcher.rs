@@ -1,10 +1,10 @@
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
-use cpu::isa::modrm::{ModRm, ModRmModeField, Sib};
-use cpu::isa::opcode::{self, Opcode, OperandSize};
-use cpu::isa::opcode::{REX, REX_WRXB};
-use cpu::isa::registers::Reg64Id;
-use cpu::{InternalException, Result};
+use x86_64::isa::modrm::{ModRm, ModRmModeField, Sib};
+use x86_64::isa::opcode::{self, Opcode, OperandSize};
+use x86_64::isa::opcode::{REX, REX_WRXB};
+use x86_64::isa::registers::Reg64Id;
+use x86_64::{InternalException, Result};
 use num::FromPrimitive;
 
 #[derive(Debug)]

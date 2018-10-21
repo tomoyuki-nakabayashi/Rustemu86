@@ -1,9 +1,9 @@
-use cpu::exceptions::InternalException;
-use cpu::fetcher::FetchedInst;
-use cpu::isa::registers::Reg64Id;
-use cpu::register_file::RegisterFile;
-use cpu::Result;
-use cpu::isa::opcode::OperandSize;
+use x86_64::exceptions::InternalException;
+use x86_64::fetcher::FetchedInst;
+use x86_64::isa::registers::Reg64Id;
+use x86_64::register_file::RegisterFile;
+use x86_64::Result;
+use x86_64::isa::opcode::OperandSize;
 use num::FromPrimitive;
 
 pub enum ExecuteInstType {
@@ -65,7 +65,7 @@ pub fn decode(
     rf: &RegisterFile,
     inst: &FetchedInst,
 ) -> Result<Vec<ExecuteInstType>> {
-    use cpu::isa::opcode::Opcode::*;
+    use x86_64::isa::opcode::Opcode::*;
     match inst.opcode {
         // Arithmetic and Logic instructions.
         Add => Ok(decode_add(&rf, &inst)),
@@ -129,7 +129,7 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
 /////////////////////////////////////////////////////////////////////////////
 fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use cpu::isa::modrm::ModRmModeField::*;
+        use x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.rm;
@@ -154,7 +154,7 @@ fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
 
 fn decode_mov_rm(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use cpu::isa::modrm::ModRmModeField::*;
+        use x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.reg;
@@ -194,7 +194,7 @@ fn decode_mov_oi(inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
 
 fn decode_mov_mi(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use cpu::isa::modrm::ModRmModeField::*;
+        use x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.rm;

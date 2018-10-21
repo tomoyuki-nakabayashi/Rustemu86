@@ -1,9 +1,9 @@
-use cpu::decoder::ExOpcode;
-use cpu::decoder::ExecuteInst;
-use cpu::decoder::ExecuteInstType;
-use cpu::isa::registers::Reg64Id;
-use cpu::isa::opcode::OperandSize;
-use cpu::CpuState;
+use x86_64::decoder::ExOpcode;
+use x86_64::decoder::ExecuteInst;
+use x86_64::decoder::ExecuteInstType;
+use x86_64::isa::registers::Reg64Id;
+use x86_64::isa::opcode::OperandSize;
+use x86_64::CpuState;
 
 pub enum WriteBack {
     Rip(u64),

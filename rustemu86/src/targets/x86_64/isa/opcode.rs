@@ -1,4 +1,4 @@
-use cpu::isa::modrm::ModRm;
+use x86_64::isa::modrm::ModRm;
 
 pub const REX: u8 = 0x40;
 pub const REX_WRXB: u8 = 0x4F;
