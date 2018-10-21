@@ -21,8 +21,8 @@ pub enum WriteBackData {
     QWord(u64),
 }
 
-pub fn execute(inst: ExecuteInstType) -> Result<WriteBack, ()> {
-    match inst {
+pub fn execute(inst: &ExecuteInstType) -> Result<WriteBack, ()> {
+    match inst.clone() {
         ExecuteInstType::ArithLogic(inst) => execute_arith_logic(inst),
         ExecuteInstType::Branch(inst) => execute_branch(inst),
         ExecuteInstType::LoadStore(inst) => execute_load_store(inst),

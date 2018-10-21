@@ -6,6 +6,8 @@ use x86_64::Result;
 use x86_64::isa::opcode::OperandSize;
 use num::FromPrimitive;
 
+// TODO: Remove clone trait.
+#[derive(Clone)]
 pub enum ExecuteInstType {
     ArithLogic(ExecuteInst),
     Branch(ExecuteInst),
@@ -14,6 +16,7 @@ pub enum ExecuteInstType {
 }
 
 #[allow(dead_code)]
+#[derive(Clone)]
 pub struct ExecuteInst {
     opcode: ExOpcode,
     dest: Option<Reg64Id>,
