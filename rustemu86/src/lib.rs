@@ -20,9 +20,10 @@ mod targets;
 use args::EmulationMode;
 use targets::x86_64::{self, X86_64};
 use cpu::model::CpuModel;
+use cpu::model::cpu_factory;
 use display::GtkVgaTextBuffer;
 use peripherals::interconnect::Interconnect;
-use rustemu86::{Interactive, NoneDebug, PerCycleDump};
+//use rustemu86::{Interactive, NoneDebug, PerCycleDump};
 
 pub struct CpuError {}
 
@@ -41,7 +42,7 @@ pub fn start_emulation(
 ) -> Result<(), CpuError> {
     let mut interconnect = Interconnect::new(mode_option.clone(), vga_text_buffer);
     interconnect.init_memory(program);
-    let mut x86_64 = X86_64::new(interconnect);
+    let mut x86_64 = cpu_factory::<X86_64>(interconnect);
 
     let result = match mode_option {
         EmulationMode::Normal | EmulationMode::Test(_) => x86_64.run(/*&NoneDebug {}*/),

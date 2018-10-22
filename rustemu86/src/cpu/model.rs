@@ -1,5 +1,4 @@
 use peripherals::interconnect::Interconnect;
-use std::fmt;
 
 /// The factory to create a CPU object.
 pub fn cpu_factory<T>(interconnect: Interconnect) -> T
@@ -51,14 +50,4 @@ pub trait Pipeline {
     /// Write back the result of execution.
     /// Only this method updates the CPU state.
     fn write_back(&mut self, inst: &Self::Executed) -> Result<(), Self::Error>;
-}
-
-/// Emulation Error.
-#[derive(Debug)]
-pub struct EmulationError(String);
-
-impl fmt::Display for EmulationError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}]", self.0)
-    }
 }

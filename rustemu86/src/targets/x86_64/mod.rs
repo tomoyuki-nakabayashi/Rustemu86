@@ -15,29 +15,31 @@ use self::ex_stage::{WriteBack, WriteBackData};
 use self::register_file::RegisterFile;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
-use rustemu86::DebugMode;
+use rustemu86::{DebugMode, NoneDebug};
 use std::fmt;
 use std::result;
-pub type Result<T> = result::Result<T, InternalException>;
 
+pub type Result<T> = result::Result<T, InternalException>;
 pub struct X86_64 {
     rf: RegisterFile,
     fetch_unit: FetchUnit,
     executed_insts: u64,
     mmio: Interconnect,
     state: CpuState,
+    debug: Box<dyn DebugMode>,
 }
 
 impl CpuModel for X86_64 {
     type Error = InternalException;
 
-    fn new(peripheral_bus: Interconnect) -> X86_64 {
+    fn new(mmio: Interconnect) -> X86_64 {
         X86_64 {
             rf: RegisterFile::new(),
             fetch_unit: FetchUnit::new(),
             executed_insts: 0,
-            mmio: peripheral_bus,
+            mmio: mmio,
             state: CpuState::Running,
+            debug: Box::new(NoneDebug {}),
         }
     }
 
@@ -51,9 +53,9 @@ impl CpuModel for X86_64 {
             let inst = self.fetch_unit.fetch(&inst_candidate)?;
             let uops = self.decode(&inst)?;
             let wbs = self.execute(&uops)?;
-            self.write_back(&wbs);
+            self.write_back(&wbs)?;
             self.executed_insts += 1;
-            // debug_mode.do_cycle_end_action(&self);
+            self.debug.do_cycle_end_action(&self);
         }
         println!(
             "Finish emulation. {} instructions executed.",
@@ -69,7 +71,7 @@ impl Pipeline for X86_64 {
     type Decoded = Vec<ExecuteInstType>;
     type Executed = Vec<WriteBack>;
 
-    fn fetch(&self, program: &[u8]) -> Result<Self::Fetched> {
+    fn fetch(&self, _program: &[u8]) -> Result<Self::Fetched> {
         //self.fetch_unit.fetch(&program)
         unimplemented!()
     }
@@ -145,7 +147,7 @@ mod test {
     use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use display::GtkVgaTextBuffer;
     use peripherals::interconnect::Interconnect;
-    use rustemu86;
+//    use rustemu86;
 
     fn execute_program(program: Vec<u8>) -> X86_64 {
         let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
