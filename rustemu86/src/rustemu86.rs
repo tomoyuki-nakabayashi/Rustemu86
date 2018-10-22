@@ -4,8 +4,8 @@ pub trait DebugMode {
     fn do_cycle_end_action(&self, _cpu: &X86_64) {}
 }
 
-pub struct NoneDebug {}
-impl DebugMode for NoneDebug {
+pub struct DebugDesabled {}
+impl DebugMode for DebugDesabled {
     fn do_cycle_end_action(&self, _cpu: &X86_64) {}
 }
 

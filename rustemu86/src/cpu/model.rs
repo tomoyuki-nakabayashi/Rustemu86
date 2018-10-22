@@ -1,10 +1,11 @@
 use peripherals::interconnect::Interconnect;
+use rustemu86::DebugMode;
 
 /// The factory to create a CPU object.
-pub fn cpu_factory<T>(interconnect: Interconnect) -> T
+pub fn cpu_factory<T>(mmio: Interconnect, debug: Box<dyn DebugMode>) -> T
     where T: CpuModel + Pipeline
 {
-    T::new(interconnect)
+    T::new(mmio, debug)
 }
 
 /// All CPUs must implement CpuModel trait.
@@ -12,7 +13,7 @@ pub trait CpuModel {
     type Error;
 
     /// Create instance which holds an interface to the interconnect.
-    fn new(interconnect: Interconnect) -> Self;
+    fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> Self;
 
     /// Initialize x86_64 state and register including program counter.
     fn init(&mut self);

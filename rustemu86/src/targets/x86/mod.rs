@@ -13,6 +13,7 @@ use self::decoder::ExecuteInst;
 use self::executor::WriteBackType;
 use peripherals::interconnect::Interconnect;
 use cpu::model::{CpuModel, Pipeline};
+use rustemu86::DebugMode;
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -20,7 +21,7 @@ pub type Result<T> = result::Result<T, CompatibleException>;
 /// x86 32-bit mode.
 pub struct X86 {
     ip: u64,
-    bus: Interconnect,
+    mmio: Interconnect,
     rf: RegisterFile,
     state: CpuState,
 }
@@ -34,7 +35,7 @@ impl X86 {
         rf.write_u64(Esp, 0x6f2cu64);
         X86 {
             ip: 0x7c00u64,
-            bus: peripheral_bus,
+            mmio: peripheral_bus,
             rf: rf,
             state: CpuState::Running,
         }
@@ -44,10 +45,10 @@ impl X86 {
 impl CpuModel for X86 {
     type Error = CompatibleException;
 
-    fn new(peripheral_bus: Interconnect) -> X86 {
+    fn new(mmio: Interconnect, _debug: Box<dyn DebugMode>) -> X86 {
         X86 {
             ip: 0,
-            bus: peripheral_bus,
+            mmio: mmio,
             rf: RegisterFile::new(),
             state: CpuState::Running,
         }
@@ -59,7 +60,7 @@ impl CpuModel for X86 {
 
     fn run(&mut self) -> Result<()> {
         while self.state == CpuState::Running {
-            let inst_candidate = self.bus.fetch_inst_candidate(self.ip);
+            let inst_candidate = self.mmio.fetch_inst_candidate(self.ip);
             self.execute_an_instruction(&inst_candidate)?;
         }
         Ok(())
@@ -115,12 +116,13 @@ mod test {
     use args::EmulationMode;
     use display::GtkVgaTextBuffer;
     use cpu::model::cpu_factory;
+    use rustemu86::DebugDesabled;
 
     fn execute_program(program: Vec<u8>) -> X86 {
         let mut interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program);
-        let mut x86_64: X86 = cpu_factory(interconnect);
+        let mut x86_64: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
         let result = x86_64.run();
 
         assert!(result.is_ok(), "{:?}", result.err());

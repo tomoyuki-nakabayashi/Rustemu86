@@ -15,7 +15,7 @@ use self::ex_stage::{WriteBack, WriteBackData};
 use self::register_file::RegisterFile;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
-use rustemu86::{DebugMode, NoneDebug};
+use rustemu86::DebugMode;
 use std::fmt;
 use std::result;
 
@@ -32,14 +32,14 @@ pub struct X86_64 {
 impl CpuModel for X86_64 {
     type Error = InternalException;
 
-    fn new(mmio: Interconnect) -> X86_64 {
+    fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> X86_64 {
         X86_64 {
             rf: RegisterFile::new(),
             fetch_unit: FetchUnit::new(),
             executed_insts: 0,
             mmio: mmio,
             state: CpuState::Running,
-            debug: Box::new(NoneDebug {}),
+            debug: debug,
         }
     }
 
@@ -143,6 +143,7 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
+    use rustemu86::DebugDesabled;
     use args::EmulationMode;
     use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use display::GtkVgaTextBuffer;
@@ -150,21 +151,22 @@ mod test {
 //    use rustemu86;
 
     fn execute_program(program: Vec<u8>) -> X86_64 {
-        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        interconnect.init_memory(program);
-        let mut x86_64 = X86_64::new(interconnect);
-        let result = x86_64.run(/*&rustemu86::NoneDebug {}*/);
+        let mut mmio = Interconnect::new(EmulationMode::Normal,
+            GtkVgaTextBuffer::new());
+        mmio.init_memory(program);
+        let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
+        let result = x86_64.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
         x86_64
     }
 
     fn execute_program_after_init(program: Vec<u8>, initializer: &Fn(&mut X86_64)) -> X86_64 {
-        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        interconnect.init_memory(program);
-        let mut x86_64 = X86_64::new(interconnect);
+        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
+        mmio.init_memory(program);
+        let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         initializer(&mut x86_64);
-        let result = x86_64.run(/*&rustemu86::NoneDebug {}*/);
+        let result = x86_64.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
         x86_64
