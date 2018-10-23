@@ -148,7 +148,6 @@ mod test {
     use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use display::GtkVgaTextBuffer;
     use peripherals::interconnect::Interconnect;
-//    use rustemu86;
 
     fn execute_program(program: Vec<u8>) -> X86_64 {
         let mut mmio = Interconnect::new(EmulationMode::Normal,
