@@ -152,7 +152,7 @@ mod test {
     fn execute_program(program: Vec<u8>) -> X86_64 {
         let mut mmio = Interconnect::new(EmulationMode::Normal,
             GtkVgaTextBuffer::new());
-        mmio.init_memory(program);
+        mmio.init_memory(program, 0);
         let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         let result = x86_64.run();
 
@@ -162,7 +162,7 @@ mod test {
 
     fn execute_program_after_init(program: Vec<u8>, initializer: &Fn(&mut X86_64)) -> X86_64 {
         let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        mmio.init_memory(program);
+        mmio.init_memory(program, 0);
         let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         initializer(&mut x86_64);
         let result = x86_64.run();

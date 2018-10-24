@@ -1,12 +1,13 @@
 use rustemu86::DebugMode;
 use peripherals::interconnect::Interconnect;
-use cpu::model::{CpuModel, Pipeline};
+use cpu::model::CpuModel;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
 
 pub struct InternalError (String);
 
+#[allow(dead_code)]
 pub struct Riscv {
     mmio: Interconnect,
     debug: Box<dyn DebugMode>,
@@ -43,7 +44,7 @@ mod test {
         let program = vec![0x73, 0x00, 0x50, 0x10];
         let mut mmio = Interconnect::new(EmulationMode::Normal,
             GtkVgaTextBuffer::new());
-        mmio.init_memory(program);
+        mmio.init_memory(program, 0);
         let mut riscv = Riscv::new(mmio, Box::new(DebugDesabled {}));
 
         let result = riscv.run();

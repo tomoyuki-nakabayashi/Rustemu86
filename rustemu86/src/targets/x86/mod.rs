@@ -29,16 +29,10 @@ pub struct X86 {
 impl X86 {
     /// Creates instance just after booting bios.
     /// IP starts with 0x7c00.
-    pub fn boot_bios(peripheral_bus: Interconnect) -> X86 {
-        let mut rf = RegisterFile::new();
-        rf.write_u64(Eax, 0xaa55u64);
-        rf.write_u64(Esp, 0x6f2cu64);
-        X86 {
-            ip: 0x7c00u64,
-            mmio: peripheral_bus,
-            rf: rf,
-            state: CpuState::Running,
-        }
+    pub fn boot_bios(&mut self) {
+        self.rf.write_u64(Eax, 0xaa55u64);
+        self.rf.write_u64(Esp, 0x6f2cu64);
+        self.ip = 0x7c00u64;
     }
 }
 
@@ -118,41 +112,50 @@ mod test {
     use cpu::model::cpu_factory;
     use rustemu86::DebugDesabled;
 
-    fn execute_program(program: Vec<u8>) -> X86 {
+    fn execute_program(program: Vec<u8>, start_addr: usize) -> X86 {
         let mut interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
-        interconnect.init_memory(program);
-        let mut x86_64: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
-        let result = x86_64.run();
+        interconnect.init_memory(program, start_addr);
+        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
+        let result = x86.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
-        x86_64
+        x86
     }
 
     #[test]
     fn skip_bios() {
-        let interconnect = Interconnect::new(
+        let program = vec![0xf4];
+        let mut interconnect = Interconnect::new(
             EmulationMode::Normal, GtkVgaTextBuffer::new());
-        let x86_64 = X86::boot_bios(interconnect);
+        interconnect.init_memory(program, 0x7c00);
 
-        assert_eq!(x86_64.rf.read_u64(Eax), 0xaa55u64);
-        assert_eq!(x86_64.rf.read_u64(Esp), 0x6f2cu64);
-        assert_eq!(x86_64.ip, 0x7c00u64);
+        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
+        x86.boot_bios();
+
+        assert_eq!(x86.rf.read_u64(Eax), 0xaa55u64);
+        assert_eq!(x86.rf.read_u64(Esp), 0x6f2cu64);
+        assert_eq!(x86.ip, 0x7c00u64);
+
+        let result = x86.run();
+        assert!(result.is_ok(), "{:?}", result.err());
+        assert_eq!(x86.ip, 0x7c01u64);
+        assert_eq!(x86.state, CpuState::Halted);
     }
 
     #[test]
     fn stop_at_hlt() {
         let program = vec![0xf4];
-        let x86_64 = execute_program(program);
+        let x86 = execute_program(program, 0);
 
-        assert_eq!(x86_64.state, CpuState::Halted)
+        assert_eq!(x86.state, CpuState::Halted);
     }
 
     #[test]
     fn clear_register_by_xor() {
         let program = vec![0x31, 0xc0, 0xf4];
-        let x86_64 = execute_program(program);
+        let x86 = execute_program(program, 0);
 
-        assert_eq!(x86_64.rf.read_u64(Eax), 0);
+        assert_eq!(x86.rf.read_u64(Eax), 0);
     }
 }

@@ -41,7 +41,8 @@ pub fn start_emulation(
     vga_text_buffer: GtkVgaTextBuffer,
 ) -> Result<(), CpuError> {
     let mut interconnect = Interconnect::new(mode_option.clone(), vga_text_buffer);
-    interconnect.init_memory(program);
+    // Need to initialize according to elf.
+    interconnect.init_memory(program, 0);
     let debug: Box<dyn DebugMode> = match mode_option {
         EmulationMode::Normal | EmulationMode::Test(_) => Box::new(DebugDesabled {}),
         EmulationMode::PerCycleDump => Box::new(PerCycleDump {}),

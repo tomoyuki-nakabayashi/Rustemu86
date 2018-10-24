@@ -7,7 +7,7 @@ use peripherals::uart16550::Target;
 use peripherals::uart16550::Uart16550;
 
 const MAX_INSTRUCTION_LENGTH: usize = 15;
-const MEMORY_SIZE: usize = 0x2000;
+const MEMORY_SIZE: usize = 0x10000;
 
 pub struct Interconnect {
     memory: Memory,
@@ -27,8 +27,8 @@ impl Interconnect {
         }
     }
 
-    pub fn init_memory(&mut self, program: Vec<u8>) {
-        self.memory.fill_ram(program, 0);
+    pub fn init_memory(&mut self, program: Vec<u8>, start: usize) {
+        self.memory.fill_ram(program, start);
     }
 
     pub fn fetch_inst_candidate(&self, rip: u64) -> Vec<u8> {
@@ -103,7 +103,7 @@ mod test {
             EmulationMode::Test("test".to_string()),
             GtkVgaTextBuffer::new(),
         );
-        interconnect.init_memory(program);
+        interconnect.init_memory(program, 0);
 
         assert_eq!(interconnect.read_u8(0x0).unwrap(), 0x48);
         assert_eq!(interconnect.read_u8(0x1).unwrap(), 0xff);
