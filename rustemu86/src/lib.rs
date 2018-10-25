@@ -9,7 +9,7 @@ extern crate failure;
 #[macro_use]
 extern crate enum_primitive;
 
-pub mod args;
+pub mod options;
 pub mod display;
 pub mod loader;
 pub mod peripherals;
@@ -17,7 +17,7 @@ pub mod rustemu86;
 mod cpu;
 mod targets;
 
-use args::EmulationMode;
+use options::EmulationMode;
 use targets::x86_64::{self, X86_64};
 use cpu::model::CpuModel;
 use cpu::model::cpu_factory;

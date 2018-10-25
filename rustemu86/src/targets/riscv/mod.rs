@@ -36,7 +36,7 @@ impl CpuModel for Riscv {
 mod test {
     use super::*;
     use rustemu86::DebugDesabled;
-    use args::EmulationMode;
+    use options::EmulationMode;
     use display::GtkVgaTextBuffer;
 
     #[test]

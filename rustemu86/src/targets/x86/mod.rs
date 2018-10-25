@@ -107,7 +107,7 @@ pub struct CompatibleException(String);
 #[cfg(test)]
 mod test {
     use super::*;
-    use args::EmulationMode;
+    use options::EmulationMode;
     use display::GtkVgaTextBuffer;
     use cpu::model::cpu_factory;
     use rustemu86::DebugDesabled;

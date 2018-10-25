@@ -10,7 +10,7 @@ pub enum EmulationMode {
 }
 
 #[derive(Debug)]
-pub struct Args {
+pub struct RustemuOptions {
     pub file_path: String,
     pub emulation_mode: EmulationMode,
 }
@@ -21,9 +21,9 @@ fn print_usage(program: &str, opts: &Options) {
     process::exit(0);
 }
 
-pub fn parse_args() -> Args {
-    let args: Vec<String> = env::args().collect();
-    let program = args[0].clone();
+pub fn parse_args() -> RustemuOptions {
+    let options: Vec<String> = env::args().collect();
+    let program = options[0].clone();
 
     let mut opts = Options::new();
     opts.optflag("h", "help", "Print this help menu");
@@ -34,7 +34,7 @@ pub fn parse_args() -> Args {
     );
     opts.optflag("i", "interactive", "Run emulation with interactive shell.");
 
-    let matches = match opts.parse(&args[1..]) {
+    let matches = match opts.parse(&options[1..]) {
         Ok(m) => m,
         Err(f) => panic!(f.to_string()),
     };
@@ -55,7 +55,7 @@ pub fn parse_args() -> Args {
         print_usage(&program, &opts)
     }
 
-    Args {
+    RustemuOptions {
         file_path: matches.free[0].clone(),
         emulation_mode: mode,
     }

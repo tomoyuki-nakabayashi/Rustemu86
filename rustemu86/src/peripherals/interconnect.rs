@@ -1,4 +1,4 @@
-use args::EmulationMode;
+use options::EmulationMode;
 use display::GtkVgaTextBuffer;
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use peripherals::memory::Memory;
@@ -72,7 +72,7 @@ impl MemoryAccess for Interconnect {
 #[cfg(test)]
 mod test {
     use super::*;
-    use args::EmulationMode;
+    use options::EmulationMode;
     use display::GtkVgaTextBuffer;
     use std::fs::File;
     use std::io::prelude::*;
