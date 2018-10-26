@@ -55,7 +55,8 @@ impl<'a> FetchedInstBuilder<'a> {
             self.opcode = opcode;
             self.current_offset += 1;
         } else {
-            return Err(CompatibleException(format!("Undefined opcode '{}'.", candidate)))
+            return Err(CompatibleException(
+                format!("Encounters undefined opcode: '0x{:x}' in fetch stage.", candidate)))
         }
         Ok(self)
     }

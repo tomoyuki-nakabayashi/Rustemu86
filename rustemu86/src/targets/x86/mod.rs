@@ -123,6 +123,17 @@ mod test {
         x86
     }
 
+    fn execute_program_after(program: Vec<u8>, initializer: fn(&mut X86)) -> X86 {
+        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
+        mmio.init_memory(program, 0);
+        let mut x86 = X86::new(mmio, Box::new(DebugDesabled {}));
+        initializer(&mut x86);
+        let result = x86.run();
+
+        assert!(result.is_ok(), "{:?}", result.err());
+        x86
+    }
+
     #[test]
     fn skip_bios() {
         let program = vec![0xf4];
@@ -157,5 +168,15 @@ mod test {
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Eax), 0);
+    }
+
+    #[test]
+    fn mov_rm() {
+        let program = vec![0x8e, 0xd8, 0xf4];
+        let x86 = execute_program_after(program, |cpu: &mut X86| {
+            cpu.rf.write_u64(Eax, 0xaa55u64);
+        });
+
+        assert_eq!(x86.rf.read_u64(Edx), x86.rf.read_u64(Eax));
     }
 }

@@ -45,6 +45,10 @@ impl Execute for PrivilegedInst {
 
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
     match inst.get_opcode() {
+        OpcodeCompat::MovRmSreg => {
+            let decoded = decode_al_modrm(&inst, &gpr, Box::new(|_, b| b ));
+            Ok(decoded)
+        }
         OpcodeCompat::Xor => {
             let decoded = decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b ));
             Ok(decoded)

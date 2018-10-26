@@ -1,14 +1,15 @@
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum OpcodeCompat {
+        MovRmSreg = 0x8e,
         Xor = 0x31,
         Hlt = 0xf4,
     }
 }
 
-use self::OpcodeCompat::*;
 pub fn inst_use_modrm(opcode: OpcodeCompat) -> bool {
-    opcode == Xor
+    use self::OpcodeCompat::*;
+    opcode == Xor || opcode == MovRmSreg
 }
 
 trait OpcodeFeature {
