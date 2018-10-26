@@ -19,6 +19,13 @@ use std::result;
 pub type Result<T> = result::Result<T, CompatibleException>;
 
 /// x86 32-bit mode.
+/// Note that this does not cover all of x86 instructions.
+/// But will cover enough instructions to boot BlosOS.
+/// 
+/// ip: instruction pointer.
+/// mmio: memory mapped io.
+/// rf: general purpose register.
+/// state: CPU status either Run or Halted.
 pub struct X86 {
     ip: u64,
     mmio: Interconnect,
@@ -101,6 +108,8 @@ impl Pipeline for X86 {
     }
 }
 
+/// Represents errors of the emulator implementation.
+/// Not CPU exception such as interrupts.
 #[derive(Debug)]
 pub struct CompatibleException(String);
 

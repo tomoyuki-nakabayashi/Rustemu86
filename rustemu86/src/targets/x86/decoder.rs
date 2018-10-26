@@ -45,17 +45,12 @@ impl Execute for PrivilegedInst {
 
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
     match inst.get_opcode() {
-        OpcodeCompat::MovRmSreg => {
-            let decoded = decode_al_modrm(&inst, &gpr, Box::new(|_, b| b ));
-            Ok(decoded)
-        }
-        OpcodeCompat::Xor => {
-            let decoded = decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b ));
-            Ok(decoded)
-        }
-        OpcodeCompat::Hlt => {
-            Ok(ExecuteInst::Privileged(PrivilegedInst{}))
-        }
+        OpcodeCompat::MovRmSreg =>
+            decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
+        OpcodeCompat::Xor =>
+            decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b )),
+        OpcodeCompat::Hlt =>
+            Ok(ExecuteInst::Privileged(PrivilegedInst{})),
     }
 
 }
@@ -63,7 +58,7 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
 fn decode_al_modrm(
     inst: &FetchedInst,
     gpr: &RegisterFile,
-    expr: Box<dyn Fn(u64, u64) -> u64>) -> ExecuteInst
+    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
 {
     let (reg, rm) = inst.get_modrm().get_reg_rm();
     let inst = ArithLogicInst{
@@ -71,7 +66,7 @@ fn decode_al_modrm(
         right: gpr.read_u64(rm),
         expr: expr,
     };
-    ExecuteInst::ArithLogic(inst)
+    Ok(ExecuteInst::ArithLogic(inst))
 }
 
 fn nop(_left: u64, _right: u64) -> u64 {
