@@ -8,6 +8,8 @@ extern crate num;
 extern crate failure;
 #[macro_use]
 extern crate enum_primitive;
+#[macro_use]
+extern crate bitflags;
 
 pub mod options;
 pub mod display;
