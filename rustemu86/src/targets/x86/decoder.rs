@@ -1,5 +1,6 @@
 use targets::x86::Result;
 use targets::x86::isa::opcode::OpcodeCompat;
+use targets::x86::isa::eflags::EFlags;
 use targets::x86::fetcher::FetchedInst;
 use targets::x86::gpr::RegisterFile;
 use targets::x86::status_regs::CpuState;
@@ -8,6 +9,7 @@ use std::default::Default;
 
 pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),
+    StatusOp(StatusOpInst),
     Privileged(PrivilegedInst),
 }
 
@@ -34,6 +36,18 @@ impl Default for ArithLogicInst {
     }
 }
 
+pub struct StatusOpInst {
+    target: EFlags,
+    value: bool,
+}
+
+impl Execute for StatusOpInst {
+    type ResultValue = (EFlags, bool);
+    fn execute(&self) -> Self::ResultValue {
+        (self.target, self.value)
+    }
+}
+
 pub struct PrivilegedInst {}
 
 impl Execute for PrivilegedInst {
@@ -44,12 +58,17 @@ impl Execute for PrivilegedInst {
 }
 
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
+    use self::OpcodeCompat::*;
     match inst.get_opcode() {
-        OpcodeCompat::MovRmSreg =>
+        Cld => Ok(ExecuteInst::StatusOp(StatusOpInst{
+            target: EFlags::DIRECTION_FLAG,
+            value: false,
+        })),
+        MovRmSreg =>
             decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
-        OpcodeCompat::Xor =>
+        Xor =>
             decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b )),
-        OpcodeCompat::Hlt =>
+        Hlt =>
             Ok(ExecuteInst::Privileged(PrivilegedInst{})),
     }
 

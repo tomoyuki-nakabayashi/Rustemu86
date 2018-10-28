@@ -16,9 +16,9 @@ mod test {
     fn bitflag() {
         let mut eflags = EFlags::empty();
         eflags.set(EFlags::DIRECTION_FLAG, true);
-        assert_eq!(eflags.bits(), 1 << 10);
+        assert!(!(eflags & EFlags::DIRECTION_FLAG).is_empty());
 
         eflags.set(EFlags::DIRECTION_FLAG, false);
-        assert_eq!(eflags.bits(), 0);
+        assert!((eflags & EFlags::DIRECTION_FLAG).is_empty());
     }
 }

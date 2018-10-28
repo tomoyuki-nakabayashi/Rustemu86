@@ -1,6 +1,7 @@
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum OpcodeCompat {
+        Cld = 0xfc,
         MovRmSreg = 0x8e,
         Xor = 0x31,
         Hlt = 0xf4,

@@ -11,6 +11,7 @@ use self::status_regs::CpuState;
 use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
 use self::executor::WriteBackType;
+use self::isa::eflags::EFlags;
 use peripherals::interconnect::Interconnect;
 use cpu::model::{CpuModel, Pipeline};
 use rustemu86::DebugMode;
@@ -30,6 +31,7 @@ pub struct X86 {
     ip: u64,
     mmio: Interconnect,
     rf: RegisterFile,
+    eflags: EFlags,
     state: CpuState,
 }
 
@@ -51,6 +53,7 @@ impl CpuModel for X86 {
             ip: 0,
             mmio: mmio,
             rf: RegisterFile::new(),
+            eflags: EFlags::empty(),
             state: CpuState::Running,
         }
     }
@@ -99,6 +102,9 @@ impl Pipeline for X86 {
         match inst {
             WriteBackType::Gpr(inst) => {
                 self.rf.write_u64(inst.index, inst.value);
+            }
+            WriteBackType::EFlags(inst) => {
+                self.eflags.set(inst.target, inst.value);
             }
             WriteBackType::Status(inst) => {
                 self.state = inst.state;
@@ -187,5 +193,15 @@ mod test {
         });
 
         assert_eq!(x86.rf.read_u64(Edx), x86.rf.read_u64(Eax));
+    }
+
+    #[test]
+    fn cld() {
+        let program = vec![0xfc, 0xf4];
+        let x86 = execute_program_after(program, |cpu: &mut X86| {
+            cpu.eflags.set(EFlags::DIRECTION_FLAG, true);
+        });
+
+        assert!((x86.eflags & EFlags::DIRECTION_FLAG).is_empty());
     }
 }
