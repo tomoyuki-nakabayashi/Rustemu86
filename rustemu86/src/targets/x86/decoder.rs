@@ -60,10 +60,7 @@ impl Execute for PrivilegedInst {
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
     use self::OpcodeCompat::*;
     match inst.get_opcode() {
-        Cld => Ok(ExecuteInst::StatusOp(StatusOpInst{
-            target: EFlags::DIRECTION_FLAG,
-            value: false,
-        })),
+        Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
         MovRmSreg =>
             decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
         Xor =>
@@ -86,6 +83,14 @@ fn decode_al_modrm(
         expr: expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
+}
+
+fn decode_eflags_operation(target: EFlags, value: bool) -> Result<ExecuteInst> {
+    let inst = StatusOpInst{
+        target: target,
+        value: value,
+    };
+    Ok(ExecuteInst::StatusOp(inst))
 }
 
 fn nop(_left: u64, _right: u64) -> u64 {
