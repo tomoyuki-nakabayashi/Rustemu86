@@ -101,6 +101,7 @@ impl Pipeline for X86 {
     fn write_back(&mut self, inst: &Self::Executed) -> Result<()> {
         match inst {
             WriteBackType::Gpr(inst) => {
+                println!("{:?} <= {}", inst.index, inst.value);
                 self.rf.write_u64(inst.index, inst.value);
             }
             WriteBackType::EFlags(inst) => {
@@ -184,9 +185,9 @@ mod test {
 
         assert_eq!(x86.rf.read_u64(Eax), 0);
     }
-
+/* 
     #[test]
-    fn mov_rm() {
+    fn mov_rm_to_sreg() {
         let program = vec![0x8e, 0xd8, 0xf4];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.rf.write_u64(Eax, 0xaa55u64);
@@ -194,10 +195,10 @@ mod test {
 
         assert_eq!(x86.rf.read_u64(Edx), x86.rf.read_u64(Eax));
     }
-
+ */
     #[test]
     fn mov_imm() {
-        let program = vec![0xbc, 0x7c, 0x00, 0xf4];
+        let program = vec![0xbc, 0x00, 0x7c, 0xf4];
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Esp), 0x7c00u64);

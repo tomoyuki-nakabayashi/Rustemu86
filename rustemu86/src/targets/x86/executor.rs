@@ -2,7 +2,6 @@ use targets::x86::Result;
 use targets::x86::decoder::ExecuteInst;
 use targets::x86::status_regs::CpuState;
 use targets::x86::gpr::Reg32;
-use targets::x86::gpr::Reg32::*;
 use targets::x86::isa::eflags::EFlags;
 
 pub trait Execute {
@@ -34,7 +33,8 @@ pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
     use self::ExecuteInst::{ArithLogic, StatusOp, Privileged};
     match inst {
         ArithLogic(inst) => {
-            Ok( WriteBackType::Gpr(GprWriteBack { index: Eax, value: inst.execute() }))
+            let (target, value) = inst.execute();
+            Ok( WriteBackType::Gpr(GprWriteBack { index: target, value: value }))
         }
         StatusOp(inst) => {
             let (target, value) = inst.execute();

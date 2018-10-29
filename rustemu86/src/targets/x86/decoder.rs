@@ -2,7 +2,7 @@ use targets::x86::Result;
 use targets::x86::isa::opcode::OpcodeCompat;
 use targets::x86::isa::eflags::EFlags;
 use targets::x86::fetcher::FetchedInst;
-use targets::x86::gpr::RegisterFile;
+use targets::x86::gpr::{RegisterFile, Reg32};
 use targets::x86::status_regs::CpuState;
 use targets::x86::executor::Execute;
 use std::default::Default;
@@ -14,21 +14,23 @@ pub enum ExecuteInst {
 }
 
 pub struct ArithLogicInst {
+    target: Reg32,
     left: u64,
     right: u64,
     expr: Box<dyn Fn(u64, u64) -> u64>,
 }
 
 impl Execute for ArithLogicInst {
-    type ResultValue = u64;
+    type ResultValue = (Reg32, u64);
     fn execute(&self) -> Self::ResultValue {
-        (self.expr)(self.right, self.left)
+        (self.target, (self.expr)(self.left, self.right))
     }
 }
 
 impl Default for ArithLogicInst {
     fn default() -> ArithLogicInst {
         ArithLogicInst {
+            target: Reg32::Eax,
             left: 0,
             right: 0,
             expr: Box::new(nop),
@@ -63,6 +65,8 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
         MovRmSreg =>
             decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
+        MovOi => 
+            decode_al_rd(&inst, &gpr, Box::new(|_, b| b )),
         Xor =>
             decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b )),
         Hlt =>
@@ -78,8 +82,23 @@ fn decode_al_modrm(
 {
     let (reg, rm) = inst.get_modrm().get_reg_rm();
     let inst = ArithLogicInst{
+        target: reg,
         left: gpr.read_u64(reg),
         right: gpr.read_u64(rm),
+        expr: expr,
+    };
+    Ok(ExecuteInst::ArithLogic(inst))
+}
+
+fn decode_al_rd(
+    inst: &FetchedInst,
+    gpr: &RegisterFile,
+    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
+{
+    let inst = ArithLogicInst{
+        target: inst.get_rd(),
+        left: gpr.read_u64(inst.get_rd()),
+        right: inst.get_imm(),
         expr: expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
