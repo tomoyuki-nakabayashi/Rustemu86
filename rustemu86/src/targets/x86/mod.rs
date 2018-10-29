@@ -196,6 +196,14 @@ mod test {
     }
 
     #[test]
+    fn mov_imm() {
+        let program = vec![0xbc, 0x7c, 0x00, 0xf4];
+        let x86 = execute_program(program, 0);
+
+        assert_eq!(x86.rf.read_u64(Esp), 0x7c00u64);
+    }
+
+    #[test]
     fn cld() {
         let program = vec![0xfc, 0xf4];
         let x86 = execute_program_after(program, |cpu: &mut X86| {

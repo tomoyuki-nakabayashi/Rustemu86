@@ -3,6 +3,7 @@ enum_from_primitive! {
     pub enum OpcodeCompat {
         Cld = 0xfc,
         MovRmSreg = 0x8e,
+        MovOi = 0xb8,
         Xor = 0x31,
         Hlt = 0xf4,
     }

@@ -1,3 +1,4 @@
+use bit_field::BitField;
 use targets::x86::{Result, CompatibleException};
 use targets::x86::isa::opcode::{self, OpcodeCompat};
 use targets::x86::isa::modrm::ModRm;
@@ -51,13 +52,20 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
         let candidate = self.program[self.current_offset];
-        if let Some(opcode) = OpcodeCompat::from_u8(candidate) {
-            self.opcode = opcode;
-            self.current_offset += 1;
-        } else {
-            return Err(CompatibleException(
-                format!("Encounters undefined opcode: '0x{:x}' in fetch stage.", candidate)))
+        let mut rd: u8 = 0;
+        {
+            let extract_rd = |opcode| {
+                rd = candidate.get_bits(0..3);
+                Some(opcode)
+            };
+            let parse_opcode_plus_rd = || OpcodeCompat::from_u8(candidate & 0xf8)
+                .and_then(extract_rd);
+            self.opcode = OpcodeCompat::from_u8(candidate)
+                .or_else(parse_opcode_plus_rd)
+                .ok_or(CompatibleException(
+                    format!("Encounters undefined opcode: '0x{:x}' in fetch stage.", candidate)))?
         }
+        self.current_offset += 1;
         Ok(self)
     }
 
