@@ -1,7 +1,7 @@
 use targets::x86::Result;
 use targets::x86::decoder::ExecuteInst;
 use targets::x86::status_regs::CpuState;
-use targets::x86::gpr::Reg32;
+use targets::x86::gpr::{Reg32, SegReg};
 use targets::x86::isa::eflags::EFlags;
 
 pub trait Execute {
@@ -11,12 +11,18 @@ pub trait Execute {
 
 pub enum WriteBackType {
     Gpr(GprWriteBack),
+    Segment(SegmentWriteBack),
     EFlags(EFlagsWriteBack),
     Status(StatusWriteBack),
 }
 
 pub struct GprWriteBack {
     pub(super) index: Reg32,
+    pub(super) value: u64,
+}
+
+pub struct SegmentWriteBack {
+    pub(super) index: SegReg,
     pub(super) value: u64,
 }
 
@@ -30,11 +36,15 @@ pub struct StatusWriteBack {
 }
 
 pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
-    use self::ExecuteInst::{ArithLogic, StatusOp, Privileged};
+    use self::ExecuteInst::{ArithLogic, Segment, StatusOp, Privileged};
     match inst {
         ArithLogic(inst) => {
             let (target, value) = inst.execute();
             Ok( WriteBackType::Gpr(GprWriteBack { index: target, value: value }))
+        }
+        Segment(inst) => {
+            let (target, value) = inst.execute();
+            Ok( WriteBackType::Segment(SegmentWriteBack { index: target, value: value }))
         }
         StatusOp(inst) => {
             let (target, value) = inst.execute();

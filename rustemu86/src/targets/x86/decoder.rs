@@ -2,13 +2,13 @@ use targets::x86::Result;
 use targets::x86::isa::opcode::OpcodeCompat;
 use targets::x86::isa::eflags::EFlags;
 use targets::x86::fetcher::FetchedInst;
-use targets::x86::gpr::{RegisterFile, Reg32};
+use targets::x86::gpr::{RegisterFile, Reg32, SegReg};
 use targets::x86::status_regs::CpuState;
 use targets::x86::executor::Execute;
-use std::default::Default;
 
 pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),
+    Segment(SegmentInst),
     StatusOp(StatusOpInst),
     Privileged(PrivilegedInst),
 }
@@ -27,14 +27,17 @@ impl Execute for ArithLogicInst {
     }
 }
 
-impl Default for ArithLogicInst {
-    fn default() -> ArithLogicInst {
-        ArithLogicInst {
-            target: Reg32::Eax,
-            left: 0,
-            right: 0,
-            expr: Box::new(nop),
-        }
+pub struct SegmentInst {
+    target: SegReg,
+    left: u64,
+    right: u64,
+    expr: Box<dyn Fn(u64, u64) -> u64>,
+}
+
+impl Execute for SegmentInst {
+    type ResultValue = (SegReg, u64);
+    fn execute(&self) -> Self::ResultValue {
+        (self.target, (self.expr)(self.left, self.right))
     }
 }
 
@@ -64,7 +67,7 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
     match inst.get_opcode() {
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
         MovRmSreg =>
-            decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
+            decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b )),
         MovOi => 
             decode_al_rd(&inst, &gpr, Box::new(|_, b| b )),
         Xor =>
@@ -88,6 +91,21 @@ fn decode_al_modrm(
         expr: expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
+}
+
+fn decode_seg_modrm(
+    inst: &FetchedInst,
+    gpr: &RegisterFile,
+    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
+{
+    let (reg, rm) = inst.get_modrm().get_reg_rm();
+    let inst = SegmentInst{
+        target: SegReg::Ds,
+        left: gpr.read_u64(reg),
+        right: gpr.read_u64(rm),
+        expr: expr,
+    };
+    Ok(ExecuteInst::Segment(inst))
 }
 
 fn decode_al_rd(

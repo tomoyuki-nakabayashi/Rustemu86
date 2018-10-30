@@ -5,8 +5,7 @@ mod executor;
 mod status_regs;
 mod isa;
 
-use self::gpr::RegisterFile;
-use self::gpr::Reg32::*;
+use self::gpr::{RegisterFile, SegmentRegister};
 use self::status_regs::CpuState;
 use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
@@ -31,6 +30,7 @@ pub struct X86 {
     ip: u64,
     mmio: Interconnect,
     rf: RegisterFile,
+    segment: SegmentRegister,
     eflags: EFlags,
     state: CpuState,
 }
@@ -39,6 +39,7 @@ impl X86 {
     /// Creates instance just after booting bios.
     /// IP starts with 0x7c00.
     pub fn boot_bios(&mut self) {
+        use self::gpr::Reg32::*;
         self.rf.write_u64(Eax, 0xaa55u64);
         self.rf.write_u64(Esp, 0x6f2cu64);
         self.ip = 0x7c00u64;
@@ -53,6 +54,7 @@ impl CpuModel for X86 {
             ip: 0,
             mmio: mmio,
             rf: RegisterFile::new(),
+            segment: SegmentRegister::new(),
             eflags: EFlags::empty(),
             state: CpuState::Running,
         }
@@ -104,6 +106,9 @@ impl Pipeline for X86 {
                 println!("{:?} <= {}", inst.index, inst.value);
                 self.rf.write_u64(inst.index, inst.value);
             }
+            WriteBackType::Segment(inst) => {
+                self.segment.write_u64(inst.index, inst.value);
+            }
             WriteBackType::EFlags(inst) => {
                 self.eflags.set(inst.target, inst.value);
             }
@@ -127,6 +132,8 @@ mod test {
     use display::GtkVgaTextBuffer;
     use cpu::model::cpu_factory;
     use rustemu86::DebugDesabled;
+    use self::gpr::Reg32::*;
+    use self::gpr::SegReg::*;
 
     fn execute_program(program: Vec<u8>, start_addr: usize) -> X86 {
         let mut interconnect = Interconnect::new(
@@ -185,7 +192,7 @@ mod test {
 
         assert_eq!(x86.rf.read_u64(Eax), 0);
     }
-/* 
+
     #[test]
     fn mov_rm_to_sreg() {
         let program = vec![0x8e, 0xd8, 0xf4];
@@ -193,9 +200,9 @@ mod test {
             cpu.rf.write_u64(Eax, 0xaa55u64);
         });
 
-        assert_eq!(x86.rf.read_u64(Edx), x86.rf.read_u64(Eax));
+        assert_eq!(x86.segment.read_u64(Ds), x86.rf.read_u64(Eax));
     }
- */
+ 
     #[test]
     fn mov_imm() {
         let program = vec![0xbc, 0x00, 0x7c, 0xf4];

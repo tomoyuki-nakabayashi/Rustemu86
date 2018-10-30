@@ -1,4 +1,4 @@
-/// General Purpose Register File.
+//! General Purpose Register File.
 
 const REGISTER_NUM : usize = 8;
 
@@ -34,5 +34,40 @@ enum_from_primitive! {
         Ebp = 0x05,
         Esi = 0x06,
         Edi = 0x07,
+    }
+}
+
+const NUM_SEGMENT_REGSITERS: usize = 5;
+
+/// Segment register.
+pub(crate) struct SegmentRegister {
+    rams: Vec<u64>,
+}
+
+impl SegmentRegister {
+    pub fn new() -> SegmentRegister {
+        SegmentRegister {
+            rams: vec![0xffff_ffff_ffff_ffff; NUM_SEGMENT_REGSITERS],
+        }
+    }
+
+    pub fn read_u64(&self, index: SegReg) -> u64 {
+        self.rams[index as usize]
+    }
+
+    pub fn write_u64(&mut self, index: SegReg, value: u64) {
+        self.rams[index as usize] = value;
+    }
+}
+
+enum_from_primitive! {
+    /// Segment register index for x86 32bit mode.
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum SegReg {
+        Ds = 0x00,
+        Es = 0x01,
+        Ss = 0x02,
+        Fs = 0x03,
+        Gs = 0x04,
     }
 }
