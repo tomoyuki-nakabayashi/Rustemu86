@@ -37,7 +37,7 @@ enum_from_primitive! {
     }
 }
 
-const NUM_SEGMENT_REGSITERS: usize = 5;
+const NUM_SEGMENT_REGSITERS: usize = 6;
 
 /// Segment register.
 pub(crate) struct SegmentRegister {
@@ -64,10 +64,11 @@ enum_from_primitive! {
     /// Segment register index for x86 32bit mode.
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum SegReg {
-        Ds = 0x00,
-        Es = 0x01,
+        Es = 0x00,
+        Cs = 0x01,
         Ss = 0x02,
-        Fs = 0x03,
-        Gs = 0x04,
+        Ds = 0x03,
+        Fs = 0x04,
+        Gs = 0x05,
     }
 }

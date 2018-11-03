@@ -107,6 +107,7 @@ impl Pipeline for X86 {
                 self.rf.write_u64(inst.index, inst.value);
             }
             WriteBackType::Segment(inst) => {
+                println!("{:?} <= {}", inst.index, inst.value);
                 self.segment.write_u64(inst.index, inst.value);
             }
             WriteBackType::EFlags(inst) => {
@@ -179,7 +180,7 @@ mod test {
 
     #[test]
     fn stop_at_hlt() {
-        let program = vec![0xf4];
+        let program = vec![0xf4];  // hlt
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.state, CpuState::Halted);
@@ -187,7 +188,9 @@ mod test {
 
     #[test]
     fn clear_register_by_xor() {
-        let program = vec![0x31, 0xc0, 0xf4];
+        let program = vec![
+            0x31, 0xc0,  // xor    %eax,%eax
+            0xf4];
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Eax), 0);
@@ -195,17 +198,29 @@ mod test {
 
     #[test]
     fn mov_rm_to_sreg() {
-        let program = vec![0x8e, 0xd8, 0xf4];
+        let program = vec![
+            0x8e, 0xd8,  // mov    %eax,%ds
+            0x8e, 0xc0,  // mov    %eax,%es
+            0x8e, 0xd0,  // mov    %eax,%ss
+            0x8e, 0xe0,  // mov    %eax,%fs
+            0x8e, 0xe8,  // mov    %eax,%gs
+            0xf4];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.rf.write_u64(Eax, 0xaa55u64);
         });
 
         assert_eq!(x86.segment.read_u64(Ds), x86.rf.read_u64(Eax));
+        assert_eq!(x86.segment.read_u64(Es), x86.rf.read_u64(Eax));
+        assert_eq!(x86.segment.read_u64(Ss), x86.rf.read_u64(Eax));
+        assert_eq!(x86.segment.read_u64(Fs), x86.rf.read_u64(Eax));
+        assert_eq!(x86.segment.read_u64(Gs), x86.rf.read_u64(Eax));
     }
  
     #[test]
     fn mov_imm() {
-        let program = vec![0xbc, 0x00, 0x7c, 0xf4];
+        let program = vec![
+            0xbc, 0x00, 0x7c,  // mov    $0x7c00,%sp
+            0xf4];
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Esp), 0x7c00u64);
@@ -213,7 +228,9 @@ mod test {
 
     #[test]
     fn cld() {
-        let program = vec![0xfc, 0xf4];
+        let program = vec![
+            0xfc,  // cld
+            0xf4];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.eflags.set(EFlags::DIRECTION_FLAG, true);
         });

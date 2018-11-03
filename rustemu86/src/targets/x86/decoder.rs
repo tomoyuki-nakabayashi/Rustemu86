@@ -98,10 +98,10 @@ fn decode_seg_modrm(
     gpr: &RegisterFile,
     expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
 {
-    let (reg, rm) = inst.get_modrm().get_reg_rm();
+    let (sreg, rm) = inst.get_modrm().get_sreg_rm();
     let inst = SegmentInst{
-        target: SegReg::Ds,
-        left: gpr.read_u64(reg),
+        target: sreg,
+        left: 0,  // Never use
         right: gpr.read_u64(rm),
         expr: expr,
     };
