@@ -189,7 +189,7 @@ mod test {
     #[test]
     fn clear_register_by_xor() {
         let program = vec![
-            0x31, 0xc0,  // xor    %eax,%eax
+            0x31, 0xc0,  // xor    ax,ax
             0xf4];
         let x86 = execute_program(program, 0);
 
@@ -199,11 +199,11 @@ mod test {
     #[test]
     fn mov_rm_to_sreg() {
         let program = vec![
-            0x8e, 0xd8,  // mov    %eax,%ds
-            0x8e, 0xc0,  // mov    %eax,%es
-            0x8e, 0xd0,  // mov    %eax,%ss
-            0x8e, 0xe0,  // mov    %eax,%fs
-            0x8e, 0xe8,  // mov    %eax,%gs
+            0x8e, 0xd8,  // mov    ds,ax
+            0x8e, 0xc0,  // mov    es,ax
+            0x8e, 0xd0,  // mov    ss,ax
+            0x8e, 0xe0,  // mov    fs,ax
+            0x8e, 0xe8,  // mov    gs,ax
             0xf4];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.rf.write_u64(Eax, 0xaa55u64);
@@ -219,7 +219,7 @@ mod test {
     #[test]
     fn mov_imm() {
         let program = vec![
-            0xbc, 0x00, 0x7c,  // mov    $0x7c00,%sp
+            0xbc, 0x00, 0x7c,  // mov    sp,0x7c00
             0xf4];
         let x86 = execute_program(program, 0);
 
