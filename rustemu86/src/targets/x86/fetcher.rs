@@ -1,3 +1,5 @@
+//! Fetch unit for x86 real mode.
+
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use targets::x86::{Result, CompatibleException};
@@ -38,6 +40,8 @@ impl FetchedInst {
     }
 }
 
+/// Fetch an instruction.
+/// program must be long enough to parse an x86 instruction.
 pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {
     let inst = FetchedInstBuilder::new(program)
         .parse_opcode()?
@@ -47,7 +51,9 @@ pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {
     Ok(inst)
 }
 
+// Builder pattern to build an instruction.
 struct FetchedInstBuilder<'a> {
+    addr_size_override: bool,
     opcode: OpcodeCompat,
     modrm: Option<ModRm>,
     rd: u8,
@@ -59,6 +65,7 @@ struct FetchedInstBuilder<'a> {
 impl<'a> FetchedInstBuilder<'a> {
     fn new(program: &[u8]) -> FetchedInstBuilder {
         FetchedInstBuilder {
+            addr_size_override: false,
             opcode: OpcodeCompat::Hlt,
             modrm: None,
             rd: 0,
@@ -68,8 +75,21 @@ impl<'a> FetchedInstBuilder<'a> {
         }
     }
 
+    fn parse_legacy_prefix(&mut self) -> &mut FetchedInstBuilder<'a> {
+        let candidate = self.peek_u8();
+        match candidate {
+            opcode::ADDRESS_SIZE_OVERRIDE_PREFIX => {
+                self.addr_size_override = true;
+                self.current_offset += 1;
+            }
+            _ => ()
+        };
+
+        self
+    }
+
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
-        let candidate = self.program[self.current_offset];
+        let candidate = self.peek_u8();
         let mut rd: u8 = 0;
         {
             let extract_rd = |opcode| {
@@ -89,7 +109,7 @@ impl<'a> FetchedInstBuilder<'a> {
     }
 
     fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
-        let candidate = self.program[self.current_offset];
+        let candidate = self.peek_u8();
         if opcode::inst_use_modrm(self.opcode) {
             self.modrm = Some(ModRm::new(candidate));
             self.current_offset += 1;
@@ -100,15 +120,21 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
         match self.opcode {
             OpcodeCompat::MovOi => {
-                let mut imm = &self.program[self.current_offset..self.current_offset + 2];
-                self.imm = Some(imm.read_u16::<LittleEndian>().unwrap().into());
-                self.current_offset += 2;
+                self.read_imm_u16();    
+            }
+            OpcodeCompat::Lea => {
+                if self.addr_size_override {
+                    self.read_imm_u32();
+                } else {
+                    self.read_imm_u16();    
+                }
             }
             _ => {}
         }
         self
     }
 
+    // Build the result of the builder.
     fn build(&self) -> FetchedInst {
         FetchedInst {
             opcode: self.opcode,
@@ -117,5 +143,24 @@ impl<'a> FetchedInstBuilder<'a> {
             imm: self.imm,
             inst_bytes: self.current_offset as u64,
         }
+    }
+
+    // Helper function to peek next one byte.
+    fn peek_u8(&self) -> u8 {
+        self.program[self.current_offset]
+    }
+
+    // Helper function to read u16 to immediate.
+    fn read_imm_u16(&mut self) {
+        let mut imm = &self.program[self.current_offset..self.current_offset + 2];
+        self.imm = Some(imm.read_u16::<LittleEndian>().unwrap().into());
+        self.current_offset += 2;
+    }
+
+    // Helper function to read u32 to immediate.
+    fn read_imm_u32(&mut self) {
+        let mut imm = &self.program[self.current_offset..self.current_offset + 4];
+        self.imm = Some(imm.read_u32::<LittleEndian>().unwrap().into());
+        self.current_offset += 4;
     }
 }

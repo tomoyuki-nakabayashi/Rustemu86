@@ -1,7 +1,11 @@
+pub const OPERAND_SIZE_OVERRIDE_PREFIX: u8 = 0x66;
+pub const ADDRESS_SIZE_OVERRIDE_PREFIX: u8 = 0x67;
+
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum OpcodeCompat {
         Cld = 0xfc,
+        Lea = 0x8d,
         MovRmSreg = 0x8e,
         MovOi = 0xb8,
         Xor = 0x31,

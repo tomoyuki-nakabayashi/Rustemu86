@@ -66,6 +66,7 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
     use self::OpcodeCompat::*;
     match inst.get_opcode() {
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
+        Lea => unimplemented!(),
         MovRmSreg =>
             decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b )),
         MovOi => 
