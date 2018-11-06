@@ -237,4 +237,15 @@ mod test {
 
         assert!((x86.eflags & EFlags::DIRECTION_FLAG).is_empty());
     }
+
+    #[test]
+    fn lea() {
+        let program = vec![
+            0x67, 0x8d, 0x35, 0x16, 0x7d, 0x00, 0x00,  // addr32 lea si,ds:0x7d16
+            0xf4
+        ];
+        let x86 = execute_program(program, 0);
+
+        assert_eq!(x86.rf.read_u64(Esi), 0x00007d16);
+    }
 }

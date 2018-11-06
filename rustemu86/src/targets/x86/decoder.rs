@@ -1,5 +1,6 @@
 use targets::x86::Result;
 use targets::x86::isa::opcode::OpcodeCompat;
+use targets::x86::isa::modrm::ModRm;
 use targets::x86::isa::eflags::EFlags;
 use targets::x86::fetcher::FetchedInst;
 use targets::x86::gpr::{RegisterFile, Reg32, SegReg};
@@ -66,7 +67,8 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
     use self::OpcodeCompat::*;
     match inst.get_opcode() {
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
-        Lea => unimplemented!(),
+        Lea => 
+            decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
         MovRmSreg =>
             decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b )),
         MovOi => 
@@ -79,16 +81,29 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
 
 }
 
+// helper function to decode mod rm
+fn decode_modrm(modrm: ModRm, rf: &RegisterFile, inst: &FetchedInst)
+    -> (Reg32, u64, u64)
+{
+    let (reg, rm) = modrm.get_reg_rm();
+    let (left, right) = match modrm.get_mode() {
+        0x00 => (rf.read_u64(reg), inst.get_imm()),
+        0x11 => (rf.read_u64(reg), rf.read_u64(rm)),    
+        _ => (0, 0),
+    };
+    (reg, left, right)
+}
+
 fn decode_al_modrm(
     inst: &FetchedInst,
     gpr: &RegisterFile,
     expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
 {
-    let (reg, rm) = inst.get_modrm().get_reg_rm();
+    let (target, left, right) = decode_modrm(inst.get_modrm(), &gpr, inst);
     let inst = ArithLogicInst{
-        target: reg,
-        left: gpr.read_u64(reg),
-        right: gpr.read_u64(rm),
+        target: target,
+        left: left,
+        right: right,
         expr: expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))

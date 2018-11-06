@@ -5,18 +5,24 @@ use num::FromPrimitive;
 /// Mod R/M.
 #[derive(Debug, Clone, Copy)]
 pub struct ModRm {
-    mode: usize,
+    mode: usize,  // TODO: Define enum.
     reg: u8,
     rm : u8,
 }
 
 impl ModRm {
+    /// New from a byte.
     pub fn new(byte: u8) -> ModRm {
         ModRm {
             mode: byte.get_bits(6..8) as usize,
             reg: byte.get_bits(3..6),
             rm: byte.get_bits(0..3),
         }
+    }
+
+    /// ModRM mode.
+    pub fn get_mode(&self) -> usize {
+        self.mode
     }
 
     pub fn get_reg_rm(&self) -> (Reg32, Reg32) {

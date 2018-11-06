@@ -44,6 +44,7 @@ impl FetchedInst {
 /// program must be long enough to parse an x86 instruction.
 pub(super) fn fetch(program: &[u8]) -> Result<FetchedInst> {
     let inst = FetchedInstBuilder::new(program)
+        .parse_legacy_prefix()
         .parse_opcode()?
         .parse_modrm()
         .parse_imm()

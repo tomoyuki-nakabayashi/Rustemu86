@@ -15,7 +15,7 @@ enum_from_primitive! {
 
 pub fn inst_use_modrm(opcode: OpcodeCompat) -> bool {
     use self::OpcodeCompat::*;
-    opcode == Xor || opcode == MovRmSreg
+    opcode == Xor || opcode == MovRmSreg || opcode == Lea
 }
 
 trait OpcodeFeature {
