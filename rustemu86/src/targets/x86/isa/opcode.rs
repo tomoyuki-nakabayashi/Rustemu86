@@ -1,3 +1,5 @@
+use num::FromPrimitive;
+
 pub const OPERAND_SIZE_OVERRIDE_PREFIX: u8 = 0x66;
 pub const ADDRESS_SIZE_OVERRIDE_PREFIX: u8 = 0x67;
 
@@ -36,3 +38,52 @@ impl OpcodeFeature for ArithRm {
         true
     }
 }
+
+enum DataType {
+    UByte(u8),
+    UWord(u16),
+    UDWord(u32),
+    UQWord(u64),
+    SByte(i8),
+    SWord(i16),
+    SDWord(i32),
+    SQWord(i64),
+}
+
+struct MetaInst {
+    opcode: OpcodeCompat,
+    modrm: bool,
+    imm_type: Option<DataType>,
+    disp_type: Option<DataType>,
+}
+
+impl MetaInst {
+    fn from_u8(candidate: u8) -> Option<MetaInst> {
+        let opcode = OpcodeCompat::from_u8(candidate)?;
+        Some(MetaInst {
+            opcode: opcode,
+            modrm: false,
+            imm_type: None,
+            disp_type: None,
+        })
+    }
+}
+
+/*
+(op, modrm, imm_u16, disp_u16)
+=>
+enum_from_primitive! {
+    pub enum Opcode {
+        ...
+        ...
+    }
+}
+
+impl MetaInst {
+    fn from_u8() -> Option<MetaInst> {
+        match opcode {
+            op => Some(op, modrm, imm_u16, disp_u16),
+        }
+    }
+}
+*/
