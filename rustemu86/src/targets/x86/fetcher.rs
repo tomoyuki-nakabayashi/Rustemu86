@@ -3,7 +3,7 @@
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use targets::x86::{Result, CompatibleException};
-use targets::x86::isa::opcode::{self, OpcodeCompat};
+use targets::x86::isa::opcode::{self, OpcodeCompat, MetaInst};
 use targets::x86::isa::modrm::ModRm;
 use targets::x86::gpr::Reg32;
 use num::FromPrimitive;
@@ -61,6 +61,7 @@ struct FetchedInstBuilder<'a> {
     imm: Option<u64>,
     program: &'a [u8],
     current_offset: usize,
+    meta_inst: Option<MetaInst>,
 }
 
 impl<'a> FetchedInstBuilder<'a> {
@@ -73,6 +74,7 @@ impl<'a> FetchedInstBuilder<'a> {
             imm: None,
             program: program,
             current_offset: 0,
+            meta_inst: None,
         }
     }
 
@@ -91,6 +93,9 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
         let candidate = self.peek_u8();
+        self.meta_inst = MetaInst::from_u8(candidate)
+            .or_else(|| MetaInst::from_u8(candidate & 0xf8));
+
         let mut rd: u8 = 0;
         {
             let extract_rd = |opcode| {
@@ -111,7 +116,8 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
         let candidate = self.peek_u8();
-        if opcode::inst_use_modrm(self.opcode) {
+        // TODO: Remove the unwrap!
+        if self.meta_inst.as_ref().unwrap().use_modrm() {
             self.modrm = Some(ModRm::new(candidate));
             self.current_offset += 1;
         }

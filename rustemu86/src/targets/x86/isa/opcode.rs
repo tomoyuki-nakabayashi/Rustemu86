@@ -39,18 +39,20 @@ impl OpcodeFeature for ArithRm {
     }
 }
 
-enum DataType {
-    UByte(u8),
-    UWord(u16),
-    UDWord(u32),
-    UQWord(u64),
-    SByte(i8),
-    SWord(i16),
-    SDWord(i32),
-    SQWord(i64),
+#[derive(Debug)]
+pub enum DataType {
+    UByte,
+    UWord,
+    UDWord,
+    UQWord,
+    SByte,
+    SWord,
+    SDWord,
+    SQWord,
 }
 
-struct MetaInst {
+#[derive(Debug)]
+pub struct MetaInst {
     opcode: OpcodeCompat,
     modrm: bool,
     imm_type: Option<DataType>,
@@ -58,14 +60,22 @@ struct MetaInst {
 }
 
 impl MetaInst {
-    fn from_u8(candidate: u8) -> Option<MetaInst> {
+    pub fn from_u8(candidate: u8) -> Option<MetaInst> {
         let opcode = OpcodeCompat::from_u8(candidate)?;
-        Some(MetaInst {
-            opcode: opcode,
-            modrm: false,
-            imm_type: None,
-            disp_type: None,
+        use self::OpcodeCompat::*;
+        use self::DataType::*;
+        Some(match opcode {
+            Cld => MetaInst { opcode: opcode, modrm: false, imm_type: None, disp_type: None, },
+            Lea => MetaInst { opcode: opcode, modrm: true, imm_type: None, disp_type: Some(UQWord), },
+            MovRmSreg => MetaInst { opcode: opcode, modrm: true, imm_type: None, disp_type: None, },
+            MovOi => MetaInst { opcode: opcode, modrm: false, imm_type: Some(UDWord), disp_type: None, },
+            Xor => MetaInst { opcode: opcode, modrm: true, imm_type: None, disp_type: None, },
+            Hlt => MetaInst { opcode: opcode, modrm: false, imm_type: None, disp_type: None, },
         })
+    }
+
+    pub fn use_modrm(&self) -> bool {
+        self.modrm
     }
 }
 
