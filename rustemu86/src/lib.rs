@@ -11,21 +11,21 @@ extern crate enum_primitive;
 #[macro_use]
 extern crate bitflags;
 
-pub mod options;
+mod cpu;
 pub mod display;
 pub mod loader;
+pub mod options;
 pub mod peripherals;
 pub mod rustemu86;
-mod cpu;
 mod targets;
 
-use options::EmulationMode;
-use targets::x86_64::{self, X86_64};
-use cpu::model::CpuModel;
 use cpu::model::cpu_factory;
+use cpu::model::CpuModel;
 use display::GtkVgaTextBuffer;
+use options::EmulationMode;
 use peripherals::interconnect::Interconnect;
-use rustemu86::{DebugMode, Interactive, DebugDesabled, PerCycleDump};
+use rustemu86::{DebugDesabled, DebugMode, Interactive, PerCycleDump};
+use targets::x86_64::{self, X86_64};
 
 pub struct CpuError {}
 
@@ -59,7 +59,7 @@ pub fn start_emulation(
         Err(err) => {
             println!("Emulation stopped at error: {:?}", err);
             Err(CpuError {})
-        },
+        }
     }
 }
 

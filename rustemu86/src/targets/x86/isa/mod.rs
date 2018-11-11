@@ -1,3 +1,3 @@
-pub mod opcode;
-pub mod modrm;
 pub mod eflags;
+pub mod modrm;
+pub mod opcode;

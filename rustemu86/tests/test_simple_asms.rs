@@ -1,6 +1,6 @@
 extern crate rustemu86;
-use rustemu86::options::EmulationMode;
 use rustemu86::display::GtkVgaTextBuffer;
+use rustemu86::options::EmulationMode;
 
 #[test]
 fn test_simple_add() {

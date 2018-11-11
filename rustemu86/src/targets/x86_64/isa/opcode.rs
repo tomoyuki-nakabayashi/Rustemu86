@@ -30,19 +30,22 @@ enum_from_primitive! {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum OperandSize {
-  Byte,
-  Word,
-  DoubleWord,
-  QuadWord,
+    Byte,
+    Word,
+    DoubleWord,
+    QuadWord,
 }
 
 impl Opcode {
-  pub fn modrm_if_required(&self, candidate: u8) -> Option<ModRm> {
-    match self {
-      Opcode::Add | Opcode::Inc | Opcode::MovToRm | Opcode::MovToReg |
-      Opcode::MovRmImm | Opcode::MovRmImm8
-        => return Some(ModRm::new(candidate)),
-      _ => return None,
+    pub fn modrm_if_required(&self, candidate: u8) -> Option<ModRm> {
+        match self {
+            Opcode::Add
+            | Opcode::Inc
+            | Opcode::MovToRm
+            | Opcode::MovToReg
+            | Opcode::MovRmImm
+            | Opcode::MovRmImm8 => return Some(ModRm::new(candidate)),
+            _ => return None,
+        }
     }
-  }
 }

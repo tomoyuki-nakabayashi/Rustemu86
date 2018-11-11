@@ -8,20 +8,20 @@ pub type Result<T> = result::Result<T, MemoryAccessError>;
 pub struct MemoryAccessError;
 
 /// Provides memory access interface for different byte size.
-/// 
+///
 /// An implementor must implement both read_u8()/write_u8().
-/// Default functions are defined for other trait functions (u16, u32, u64). 
+/// Default functions are defined for other trait functions (u16, u32, u64).
 /// The default functions just call read_u8() or write_u8() and collect the result.
 /// **Note that default implementations assume Little Endian byte order.**
-/// 
+///
 /// The meaning and how to translate the address depend on an implementor.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
 /// extern crate rustemu86;
 /// use rustemu86::peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
-/// 
+///
 /// struct TestMemory(Vec<u8>);
 /// impl MemoryAccess for TestMemory {
 ///     fn read_u8(&self, addr: usize) -> Result<u8> {
@@ -30,7 +30,7 @@ pub struct MemoryAccessError;
 ///             _ => Err(MemoryAccessError {}),
 ///         }
 ///     }
-/// 
+///
 ///     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
 ///         match addr {
 ///             0...7 => {
@@ -41,7 +41,7 @@ pub struct MemoryAccessError;
 ///         }
 ///     }
 /// }
-/// 
+///
 /// let buffer = vec![0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08];
 /// let memory = TestMemory(buffer);
 /// assert_eq!(memory.read_u8(0).unwrap(), 0x01);

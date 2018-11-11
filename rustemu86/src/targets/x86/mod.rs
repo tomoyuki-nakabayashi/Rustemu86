@@ -1,18 +1,18 @@
-mod gpr;
-mod fetcher;
 mod decoder;
 mod executor;
-mod status_regs;
+mod fetcher;
+mod gpr;
 mod isa;
+mod status_regs;
 
-use self::gpr::{RegisterFile, SegmentRegister};
-use self::status_regs::CpuState;
-use self::fetcher::FetchedInst;
 use self::decoder::ExecuteInst;
 use self::executor::WriteBackType;
+use self::fetcher::FetchedInst;
+use self::gpr::{RegisterFile, SegmentRegister};
 use self::isa::eflags::EFlags;
-use peripherals::interconnect::Interconnect;
+use self::status_regs::CpuState;
 use cpu::model::{CpuModel, Pipeline};
+use peripherals::interconnect::Interconnect;
 use rustemu86::DebugMode;
 use std::result;
 
@@ -21,7 +21,7 @@ pub type Result<T> = result::Result<T, CompatibleException>;
 /// x86 32-bit mode.
 /// Note that this does not cover all of x86 instructions.
 /// But will cover enough instructions to boot BlosOS.
-/// 
+///
 /// ip: instruction pointer.
 /// mmio: memory mapped io.
 /// rf: general purpose register.
@@ -128,19 +128,18 @@ pub struct CompatibleException(String);
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use options::EmulationMode;
-    use display::GtkVgaTextBuffer;
-    use cpu::model::cpu_factory;
-    use rustemu86::DebugDesabled;
     use self::gpr::Reg32::*;
     use self::gpr::SegReg::*;
+    use super::*;
+    use cpu::model::cpu_factory;
+    use display::GtkVgaTextBuffer;
+    use options::EmulationMode;
+    use rustemu86::DebugDesabled;
 
     fn execute_program(program: Vec<u8>, start_addr: usize) -> X86 {
-        let mut interconnect = Interconnect::new(
-            EmulationMode::Normal, GtkVgaTextBuffer::new());
+        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program, start_addr);
-        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
+        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled {}));
         let result = x86.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
@@ -161,11 +160,10 @@ mod test {
     #[test]
     fn skip_bios() {
         let program = vec![0xf4];
-        let mut interconnect = Interconnect::new(
-            EmulationMode::Normal, GtkVgaTextBuffer::new());
+        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
         interconnect.init_memory(program, 0x7c00);
 
-        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled{}));
+        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled {}));
         x86.boot_bios();
 
         assert_eq!(x86.rf.read_u64(Eax), 0xaa55u64);
@@ -180,7 +178,7 @@ mod test {
 
     #[test]
     fn stop_at_hlt() {
-        let program = vec![0xf4];  // hlt
+        let program = vec![0xf4]; // hlt
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.state, CpuState::Halted);
@@ -189,8 +187,9 @@ mod test {
     #[test]
     fn clear_register_by_xor() {
         let program = vec![
-            0x31, 0xc0,  // xor    ax,ax
-            0xf4];
+            0x31, 0xc0, // xor    ax,ax
+            0xf4,
+        ];
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Eax), 0);
@@ -199,12 +198,13 @@ mod test {
     #[test]
     fn mov_rm_to_sreg() {
         let program = vec![
-            0x8e, 0xd8,  // mov    ds,ax
-            0x8e, 0xc0,  // mov    es,ax
-            0x8e, 0xd0,  // mov    ss,ax
-            0x8e, 0xe0,  // mov    fs,ax
-            0x8e, 0xe8,  // mov    gs,ax
-            0xf4];
+            0x8e, 0xd8, // mov    ds,ax
+            0x8e, 0xc0, // mov    es,ax
+            0x8e, 0xd0, // mov    ss,ax
+            0x8e, 0xe0, // mov    fs,ax
+            0x8e, 0xe8, // mov    gs,ax
+            0xf4,
+        ];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.rf.write_u64(Eax, 0xaa55u64);
         });
@@ -215,12 +215,13 @@ mod test {
         assert_eq!(x86.segment.read_u64(Fs), x86.rf.read_u64(Eax));
         assert_eq!(x86.segment.read_u64(Gs), x86.rf.read_u64(Eax));
     }
- 
+
     #[test]
     fn mov_imm() {
         let program = vec![
-            0xbc, 0x00, 0x7c,  // mov    sp,0x7c00
-            0xf4];
+            0xbc, 0x00, 0x7c, // mov    sp,0x7c00
+            0xf4,
+        ];
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Esp), 0x7c00u64);
@@ -229,8 +230,9 @@ mod test {
     #[test]
     fn cld() {
         let program = vec![
-            0xfc,  // cld
-            0xf4];
+            0xfc, // cld
+            0xf4,
+        ];
         let x86 = execute_program_after(program, |cpu: &mut X86| {
             cpu.eflags.set(EFlags::DIRECTION_FLAG, true);
         });
@@ -241,8 +243,8 @@ mod test {
     #[test]
     fn lea() {
         let program = vec![
-            0x67, 0x8d, 0x35, 0x16, 0x7d, 0x00, 0x00,  // addr32 lea si,ds:0x7d16
-            0xf4
+            0x67, 0x8d, 0x35, 0x16, 0x7d, 0x00, 0x00, // addr32 lea si,ds:0x7d16
+            0xf4,
         ];
         let x86 = execute_program(program, 0);
 

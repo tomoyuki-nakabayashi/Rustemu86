@@ -1,10 +1,10 @@
+use num::FromPrimitive;
 use x86_64::exceptions::InternalException;
 use x86_64::fetcher::FetchedInst;
+use x86_64::isa::opcode::OperandSize;
 use x86_64::isa::registers::Reg64Id;
 use x86_64::register_file::RegisterFile;
 use x86_64::Result;
-use x86_64::isa::opcode::OperandSize;
-use num::FromPrimitive;
 
 // TODO: Remove clone trait.
 #[derive(Clone)]
@@ -64,10 +64,7 @@ pub enum ExOpcode {
     Halt,
 }
 
-pub fn decode(
-    rf: &RegisterFile,
-    inst: &FetchedInst,
-) -> Result<Vec<ExecuteInstType>> {
+pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     use x86_64::isa::opcode::Opcode::*;
     match inst.opcode {
         // Arithmetic and Logic instructions.
@@ -147,11 +144,13 @@ fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
                     op_size: inst.op_size,
                 };
                 Ok(vec![ExecuteInstType::ArithLogic(uop)])
-            },
+            }
             _ => Ok(decode_store(&rf, &inst)),
         }
     } else {
-        Err(InternalException::ModRmRequired { opcode: inst.opcode } )
+        Err(InternalException::ModRmRequired {
+            opcode: inst.opcode,
+        })
     }
 }
 
@@ -172,11 +171,13 @@ fn decode_mov_rm(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
                     op_size: inst.op_size,
                 };
                 Ok(vec![ExecuteInstType::ArithLogic(uop)])
-            },
+            }
             _ => Ok(decode_load(&rf, &inst)),
         }
     } else {
-        Err(InternalException::ModRmRequired { opcode: inst.opcode } )
+        Err(InternalException::ModRmRequired {
+            opcode: inst.opcode,
+        })
     }
 }
 
@@ -212,11 +213,13 @@ fn decode_mov_mi(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
                     op_size: inst.op_size,
                 };
                 Ok(vec![ExecuteInstType::ArithLogic(uop)])
-            },
+            }
             _ => Ok(decode_store(&rf, &inst)),
         }
     } else {
-        Err(InternalException::ModRmRequired { opcode: inst.opcode } )
+        Err(InternalException::ModRmRequired {
+            opcode: inst.opcode,
+        })
     }
 }
 

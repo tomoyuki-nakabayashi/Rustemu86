@@ -74,9 +74,9 @@ impl Write for FileWriter {
 #[cfg(test)]
 mod test {
     use super::*;
+    use peripherals::memory_access::MemoryAccess;
     use std::fs::File;
     use std::io::prelude::*;
-    use peripherals::memory_access::MemoryAccess;
 
     #[test]
     fn stdout_write() {

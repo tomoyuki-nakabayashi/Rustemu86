@@ -1,8 +1,8 @@
 //! General Purpose Register File.
 
-const REGISTER_NUM : usize = 8;
+const REGISTER_NUM: usize = 8;
 
-pub(crate) struct RegisterFile{
+pub(crate) struct RegisterFile {
     rams: Vec<u64>,
 }
 

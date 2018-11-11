@@ -7,12 +7,12 @@ mod fetcher;
 mod isa;
 mod register_file;
 
-use cpu::model::{CpuModel, Pipeline};
-use self::exceptions::InternalException;
-use self::fetcher::{FetchUnit, FetchedInst};
 use self::decoder::ExecuteInstType;
 use self::ex_stage::{WriteBack, WriteBackData};
+use self::exceptions::InternalException;
+use self::fetcher::{FetchUnit, FetchedInst};
 use self::register_file::RegisterFile;
+use cpu::model::{CpuModel, Pipeline};
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
 use rustemu86::DebugMode;
@@ -81,8 +81,10 @@ impl Pipeline for X86_64 {
     }
 
     fn execute(&self, insts: &Self::Decoded) -> Result<Self::Executed> {
-        let results: Self::Executed = (&insts).into_iter()
-            .map(|inst| ex_stage::execute(&inst).unwrap()).collect();
+        let results: Self::Executed = (&insts)
+            .into_iter()
+            .map(|inst| ex_stage::execute(&inst).unwrap())
+            .collect();
         Ok(results)
     }
 
@@ -91,11 +93,13 @@ impl Pipeline for X86_64 {
             match wb {
                 WriteBack::GeneralRegister(dest, value) => self.rf.write64(*dest, *value),
                 WriteBack::Rip(next_rip) => self.fetch_unit.set_rip(*next_rip),
-                WriteBack::Load(dest, addr) => self.rf.write64(*dest, self.mmio.read_u64(*addr as usize).unwrap()),
+                WriteBack::Load(dest, addr) => self
+                    .rf
+                    .write64(*dest, self.mmio.read_u64(*addr as usize).unwrap()),
                 WriteBack::Store(addr, data) => {
                     let addr = *addr as usize;
                     use self::WriteBackData::*;
-                    match data{
+                    match data {
                         Byte(data) => self.mmio.write_u8(addr, *data).unwrap(),
                         Word(data) => self.mmio.write_u16(addr, *data).unwrap(),
                         DWord(data) => self.mmio.write_u32(addr, *data).unwrap(),
@@ -103,7 +107,9 @@ impl Pipeline for X86_64 {
                     }
                 }
                 WriteBack::CpuState(next_state) => self.state = *next_state,
-                WriteBack::Return(addr) => self.fetch_unit.set_rip(self.mmio.read_u64(*addr as usize).unwrap()),
+                WriteBack::Return(addr) => self
+                    .fetch_unit
+                    .set_rip(self.mmio.read_u64(*addr as usize).unwrap()),
             };
         }
         Ok(())
@@ -143,15 +149,14 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rustemu86::DebugDesabled;
-    use options::EmulationMode;
-    use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use display::GtkVgaTextBuffer;
+    use options::EmulationMode;
     use peripherals::interconnect::Interconnect;
+    use rustemu86::DebugDesabled;
+    use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
 
     fn execute_program(program: Vec<u8>) -> X86_64 {
-        let mut mmio = Interconnect::new(EmulationMode::Normal,
-            GtkVgaTextBuffer::new());
+        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
         mmio.init_memory(program, 0);
         let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         let result = x86_64.run();

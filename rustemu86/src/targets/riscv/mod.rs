@@ -1,11 +1,11 @@
-use rustemu86::DebugMode;
-use peripherals::interconnect::Interconnect;
 use cpu::model::CpuModel;
+use peripherals::interconnect::Interconnect;
+use rustemu86::DebugMode;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
 
-pub struct InternalError (String);
+pub struct InternalError(String);
 
 #[allow(dead_code)]
 pub struct Riscv {
@@ -35,15 +35,14 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rustemu86::DebugDesabled;
-    use options::EmulationMode;
     use display::GtkVgaTextBuffer;
+    use options::EmulationMode;
+    use rustemu86::DebugDesabled;
 
     #[test]
     fn stop_at_wfi() {
         let program = vec![0x73, 0x00, 0x50, 0x10];
-        let mut mmio = Interconnect::new(EmulationMode::Normal,
-            GtkVgaTextBuffer::new());
+        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
         mmio.init_memory(program, 0);
         let mut riscv = Riscv::new(mmio, Box::new(DebugDesabled {}));
 

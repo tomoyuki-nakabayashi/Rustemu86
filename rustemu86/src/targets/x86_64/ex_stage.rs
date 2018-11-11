@@ -1,8 +1,8 @@
 use x86_64::decoder::ExOpcode;
 use x86_64::decoder::ExecuteInst;
 use x86_64::decoder::ExecuteInstType;
-use x86_64::isa::registers::Reg64Id;
 use x86_64::isa::opcode::OperandSize;
+use x86_64::isa::registers::Reg64Id;
 use x86_64::CpuState;
 
 pub enum WriteBack {

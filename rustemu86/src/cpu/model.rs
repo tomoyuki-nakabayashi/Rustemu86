@@ -3,7 +3,8 @@ use rustemu86::DebugMode;
 
 /// The factory to create a CPU object.
 pub fn cpu_factory<T>(mmio: Interconnect, debug: Box<dyn DebugMode>) -> T
-    where T: CpuModel + Pipeline
+where
+    T: CpuModel + Pipeline,
 {
     T::new(mmio, debug)
 }
@@ -31,7 +32,8 @@ pub trait Pipeline {
 
     /// Execute an instruction from the program.
     fn execute_an_instruction(&mut self, program: &[u8]) -> Result<(), Self::Error> {
-        let result = self.fetch(program)
+        let result = self
+            .fetch(program)
             .map(|inst| self.decode(&inst))?
             .map(|inst| self.execute(&inst))?;
 

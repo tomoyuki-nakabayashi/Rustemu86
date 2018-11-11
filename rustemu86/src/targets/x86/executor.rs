@@ -1,8 +1,8 @@
-use targets::x86::Result;
 use targets::x86::decoder::ExecuteInst;
-use targets::x86::status_regs::CpuState;
 use targets::x86::gpr::{Reg32, SegReg};
 use targets::x86::isa::eflags::EFlags;
+use targets::x86::status_regs::CpuState;
+use targets::x86::Result;
 
 pub trait Execute {
     type ResultValue;
@@ -36,22 +36,31 @@ pub struct StatusWriteBack {
 }
 
 pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
-    use self::ExecuteInst::{ArithLogic, Segment, StatusOp, Privileged};
+    use self::ExecuteInst::{ArithLogic, Privileged, Segment, StatusOp};
     match inst {
         ArithLogic(inst) => {
             let (target, value) = inst.execute();
-            Ok( WriteBackType::Gpr(GprWriteBack { index: target, value: value }))
+            Ok(WriteBackType::Gpr(GprWriteBack {
+                index: target,
+                value: value,
+            }))
         }
         Segment(inst) => {
             let (target, value) = inst.execute();
-            Ok( WriteBackType::Segment(SegmentWriteBack { index: target, value: value }))
+            Ok(WriteBackType::Segment(SegmentWriteBack {
+                index: target,
+                value: value,
+            }))
         }
         StatusOp(inst) => {
             let (target, value) = inst.execute();
-            Ok( WriteBackType::EFlags( EFlagsWriteBack {target: target, value: value}))
+            Ok(WriteBackType::EFlags(EFlagsWriteBack {
+                target: target,
+                value: value,
+            }))
         }
-        Privileged(inst) => {
-            Ok( WriteBackType::Status( StatusWriteBack{ state: inst.execute() } ))
-        }
+        Privileged(inst) => Ok(WriteBackType::Status(StatusWriteBack {
+            state: inst.execute(),
+        })),
     }
 }

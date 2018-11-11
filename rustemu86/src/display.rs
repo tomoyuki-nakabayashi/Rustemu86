@@ -3,8 +3,8 @@ extern crate gtk;
 
 use bit_field::BitField;
 use gio::ApplicationExt;
-use gtk::{Grid, Cast};
-use gtk::{ContainerExt, WidgetExt, WindowExt, GridExt, LabelExt};
+use gtk::{Cast, Grid};
+use gtk::{ContainerExt, GridExt, LabelExt, WidgetExt, WindowExt};
 use num::{FromPrimitive, Integer};
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use std::fmt;

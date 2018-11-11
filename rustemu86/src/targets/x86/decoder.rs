@@ -1,11 +1,11 @@
-use targets::x86::Result;
-use targets::x86::isa::opcode::OpcodeCompat;
-use targets::x86::isa::modrm::ModRm;
-use targets::x86::isa::eflags::EFlags;
-use targets::x86::fetcher::FetchedInst;
-use targets::x86::gpr::{RegisterFile, Reg32, SegReg};
-use targets::x86::status_regs::CpuState;
 use targets::x86::executor::Execute;
+use targets::x86::fetcher::FetchedInst;
+use targets::x86::gpr::{Reg32, RegisterFile, SegReg};
+use targets::x86::isa::eflags::EFlags;
+use targets::x86::isa::modrm::ModRm;
+use targets::x86::isa::opcode::Opcode;
+use targets::x86::status_regs::CpuState;
+use targets::x86::Result;
 
 pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),
@@ -64,31 +64,23 @@ impl Execute for PrivilegedInst {
 }
 
 pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
-    use self::OpcodeCompat::*;
+    use self::Opcode::*;
     match inst.get_opcode() {
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
-        Lea => 
-            decode_al_modrm(&inst, &gpr, Box::new(|_, b| b )),
-        MovRmSreg =>
-            decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b )),
-        MovOi => 
-            decode_al_rd(&inst, &gpr, Box::new(|_, b| b )),
-        Xor =>
-            decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b )),
-        Hlt =>
-            Ok(ExecuteInst::Privileged(PrivilegedInst{})),
+        Lea => decode_al_modrm(&inst, &gpr, Box::new(|_, b| b)),
+        MovRmSreg => decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b)),
+        MovOi => decode_al_rd(&inst, &gpr, Box::new(|_, b| b)),
+        Xor => decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b)),
+        Hlt => Ok(ExecuteInst::Privileged(PrivilegedInst {})),
     }
-
 }
 
 // helper function to decode mod rm
-fn decode_modrm(modrm: ModRm, rf: &RegisterFile, inst: &FetchedInst)
-    -> (Reg32, u64, u64)
-{
+fn decode_modrm(modrm: ModRm, rf: &RegisterFile, inst: &FetchedInst) -> (Reg32, u64, u64) {
     let (reg, rm) = modrm.get_reg_rm();
     let (left, right) = match modrm.get_mode() {
-        0x00 => (rf.read_u64(reg), inst.get_imm()),
-        0x11 => (rf.read_u64(reg), rf.read_u64(rm)),    
+        0x00 => (rf.read_u64(reg), inst.get_disp()),
+        0x11 => (rf.read_u64(reg), rf.read_u64(rm)),
         _ => (0, 0),
     };
     (reg, left, right)
@@ -97,10 +89,10 @@ fn decode_modrm(modrm: ModRm, rf: &RegisterFile, inst: &FetchedInst)
 fn decode_al_modrm(
     inst: &FetchedInst,
     gpr: &RegisterFile,
-    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
-{
+    expr: Box<dyn Fn(u64, u64) -> u64>,
+) -> Result<ExecuteInst> {
     let (target, left, right) = decode_modrm(inst.get_modrm(), &gpr, inst);
-    let inst = ArithLogicInst{
+    let inst = ArithLogicInst {
         target: target,
         left: left,
         right: right,
@@ -112,12 +104,12 @@ fn decode_al_modrm(
 fn decode_seg_modrm(
     inst: &FetchedInst,
     gpr: &RegisterFile,
-    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
-{
+    expr: Box<dyn Fn(u64, u64) -> u64>,
+) -> Result<ExecuteInst> {
     let (sreg, rm) = inst.get_modrm().get_sreg_rm();
-    let inst = SegmentInst{
+    let inst = SegmentInst {
         target: sreg,
-        left: 0,  // Never use
+        left: 0, // Never use
         right: gpr.read_u64(rm),
         expr: expr,
     };
@@ -127,9 +119,9 @@ fn decode_seg_modrm(
 fn decode_al_rd(
     inst: &FetchedInst,
     gpr: &RegisterFile,
-    expr: Box<dyn Fn(u64, u64) -> u64>) -> Result<ExecuteInst>
-{
-    let inst = ArithLogicInst{
+    expr: Box<dyn Fn(u64, u64) -> u64>,
+) -> Result<ExecuteInst> {
+    let inst = ArithLogicInst {
         target: inst.get_rd(),
         left: gpr.read_u64(inst.get_rd()),
         right: inst.get_imm(),
@@ -139,7 +131,7 @@ fn decode_al_rd(
 }
 
 fn decode_eflags_operation(target: EFlags, value: bool) -> Result<ExecuteInst> {
-    let inst = StatusOpInst{
+    let inst = StatusOpInst {
         target: target,
         value: value,
     };

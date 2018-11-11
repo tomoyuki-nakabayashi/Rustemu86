@@ -1,13 +1,13 @@
 use bit_field::BitField;
-use targets::x86::gpr::{Reg32, SegReg};
 use num::FromPrimitive;
+use targets::x86::gpr::{Reg32, SegReg};
 
 /// Mod R/M.
 #[derive(Debug, Clone, Copy)]
 pub struct ModRm {
-    mode: usize,  // TODO: Define enum.
+    mode: usize, // TODO: Define enum.
     reg: u8,
-    rm : u8,
+    rm: u8,
 }
 
 impl ModRm {
@@ -28,13 +28,12 @@ impl ModRm {
     pub fn get_reg_rm(&self) -> (Reg32, Reg32) {
         let reg = Reg32::from_u8(self.reg).expect("Never fail.");
         let rm = Reg32::from_u8(self.rm).expect("Never fail.");
-        return (reg, rm)
+        return (reg, rm);
     }
 
     pub fn get_sreg_rm(&self) -> (SegReg, Reg32) {
-        let sreg = SegReg::from_u8(self.reg)
-            .expect("Cannot convert to Segment register index.");
+        let sreg = SegReg::from_u8(self.reg).expect("Cannot convert to Segment register index.");
         let rm = Reg32::from_u8(self.rm).expect("Never fail.");
-        return (sreg, rm)
+        return (sreg, rm);
     }
 }

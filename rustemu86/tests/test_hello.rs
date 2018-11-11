@@ -1,6 +1,6 @@
 extern crate rustemu86;
-use rustemu86::options::EmulationMode;
 use rustemu86::display::GtkVgaTextBuffer;
+use rustemu86::options::EmulationMode;
 use std::fs::File;
 use std::io::prelude::*;
 

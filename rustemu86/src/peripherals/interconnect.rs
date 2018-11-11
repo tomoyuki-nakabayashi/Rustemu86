@@ -1,7 +1,7 @@
-use options::EmulationMode;
 use display::GtkVgaTextBuffer;
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use options::EmulationMode;
 use peripherals::memory::Memory;
+use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use peripherals::uart16550;
 use peripherals::uart16550::Target;
 use peripherals::uart16550::Uart16550;
@@ -34,7 +34,8 @@ impl Interconnect {
     pub fn fetch_inst_candidate(&self, rip: u64) -> Vec<u8> {
         (0..MAX_INSTRUCTION_LENGTH)
             .map(|x| self.read_u8(rip as usize + x))
-            .collect::<Result<Vec<u8>>>().unwrap()
+            .collect::<Result<Vec<u8>>>()
+            .unwrap()
     }
 }
 
@@ -49,9 +50,7 @@ impl MemoryAccess for Interconnect {
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.write_u8(addr as usize, data),
-            0xb8000...0xb8FA0 => self
-                .vga_text_buffer
-                .write_u8((addr & 0xfff) as usize, data),
+            0xb8000...0xb8FA0 => self.vga_text_buffer.write_u8((addr & 0xfff) as usize, data),
             0x10000000 => self.serial.write_u8(0, data),
             _ => Err(MemoryAccessError {}),
         }
@@ -72,8 +71,8 @@ impl MemoryAccess for Interconnect {
 #[cfg(test)]
 mod test {
     use super::*;
-    use options::EmulationMode;
     use display::GtkVgaTextBuffer;
+    use options::EmulationMode;
     use std::fs::File;
     use std::io::prelude::*;
 
