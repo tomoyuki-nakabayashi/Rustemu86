@@ -3,7 +3,7 @@
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use targets::x86::{Result, CompatibleException};
-use targets::x86::isa::opcode::{self, OpcodeCompat, MetaInst};
+use targets::x86::isa::opcode::{self, OpcodeCompat, MetaInst, DataType};
 use targets::x86::isa::modrm::ModRm;
 use targets::x86::gpr::Reg32;
 use num::FromPrimitive;
@@ -94,22 +94,17 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
         let candidate = self.peek_u8();
         self.meta_inst = MetaInst::from_u8(candidate)
-            .or_else(|| MetaInst::from_u8(candidate & 0xf8));
+            .or_else(|| MetaInst::plus_r_from_u8(candidate));
 
-        let mut rd: u8 = 0;
-        {
-            let extract_rd = |opcode| {
-                rd = candidate.get_bits(0..3);
-                Some(opcode)
-            };
-            let parse_opcode_plus_rd = || OpcodeCompat::from_u8(candidate & 0xf8)
-                .and_then(extract_rd);
-            self.opcode = OpcodeCompat::from_u8(candidate)
-                .or_else(parse_opcode_plus_rd)
-                .ok_or(CompatibleException(
-                    format!("Encounters undefined opcode: '0x{:x}' in fetch stage.", candidate)))?
+        if self.meta_inst.is_none() {
+            return Err(CompatibleException(
+                format!("Encounters undefined opcode: '0x{:x}' in fetch stage.", candidate)));
         }
-        self.rd = rd;
+
+        self.opcode = self.meta_inst.as_ref().unwrap().get_opcode();
+        if self.meta_inst.as_ref().unwrap().use_r() {
+            self.rd = candidate.get_bits(0..3);
+        }
         self.current_offset += 1;
         Ok(self)
     }
@@ -125,18 +120,15 @@ impl<'a> FetchedInstBuilder<'a> {
     }
 
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
-        match self.opcode {
-            OpcodeCompat::MovOi => {
-                self.read_imm_u16();    
-            }
-            OpcodeCompat::Lea => {
+        match self.meta_inst.as_ref().unwrap().get_imm_type() {
+            None => (),
+            Some(DataType::UDWord) => {
                 if self.addr_size_override {
                     self.read_imm_u32();
                 } else {
-                    self.read_imm_u16();    
+                    self.read_imm_u16();
                 }
             }
-            _ => {}
         }
         self
     }
