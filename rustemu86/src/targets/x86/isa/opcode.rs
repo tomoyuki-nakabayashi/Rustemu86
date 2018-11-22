@@ -31,6 +31,20 @@ pub enum DataType {
     //    SQWord,
 }
 
+/// Just a wrapper macro to create MetaInst.
+#[macro_use]
+macro_rules! meta_inst {
+    ( $opcode: expr, $modrm: expr, $r: expr, $imm: expr, $disp: expr) => ({
+        Some(MetaInst {
+            opcode: $opcode,
+            modrm: $modrm,
+            r: $r,
+            imm_type: $imm,
+            disp_type: $disp,
+        })
+    })
+}
+
 /// MetaInst represents meta infomation for an opcode in the opcode field.
 ///
 /// You can obtain a MetaInst from an `u8` which can be translated to a valid opcode.
@@ -50,42 +64,12 @@ impl MetaInst {
         use self::DataType::*;
         use self::Opcode::*;
         match opcode {
-            Cld => Some(MetaInst {
-                opcode: opcode,
-                modrm: false,
-                r: false,
-                imm_type: None,
-                disp_type: None,
-            }),
-            Lea => Some(MetaInst {
-                opcode: opcode,
-                modrm: true,
-                r: false,
-                imm_type: None,
-                disp_type: Some(UDWord),
-            }),
-            MovRmSreg => Some(MetaInst {
-                opcode: opcode,
-                modrm: true,
-                r: false,
-                imm_type: None,
-                disp_type: None,
-            }),
-            Xor => Some(MetaInst {
-                opcode: opcode,
-                modrm: true,
-                r: false,
-                imm_type: None,
-                disp_type: None,
-            }),
-            Hlt => Some(MetaInst {
-                opcode: opcode,
-                modrm: false,
-                r: false,
-                imm_type: None,
-                disp_type: None,
-            }),
-            MovOi => None,
+            Cld => meta_inst!(opcode, false, false, None, None),
+            Lea => meta_inst!(opcode, true, false, None, Some(UDWord)),
+            MovRmSreg => meta_inst!(opcode, true, false, None, None),
+            Xor => meta_inst!(opcode, true, false, None, None),
+            Hlt => meta_inst!(opcode, false, false, None, None),
+            _ => None,
         }
     }
 
@@ -96,13 +80,7 @@ impl MetaInst {
         use self::DataType::*;
         use self::Opcode::*;
         match opcode {
-            MovOi => Some(MetaInst {
-                opcode: opcode,
-                modrm: false,
-                r: true,
-                imm_type: Some(UDWord),
-                disp_type: None,
-            }),
+            MovOi => meta_inst!(opcode, false, true, Some(UDWord), None),
             _ => None,
         }
     }
