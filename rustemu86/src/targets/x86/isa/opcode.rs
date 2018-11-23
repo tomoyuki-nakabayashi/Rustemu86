@@ -21,7 +21,9 @@ enum_from_primitive! {
 }
 
 impl Default for Opcode {
-    fn default() -> Opcode { Opcode::Nop }
+    fn default() -> Opcode {
+        Opcode::Nop
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -36,26 +38,13 @@ pub enum DataType {
     //    SQWord,
 }
 
-/// Just a wrapper macro to create MetaInst.
-#[macro_use]
-macro_rules! meta_inst {
-    ( $opcode: expr, $modrm: expr, $r: expr, $imm: expr, $disp: expr) => ({
-        Some(MetaInst {
-            opcode: $opcode,
-            modrm: $modrm,
-            r: $r,
-            imm_type: $imm,
-            disp_type: $disp,
-        })
-    })
-}
-
+/// Generate MetaInst table.
 #[macro_use]
 macro_rules! meta_inst_table {
     ( $target: ident, $( ($opcode: ident, $modrm: expr, $r: expr, $imm: expr, $disp: expr)),+ ) => ({
         match $target {
             $(
-                $opcode => meta_inst!($opcode, $modrm, $r, $imm, $disp),
+                $opcode => Some(MetaInst::new($opcode, $modrm, $r, $imm, $disp)),
             )+
             _ => None,
         }
@@ -75,13 +64,31 @@ pub struct MetaInst {
 }
 
 impl MetaInst {
+    // Create instance. This is not for user.
+    fn new(
+        op: Opcode,
+        modrm: bool,
+        r: bool,
+        imm: Option<DataType>,
+        disp: Option<DataType>,
+    ) -> MetaInst {
+        MetaInst {
+            opcode: op,
+            modrm: modrm,
+            r: r,
+            imm_type: imm,
+            disp_type: disp,
+        }
+    }
+
     /// Instantiate from `u8` except for `plus r` opcode.
     pub fn from_u8(candidate: u8) -> Option<MetaInst> {
         let opcode = Opcode::from_u8(candidate)?;
         use self::DataType::*;
         use self::Opcode::*;
 
-        meta_inst_table!(opcode,
+        meta_inst_table!(
+            opcode,
             (Cld, false, false, None, None),
             (Lea, true, false, None, Some(UDWord)),
             (MovRmSreg, true, false, None, None),
@@ -97,7 +104,7 @@ impl MetaInst {
         use self::DataType::*;
         use self::Opcode::*;
         match opcode {
-            MovOi => meta_inst!(opcode, false, true, Some(UDWord), None),
+            MovOi => Some(MetaInst::new(opcode, false, true, Some(UDWord), None)),
             _ => None,
         }
     }
