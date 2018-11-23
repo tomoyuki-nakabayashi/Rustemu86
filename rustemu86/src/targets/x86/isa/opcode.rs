@@ -41,10 +41,14 @@ pub enum DataType {
 /// Generate MetaInst table.
 #[macro_use]
 macro_rules! meta_inst_table {
-    ( $target: ident, $( ($opcode: ident, $modrm: expr, $r: expr, $imm: expr, $disp: expr)),+ ) => ({
+    ( $target: ident, $( ( $op: ident, $( $key: ident : $value: expr ),* ) ),+ ) => ({
         match $target {
             $(
-                $opcode => Some(MetaInst::new($opcode, $modrm, $r, $imm, $disp)),
+                $op => {
+                    let mut inst = MetaInst { opcode: $op, ..MetaInst::default() };
+                    $( inst.$key = $value; )*
+                    Some(inst)
+                } 
             )+
             _ => None,
         }
@@ -89,11 +93,11 @@ impl MetaInst {
 
         meta_inst_table!(
             opcode,
-            (Cld, false, false, None, None),
-            (Lea, true, false, None, Some(UDWord)),
-            (MovRmSreg, true, false, None, None),
-            (Xor, true, false, None, None),
-            (Hlt, false, false, None, None)
+            (Cld, ),
+            (Lea, modrm: true, disp_type: Some(UDWord)),
+            (MovRmSreg, modrm: true),
+            (Xor, modrm: true),
+            (Hlt, )
         )
     }
 
