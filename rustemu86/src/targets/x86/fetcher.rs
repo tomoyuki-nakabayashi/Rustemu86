@@ -68,7 +68,7 @@ struct FetchedInstBuilder<'a> {
     disp: Option<u64>,
     program: &'a [u8],
     current_offset: usize,
-    meta_inst: Option<MetaInst>,
+    meta_inst: MetaInst,
 }
 
 impl<'a> FetchedInstBuilder<'a> {
@@ -82,7 +82,7 @@ impl<'a> FetchedInstBuilder<'a> {
             disp: None,
             program: program,
             current_offset: 0,
-            meta_inst: None,
+            meta_inst: MetaInst::default(),
         }
     }
 
@@ -102,8 +102,12 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
         let candidate = self.peek_u8();
         self.meta_inst =
-            MetaInst::from_u8(candidate).or_else(|| MetaInst::plus_r_from_u8(candidate));
-
+            MetaInst::from_u8(candidate).or_else(|| MetaInst::plus_r_from_u8(candidate))
+                .ok_or(CompatibleException(format!(
+                    "Encounters undefined opcode: '0x{:x}' in fetch stage.",
+                    candidate
+                )))?;
+/* 
         if self.meta_inst.is_none() {
             return Err(CompatibleException(format!(
                 "Encounters undefined opcode: '0x{:x}' in fetch stage.",
@@ -111,8 +115,8 @@ impl<'a> FetchedInstBuilder<'a> {
             )));
         }
 
-        self.opcode = self.meta_inst.as_ref().unwrap().get_opcode();
-        if self.meta_inst.as_ref().unwrap().use_r() {
+ */        self.opcode = self.meta_inst.get_opcode();
+        if self.meta_inst.use_r() {
             self.rd = candidate.get_bits(0..3);
         }
         self.current_offset += 1;
@@ -122,7 +126,7 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_modrm(&mut self) -> &mut FetchedInstBuilder<'a> {
         let candidate = self.peek_u8();
         // TODO: Remove the unwrap!
-        if self.meta_inst.as_ref().unwrap().use_modrm() {
+        if self.meta_inst.use_modrm() {
             self.modrm = Some(ModRm::new(candidate));
             self.current_offset += 1;
         }
@@ -130,7 +134,7 @@ impl<'a> FetchedInstBuilder<'a> {
     }
 
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
-        match self.meta_inst.as_ref().unwrap().get_imm_type() {
+        match self.meta_inst.get_imm_type() {
             None => (),
             Some(DataType::UDWord) => {
                 if self.addr_size_override {
@@ -144,7 +148,7 @@ impl<'a> FetchedInstBuilder<'a> {
     }
 
     fn parse_disp(&mut self) -> &mut FetchedInstBuilder<'a> {
-        match self.meta_inst.as_ref().unwrap().get_disp_type() {
+        match self.meta_inst.get_disp_type() {
             None => (),
             Some(DataType::UDWord) => {
                 if self.addr_size_override {

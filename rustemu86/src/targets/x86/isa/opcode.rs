@@ -14,9 +14,14 @@ enum_from_primitive! {
         Lea = 0x8d,
         MovRmSreg = 0x8e,
         MovOi = 0xb8,
+        Nop = 0x90,
         Xor = 0x31,
         Hlt = 0xf4,
     }
+}
+
+impl Default for Opcode {
+    fn default() -> Opcode { Opcode::Nop }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -45,10 +50,22 @@ macro_rules! meta_inst {
     })
 }
 
+#[macro_use]
+macro_rules! meta_inst_table {
+    ( $target: ident, $( ($opcode: ident, $modrm: expr, $r: expr, $imm: expr, $disp: expr)),+ ) => ({
+        match $target {
+            $(
+                $opcode => meta_inst!($opcode, $modrm, $r, $imm, $disp),
+            )+
+            _ => None,
+        }
+    })
+}
+
 /// MetaInst represents meta infomation for an opcode in the opcode field.
 ///
 /// You can obtain a MetaInst from an `u8` which can be translated to a valid opcode.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct MetaInst {
     opcode: Opcode,
     modrm: bool,
@@ -63,14 +80,14 @@ impl MetaInst {
         let opcode = Opcode::from_u8(candidate)?;
         use self::DataType::*;
         use self::Opcode::*;
-        match opcode {
-            Cld => meta_inst!(opcode, false, false, None, None),
-            Lea => meta_inst!(opcode, true, false, None, Some(UDWord)),
-            MovRmSreg => meta_inst!(opcode, true, false, None, None),
-            Xor => meta_inst!(opcode, true, false, None, None),
-            Hlt => meta_inst!(opcode, false, false, None, None),
-            _ => None,
-        }
+
+        meta_inst_table!(opcode,
+            (Cld, false, false, None, None),
+            (Lea, true, false, None, Some(UDWord)),
+            (MovRmSreg, true, false, None, None),
+            (Xor, true, false, None, None),
+            (Hlt, false, false, None, None)
+        )
     }
 
     /// `plus r` is a special case of u8 opcode.

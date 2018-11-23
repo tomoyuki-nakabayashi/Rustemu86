@@ -72,6 +72,7 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
         MovOi => decode_al_rd(&inst, &gpr, Box::new(|_, b| b)),
         Xor => decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b)),
         Hlt => Ok(ExecuteInst::Privileged(PrivilegedInst {})),
+        _ => unimplemented!(),
     }
 }
 
