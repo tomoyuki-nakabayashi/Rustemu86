@@ -48,11 +48,16 @@ macro_rules! meta_inst_table {
                     let mut inst = MetaInst { opcode: $op, ..MetaInst::default() };
                     $( inst.$key = $value; )*
                     Some(inst)
-                } 
+                }
             )+
             _ => None,
         }
-    })
+    });
+
+    // For trailing comma.
+    ( $target: ident, $( ( $op: ident, $( $key: ident : $value: expr ),* ) ),+, ) => ({
+        meta_inst_table!($target, $( ( $op, $( $key : $value ),* ) ),+ )
+    });
 }
 
 /// MetaInst represents meta infomation for an opcode in the opcode field.

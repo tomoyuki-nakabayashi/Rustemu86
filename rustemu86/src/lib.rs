@@ -1,5 +1,3 @@
-#![feature(trace_macros)]
-
 extern crate bit_field;
 extern crate byteorder;
 extern crate getopts;

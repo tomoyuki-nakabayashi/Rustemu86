@@ -2,6 +2,7 @@
 name = "rustemu86"
 version = "0.1.0"
 authors = ["tomoyuki-nakabayashi <tomo.wait.for.it.yuki@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 getopts = "0.2.18"
