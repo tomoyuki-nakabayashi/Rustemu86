@@ -1,6 +1,6 @@
 use bit_field::BitField;
-use num::FromPrimitive;
 use crate::x86_64::isa::registers::Reg64Id;
+use num::FromPrimitive;
 
 enum_from_primitive! {
 #[derive(Debug, Clone, Copy, PartialEq)]

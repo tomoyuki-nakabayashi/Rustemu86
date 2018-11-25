@@ -11,6 +11,7 @@ pub trait Execute {
 
 pub enum WriteBackType {
     Gpr(GprWriteBack),
+    Store(StoreWriteBack),
     Segment(SegmentWriteBack),
     EFlags(EFlagsWriteBack),
     Status(StatusWriteBack),
@@ -18,6 +19,11 @@ pub enum WriteBackType {
 
 pub struct GprWriteBack {
     pub(super) index: Reg32,
+    pub(super) value: u64,
+}
+
+pub struct StoreWriteBack {
+    pub(super) index: usize,
     pub(super) value: u64,
 }
 
@@ -36,11 +42,18 @@ pub struct StatusWriteBack {
 }
 
 pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
-    use self::ExecuteInst::{ArithLogic, Privileged, Segment, StatusOp};
+    use self::ExecuteInst::{ArithLogic, Privileged, Segment, StatusOp, Store};
     match inst {
         ArithLogic(inst) => {
             let (target, value) = inst.execute();
             Ok(WriteBackType::Gpr(GprWriteBack {
+                index: target,
+                value: value,
+            }))
+        }
+        Store(inst) => {
+            let (target, value) = inst.execute();
+            Ok(WriteBackType::Store(StoreWriteBack {
                 index: target,
                 value: value,
             }))

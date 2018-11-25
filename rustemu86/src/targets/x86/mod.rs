@@ -12,7 +12,7 @@ use self::gpr::{RegisterFile, SegmentRegister};
 use self::isa::eflags::EFlags;
 use self::status_regs::CpuState;
 use crate::cpu::model::{CpuModel, Pipeline};
-use crate::peripherals::interconnect::Interconnect;
+use crate::peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use crate::rustemu86::DebugMode;
 use std::result;
 
@@ -105,6 +105,11 @@ impl Pipeline for X86 {
             WriteBackType::Gpr(inst) => {
                 println!("{:?} <= {}", inst.index, inst.value);
                 self.rf.write_u64(inst.index, inst.value);
+            }
+            WriteBackType::Store(inst) => {
+                self.mmio
+                    .write_u64(inst.index, inst.value)
+                    .map_err(|_| CompatibleException("Invalid memory operation.".to_string()))?;
             }
             WriteBackType::Segment(inst) => {
                 println!("{:?} <= {}", inst.index, inst.value);
@@ -249,5 +254,21 @@ mod test {
         let x86 = execute_program(program, 0);
 
         assert_eq!(x86.rf.read_u64(Esi), 0x00007d16);
+    }
+
+    #[test]
+    fn load_mr_store_rm() {
+        let program = vec![
+            0x67, 0x89, 0x18, // addr32 mov [eax], ebx
+            //0x67, 0x8b, 0x08,  // addr32 mov ecx, [eax]
+            0xf4,
+        ];
+        let initializer = |cpu: &mut X86| {
+            cpu.rf.write_u64(Eax, 100);
+            cpu.rf.write_u64(Ebx, 1);
+        };
+        let x86_64 = execute_program_after(program, initializer);
+        assert_eq!(x86_64.mmio.read_u64(100).unwrap(), 1);
+        //assert_eq!(x86_64.rf.read_u64(Ecx), 1);
     }
 }

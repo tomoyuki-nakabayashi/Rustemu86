@@ -13,6 +13,7 @@ enum_from_primitive! {
     pub enum Opcode {
         Cld = 0xfc,
         Lea = 0x8d,
+        MovMr = 0x89,
         MovRmSreg = 0x8e,
         MovOi = 0xb8,
         Nop = 0x90,
@@ -30,8 +31,8 @@ impl Default for Opcode {
 #[derive(Debug, Clone, Copy)]
 pub enum DataType {
     //    UByte,
-    //    UWord,
-    UDWord,
+    UWord,
+    //UDWord,
     //    UQWord,
     //    SByte,
     //    SWord,
@@ -39,10 +40,16 @@ pub enum DataType {
     //    SQWord,
 }
 
-/// Generate MetaInst table.
+/// Generate MetaInst table which returns MetaInst for the given opcode.
+/// Should specify the opcode and optionally override other MetaInst fields.
+///
+/// format:
+/// meta_inst_table!(target_byte_array,
+///     (Opcode, `override fileds in MetaInst`)
+/// )
 #[macro_use]
 macro_rules! meta_inst_table {
-    ( $target: ident, $( ( $op: ident, $( $key: ident : $value: expr ),* ) ),+ ) => ({
+    ( $target: ident, $( ( $op: ident ; $( $key: ident : $value: expr ),* ) ),+ ) => ({
         match $target {
             $(
                 $op => {
@@ -56,8 +63,8 @@ macro_rules! meta_inst_table {
     });
 
     // For trailing comma.
-    ( $target: ident, $( ( $op: ident, $( $key: ident : $value: expr ),* ) ),+, ) => ({
-        meta_inst_table!($target, $( ( $op, $( $key : $value ),* ) ),+ )
+    ( $target: ident, $( ( $op: ident ; $( $key: ident : $value: expr ),* ) ),+, ) => ({
+        meta_inst_table!($target, $( ( $op ; $( $key : $value ),* ) ),+ )
     });
 }
 
@@ -93,11 +100,12 @@ impl MetaInst {
 
         meta_inst_table!(
             opcode,
-            (Cld, ),
-            (Lea, modrm: true, disp_type: Some(UDWord)),
-            (MovRmSreg, modrm: true),
-            (Xor, modrm: true),
-            (Hlt, ),
+            (Cld; ),
+            (Lea; modrm: true, disp_type: Some(UWord)),
+            (MovMr; modrm: true),
+            (MovRmSreg; modrm: true),
+            (Xor; modrm: true),
+            (Hlt; ),
         )
     }
 
@@ -110,7 +118,7 @@ impl MetaInst {
 
         meta_inst_table!(
             opcode,
-            (MovOi, r: true, imm_type: Some(UDWord)),
+            (MovOi; r: true, imm_type: Some(UWord)),
         )
     }
 

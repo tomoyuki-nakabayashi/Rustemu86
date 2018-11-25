@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::x86_64::isa::registers::Reg64Id;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct RegisterFile {

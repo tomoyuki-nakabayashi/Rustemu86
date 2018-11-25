@@ -9,6 +9,7 @@ use crate::targets::x86::Result;
 
 pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),
+    Store(StoreInst),
     Segment(SegmentInst),
     StatusOp(StatusOpInst),
     Privileged(PrivilegedInst),
@@ -25,6 +26,18 @@ impl Execute for ArithLogicInst {
     type ResultValue = (Reg32, u64);
     fn execute(&self) -> Self::ResultValue {
         (self.target, (self.expr)(self.left, self.right))
+    }
+}
+
+pub struct StoreInst {
+    addr: usize,
+    value: u64,
+}
+
+impl Execute for StoreInst {
+    type ResultValue = (usize, u64);
+    fn execute(&self) -> Self::ResultValue {
+        (self.addr, self.value)
     }
 }
 
@@ -68,21 +81,28 @@ pub(super) fn decode(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteIn
     match inst.get_opcode() {
         Cld => decode_eflags_operation(EFlags::DIRECTION_FLAG, false),
         Lea => decode_al_modrm(&inst, &gpr, Box::new(|_, b| b)),
+        MovMr => decode_store(&inst, &gpr),
         MovRmSreg => decode_seg_modrm(&inst, &gpr, Box::new(|_, b| b)),
         MovOi => decode_al_rd(&inst, &gpr, Box::new(|_, b| b)),
         Xor => decode_al_modrm(&inst, &gpr, Box::new(|a, b| a ^ b)),
         Hlt => Ok(ExecuteInst::Privileged(PrivilegedInst {})),
         _ => unimplemented!(),
+        // TODO: Should implement NOP instruction instead of umpimplemented!
     }
 }
 
 // helper function to decode mod rm
 fn decode_modrm(modrm: ModRm, rf: &RegisterFile, inst: &FetchedInst) -> (Reg32, u64, u64) {
+    use self::Reg32::*;
     let (reg, rm) = modrm.get_reg_rm();
     let (left, right) = match modrm.get_mode() {
-        0x00 => (rf.read_u64(reg), inst.get_disp()),
-        0x11 => (rf.read_u64(reg), rf.read_u64(rm)),
-        _ => (0, 0),
+        0b00 => match rm {
+            Eax | Ebx | Ecx | Edx => (rf.read_u64(reg), rf.read_u64(rm)),
+            Ebp => (rf.read_u64(reg), inst.get_disp()),
+            _ => unimplemented!(),
+        },
+        0b11 => (rf.read_u64(reg), rf.read_u64(rm)),
+        _ => unimplemented!(),
     };
     (reg, left, right)
 }
@@ -100,6 +120,15 @@ fn decode_al_modrm(
         expr: expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
+}
+
+fn decode_store(inst: &FetchedInst, gpr: &RegisterFile) -> Result<ExecuteInst> {
+    let (_, reg, rm) = decode_modrm(inst.get_modrm(), &gpr, inst);
+    let inst = StoreInst {
+        addr: rm as usize,
+        value: reg,
+    };
+    Ok(ExecuteInst::Store(inst))
 }
 
 fn decode_seg_modrm(

@@ -2,11 +2,11 @@
 
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
-use num::FromPrimitive;
 use crate::targets::x86::gpr::Reg32;
 use crate::targets::x86::isa::modrm::ModRm;
 use crate::targets::x86::isa::opcode::{self, DataType, MetaInst, Opcode};
-use crate::targets::x86::{CompatibleException, Result};
+use crate::targets::x86::Result;
+use num::FromPrimitive;
 
 pub struct FetchedInst {
     opcode: Opcode,
@@ -123,7 +123,7 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_imm(&mut self) -> &mut FetchedInstBuilder<'a> {
         match self.meta_inst.get_imm_type() {
             None => (),
-            Some(DataType::UDWord) => {
+            Some(DataType::UWord) => {
                 if self.addr_size_override {
                     self.read_imm_u32();
                 } else {
@@ -137,7 +137,7 @@ impl<'a> FetchedInstBuilder<'a> {
     fn parse_disp(&mut self) -> &mut FetchedInstBuilder<'a> {
         match self.meta_inst.get_disp_type() {
             None => (),
-            Some(DataType::UDWord) => {
+            Some(DataType::UWord) => {
                 if self.addr_size_override {
                     self.read_disp_u32();
                 } else {

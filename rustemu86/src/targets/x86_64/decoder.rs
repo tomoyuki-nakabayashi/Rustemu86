@@ -1,10 +1,10 @@
-use num::FromPrimitive;
 use crate::x86_64::exceptions::InternalException;
 use crate::x86_64::fetcher::FetchedInst;
 use crate::x86_64::isa::opcode::OperandSize;
 use crate::x86_64::isa::registers::Reg64Id;
 use crate::x86_64::register_file::RegisterFile;
 use crate::x86_64::Result;
+use num::FromPrimitive;
 
 // TODO: Remove clone trait.
 #[derive(Clone)]
