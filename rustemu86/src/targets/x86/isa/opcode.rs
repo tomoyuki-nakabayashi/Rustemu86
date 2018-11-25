@@ -1,3 +1,4 @@
+use crate::targets::x86::CompatibleException;
 use num::FromPrimitive;
 
 pub const OPERAND_SIZE_OVERRIDE_PREFIX: u8 = 0x66;
@@ -73,25 +74,19 @@ pub struct MetaInst {
 }
 
 impl MetaInst {
-    // Create instance. This is not for user.
-    fn new(
-        op: Opcode,
-        modrm: bool,
-        r: bool,
-        imm: Option<DataType>,
-        disp: Option<DataType>,
-    ) -> MetaInst {
-        MetaInst {
-            opcode: op,
-            modrm: modrm,
-            r: r,
-            imm_type: imm,
-            disp_type: disp,
-        }
+    /// Instanciates MetaInsts from byte array.
+    /// Currently, just from a byte, this will be fixed in the future.
+    pub fn from(candidate: u8) -> Result<MetaInst, CompatibleException> {
+        Self::from_u8(candidate)
+            .or_else(|| Self::plus_r_from_u8(candidate))
+            .ok_or(CompatibleException(format!(
+                "Encounters undefined opcode: '0x{:x}' in fetch stage.",
+                candidate
+            )))
     }
 
-    /// Instantiate from `u8` except for `plus r` opcode.
-    pub fn from_u8(candidate: u8) -> Option<MetaInst> {
+    // Instantiate from `u8` except for `plus r` opcode.
+    fn from_u8(candidate: u8) -> Option<MetaInst> {
         let opcode = Opcode::from_u8(candidate)?;
         use self::DataType::*;
         use self::Opcode::*;
@@ -102,20 +97,21 @@ impl MetaInst {
             (Lea, modrm: true, disp_type: Some(UDWord)),
             (MovRmSreg, modrm: true),
             (Xor, modrm: true),
-            (Hlt, )
+            (Hlt, ),
         )
     }
 
-    /// `plus r` is a special case of u8 opcode.
-    /// The u8 contains the destination address in their lower significant 3-bits.
-    pub fn plus_r_from_u8(candidate: u8) -> Option<MetaInst> {
+    // `plus r` is a special case of u8 opcode.
+    // The u8 contains the destination address in their lower significant 3-bits.
+    fn plus_r_from_u8(candidate: u8) -> Option<MetaInst> {
         let opcode = Opcode::from_u8(candidate & 0xf8)?;
         use self::DataType::*;
         use self::Opcode::*;
-        match opcode {
-            MovOi => Some(MetaInst::new(opcode, false, true, Some(UDWord), None)),
-            _ => None,
-        }
+
+        meta_inst_table!(
+            opcode,
+            (MovOi, r: true, imm_type: Some(UDWord)),
+        )
     }
 
     pub fn get_opcode(&self) -> Opcode {
@@ -138,22 +134,3 @@ impl MetaInst {
         self.disp_type
     }
 }
-
-/*
-(op, modrm, imm_u16, disp_u16)
-=>
-enum_from_primitive! {
-    pub enum Opcode {
-        ...
-        ...
-    }
-}
-
-impl MetaInst {
-    fn from_u8() -> Option<MetaInst> {
-        match opcode {
-            op => Some(op, modrm, imm_u16, disp_u16),
-        }
-    }
-}
-*/

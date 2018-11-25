@@ -91,7 +91,7 @@ impl<'a> FetchedInstBuilder<'a> {
         match candidate {
             opcode::ADDRESS_SIZE_OVERRIDE_PREFIX => {
                 self.addr_size_override = true;
-                self.current_offset += 1;
+                self.consume_bytes(1);
             }
             _ => (),
         };
@@ -101,18 +101,13 @@ impl<'a> FetchedInstBuilder<'a> {
 
     fn parse_opcode(&mut self) -> Result<&mut FetchedInstBuilder<'a>> {
         let candidate = self.peek_u8();
-        self.meta_inst = MetaInst::from_u8(candidate)
-            .or_else(|| MetaInst::plus_r_from_u8(candidate))
-            .ok_or(CompatibleException(format!(
-                "Encounters undefined opcode: '0x{:x}' in fetch stage.",
-                candidate
-            )))?;
+        self.meta_inst = MetaInst::from(candidate)?;
 
         self.opcode = self.meta_inst.get_opcode();
         if self.meta_inst.use_r() {
             self.rd = candidate.get_bits(0..3);
         }
-        self.current_offset += 1;
+        self.consume_bytes(1);
         Ok(self)
     }
 
@@ -120,7 +115,7 @@ impl<'a> FetchedInstBuilder<'a> {
         let candidate = self.peek_u8();
         if self.meta_inst.use_modrm() {
             self.modrm = Some(ModRm::new(candidate));
-            self.current_offset += 1;
+            self.consume_bytes(1);
         }
         self
     }
@@ -170,31 +165,36 @@ impl<'a> FetchedInstBuilder<'a> {
         self.program[self.current_offset]
     }
 
+    // Helper function to consume `num` of bytes from `self.program`.
+    fn consume_bytes(&mut self, num: usize) {
+        self.current_offset += num;
+    }
+
     // Helper function to read u16 to immediate.
     fn read_imm_u16(&mut self) {
         let mut imm = &self.program[self.current_offset..self.current_offset + 2];
         self.imm = Some(imm.read_u16::<LittleEndian>().unwrap().into());
-        self.current_offset += 2;
+        self.consume_bytes(2);
     }
 
     // Helper function to read u32 to immediate.
     fn read_imm_u32(&mut self) {
         let mut imm = &self.program[self.current_offset..self.current_offset + 4];
         self.imm = Some(imm.read_u32::<LittleEndian>().unwrap().into());
-        self.current_offset += 4;
+        self.consume_bytes(4);
     }
 
     // Helper function to read u16 to displacement.
     fn read_disp_u16(&mut self) {
         let mut disp = &self.program[self.current_offset..self.current_offset + 2];
         self.disp = Some(disp.read_u16::<LittleEndian>().unwrap().into());
-        self.current_offset += 2;
+        self.consume_bytes(2);
     }
 
     // Helper function to read u32 to displacement.
     fn read_disp_u32(&mut self) {
         let mut disp = &self.program[self.current_offset..self.current_offset + 4];
         self.disp = Some(disp.read_u32::<LittleEndian>().unwrap().into());
-        self.current_offset += 4;
+        self.consume_bytes(4);
     }
 }
