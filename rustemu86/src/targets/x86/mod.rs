@@ -11,9 +11,9 @@ use self::fetcher::FetchedInst;
 use self::gpr::{RegisterFile, SegmentRegister};
 use self::isa::eflags::EFlags;
 use self::status_regs::CpuState;
-use cpu::model::{CpuModel, Pipeline};
-use peripherals::interconnect::Interconnect;
-use rustemu86::DebugMode;
+use crate::cpu::model::{CpuModel, Pipeline};
+use crate::peripherals::interconnect::Interconnect;
+use crate::rustemu86::DebugMode;
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -131,10 +131,10 @@ mod test {
     use self::gpr::Reg32::*;
     use self::gpr::SegReg::*;
     use super::*;
-    use cpu::model::cpu_factory;
-    use display::GtkVgaTextBuffer;
-    use options::EmulationMode;
-    use rustemu86::DebugDesabled;
+    use crate::cpu::model::cpu_factory;
+    use crate::display::GtkVgaTextBuffer;
+    use crate::options::EmulationMode;
+    use crate::rustemu86::DebugDesabled;
 
     fn execute_program(program: Vec<u8>, start_addr: usize) -> X86 {
         let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());

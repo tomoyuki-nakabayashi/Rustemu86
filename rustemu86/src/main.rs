@@ -1,6 +1,6 @@
 extern crate rustemu86;
 
-use display::GtkVgaTextBuffer;
+use crate::display::GtkVgaTextBuffer;
 use rustemu86::display;
 
 fn start_rustemu86(screen: GtkVgaTextBuffer) {

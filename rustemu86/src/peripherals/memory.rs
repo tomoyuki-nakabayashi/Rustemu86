@@ -1,4 +1,4 @@
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 
 pub struct Memory {
     ram: Vec<u8>,
@@ -38,7 +38,7 @@ impl MemoryAccess for Memory {
 #[cfg(test)]
 mod test {
     use super::*;
-    use peripherals::memory_access::MemoryAccess;
+    use crate::peripherals::memory_access::MemoryAccess;
 
     #[test]
     fn read() {

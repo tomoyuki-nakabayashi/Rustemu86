@@ -1,6 +1,6 @@
-use cpu::model::CpuModel;
-use peripherals::interconnect::Interconnect;
-use rustemu86::DebugMode;
+use crate::cpu::model::CpuModel;
+use crate::peripherals::interconnect::Interconnect;
+use crate::rustemu86::DebugMode;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
@@ -35,9 +35,9 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
-    use display::GtkVgaTextBuffer;
-    use options::EmulationMode;
-    use rustemu86::DebugDesabled;
+    use crate::display::GtkVgaTextBuffer;
+    use crate::options::EmulationMode;
+    use crate::rustemu86::DebugDesabled;
 
     #[test]
     fn stop_at_wfi() {

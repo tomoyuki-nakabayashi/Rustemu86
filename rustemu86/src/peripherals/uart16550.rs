@@ -1,4 +1,4 @@
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use std::fmt;
 use std::fmt::Write;
 use std::fs;
@@ -74,7 +74,7 @@ impl Write for FileWriter {
 #[cfg(test)]
 mod test {
     use super::*;
-    use peripherals::memory_access::MemoryAccess;
+    use crate::peripherals::memory_access::MemoryAccess;
     use std::fs::File;
     use std::io::prelude::*;
 

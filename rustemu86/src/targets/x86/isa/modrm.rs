@@ -1,6 +1,6 @@
 use bit_field::BitField;
 use num::FromPrimitive;
-use targets::x86::gpr::{Reg32, SegReg};
+use crate::targets::x86::gpr::{Reg32, SegReg};
 
 /// Mod R/M.
 #[derive(Debug, Clone, Copy)]

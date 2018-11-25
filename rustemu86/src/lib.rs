@@ -19,13 +19,13 @@ pub mod peripherals;
 pub mod rustemu86;
 mod targets;
 
-use cpu::model::cpu_factory;
-use cpu::model::CpuModel;
-use display::GtkVgaTextBuffer;
-use options::EmulationMode;
-use peripherals::interconnect::Interconnect;
-use rustemu86::{DebugDesabled, DebugMode, Interactive, PerCycleDump};
-use targets::x86_64::{self, X86_64};
+use crate::cpu::model::cpu_factory;
+use crate::cpu::model::CpuModel;
+use crate::display::GtkVgaTextBuffer;
+use crate::options::EmulationMode;
+use crate::peripherals::interconnect::Interconnect;
+use crate::rustemu86::{DebugDesabled, DebugMode, Interactive, PerCycleDump};
+use crate::targets::x86_64::{self, X86_64};
 
 pub struct CpuError {}
 
@@ -66,7 +66,7 @@ pub fn start_emulation(
 #[cfg(test)]
 mod test {
     use super::*;
-    use display::GtkVgaTextBuffer;
+    use crate::display::GtkVgaTextBuffer;
 
     #[test]
     fn success_emulation() {

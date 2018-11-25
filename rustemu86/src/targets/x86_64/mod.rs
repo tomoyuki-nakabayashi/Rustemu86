@@ -12,10 +12,10 @@ use self::ex_stage::{WriteBack, WriteBackData};
 use self::exceptions::InternalException;
 use self::fetcher::{FetchUnit, FetchedInst};
 use self::register_file::RegisterFile;
-use cpu::model::{CpuModel, Pipeline};
-use peripherals::interconnect::Interconnect;
-use peripherals::memory_access::MemoryAccess;
-use rustemu86::DebugMode;
+use crate::cpu::model::{CpuModel, Pipeline};
+use crate::peripherals::interconnect::Interconnect;
+use crate::peripherals::memory_access::MemoryAccess;
+use crate::rustemu86::DebugMode;
 use std::fmt;
 use std::result;
 
@@ -149,11 +149,11 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use display::GtkVgaTextBuffer;
-    use options::EmulationMode;
-    use peripherals::interconnect::Interconnect;
-    use rustemu86::DebugDesabled;
-    use x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
+    use crate::display::GtkVgaTextBuffer;
+    use crate::options::EmulationMode;
+    use crate::peripherals::interconnect::Interconnect;
+    use crate::rustemu86::DebugDesabled;
+    use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
 
     fn execute_program(program: Vec<u8>) -> X86_64 {
         let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());

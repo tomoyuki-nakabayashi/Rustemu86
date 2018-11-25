@@ -1,4 +1,4 @@
-use x86_64::X86_64;
+use crate::x86_64::X86_64;
 
 pub trait DebugMode {
     fn do_cycle_end_action(&self, _cpu: &X86_64) {}

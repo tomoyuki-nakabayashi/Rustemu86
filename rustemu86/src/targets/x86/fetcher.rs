@@ -3,10 +3,10 @@
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use num::FromPrimitive;
-use targets::x86::gpr::Reg32;
-use targets::x86::isa::modrm::ModRm;
-use targets::x86::isa::opcode::{self, DataType, MetaInst, Opcode};
-use targets::x86::{CompatibleException, Result};
+use crate::targets::x86::gpr::Reg32;
+use crate::targets::x86::isa::modrm::ModRm;
+use crate::targets::x86::isa::opcode::{self, DataType, MetaInst, Opcode};
+use crate::targets::x86::{CompatibleException, Result};
 
 pub struct FetchedInst {
     opcode: Opcode,

@@ -1,10 +1,10 @@
 use num::FromPrimitive;
-use x86_64::exceptions::InternalException;
-use x86_64::fetcher::FetchedInst;
-use x86_64::isa::opcode::OperandSize;
-use x86_64::isa::registers::Reg64Id;
-use x86_64::register_file::RegisterFile;
-use x86_64::Result;
+use crate::x86_64::exceptions::InternalException;
+use crate::x86_64::fetcher::FetchedInst;
+use crate::x86_64::isa::opcode::OperandSize;
+use crate::x86_64::isa::registers::Reg64Id;
+use crate::x86_64::register_file::RegisterFile;
+use crate::x86_64::Result;
 
 // TODO: Remove clone trait.
 #[derive(Clone)]
@@ -65,7 +65,7 @@ pub enum ExOpcode {
 }
 
 pub fn decode(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
-    use x86_64::isa::opcode::Opcode::*;
+    use crate::x86_64::isa::opcode::Opcode::*;
     match inst.opcode {
         // Arithmetic and Logic instructions.
         Add => Ok(decode_add(&rf, &inst)),
@@ -129,7 +129,7 @@ fn decode_inc(rf: &RegisterFile, inst: &FetchedInst) -> Vec<ExecuteInstType> {
 /////////////////////////////////////////////////////////////////////////////
 fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use x86_64::isa::modrm::ModRmModeField::*;
+        use crate::x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.rm;
@@ -156,7 +156,7 @@ fn decode_mov_mr(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteIns
 
 fn decode_mov_rm(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use x86_64::isa::modrm::ModRmModeField::*;
+        use crate::x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.reg;
@@ -198,7 +198,7 @@ fn decode_mov_oi(inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
 
 fn decode_mov_mi(rf: &RegisterFile, inst: &FetchedInst) -> Result<Vec<ExecuteInstType>> {
     if let Some(modrm) = inst.mod_rm {
-        use x86_64::isa::modrm::ModRmModeField::*;
+        use crate::x86_64::isa::modrm::ModRmModeField::*;
         match modrm.mode {
             Direct => {
                 let dest = modrm.rm;

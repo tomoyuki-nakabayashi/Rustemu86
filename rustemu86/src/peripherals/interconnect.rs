@@ -1,10 +1,10 @@
-use display::GtkVgaTextBuffer;
-use options::EmulationMode;
-use peripherals::memory::Memory;
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
-use peripherals::uart16550;
-use peripherals::uart16550::Target;
-use peripherals::uart16550::Uart16550;
+use crate::display::GtkVgaTextBuffer;
+use crate::options::EmulationMode;
+use crate::peripherals::memory::Memory;
+use crate::peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::peripherals::uart16550;
+use crate::peripherals::uart16550::Target;
+use crate::peripherals::uart16550::Uart16550;
 
 const MAX_INSTRUCTION_LENGTH: usize = 15;
 const MEMORY_SIZE: usize = 0x10000;
@@ -71,8 +71,8 @@ impl MemoryAccess for Interconnect {
 #[cfg(test)]
 mod test {
     use super::*;
-    use display::GtkVgaTextBuffer;
-    use options::EmulationMode;
+    use crate::display::GtkVgaTextBuffer;
+    use crate::options::EmulationMode;
     use std::fs::File;
     use std::io::prelude::*;
 
