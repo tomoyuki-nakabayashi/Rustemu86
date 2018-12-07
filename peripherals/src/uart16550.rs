@@ -26,15 +26,17 @@ pub enum Target {
     File(String),
 }
 
-pub fn uart_factory(target: Target) -> Uart16550 {
-    match target {
+pub fn uart_factory(target: Target) -> Box<dyn MemoryAccess> {
+    let uart = match target {
         Target::Stdout => Uart16550 {
             tx_writer: Box::new(StdoutWriter::new()),
         },
         Target::File(path) => Uart16550 {
             tx_writer: Box::new(FileWriter::new(&path)),
         },
-    }
+    };
+
+    Box::new( uart )
 }
 
 struct StdoutWriter;

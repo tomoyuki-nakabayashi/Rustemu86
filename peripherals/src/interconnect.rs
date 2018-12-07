@@ -1,32 +1,25 @@
-//use gui::display::GtkVgaTextBuffer;
-//use rustemu86::options::EmulationMode;
+//! Memory mapped system bus.
+//! Currently memory map assumes AT&T compatible machine.
 use crate::memory::Memory;
 use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
-use crate::uart16550;
-use crate::uart16550::Target;
-use crate::uart16550::Uart16550;
 
+// From x86_64 specification.
 const MAX_INSTRUCTION_LENGTH: usize = 15;
+// This is temporary.
 const MEMORY_SIZE: usize = 0x10000;
 
 pub struct Interconnect {
     memory: Memory,
-    serial: Uart16550,
-//    vga_text_buffer: GtkVgaTextBuffer,
+    serial: Box<dyn MemoryAccess>,
+    display: Box<dyn MemoryAccess>,
 }
 
 impl Interconnect {
-    pub fn new(/* mode: EmulationMode, vga_text_buffer: GtkVgaTextBuffer */ path: String) -> Interconnect {
+    pub fn new(serial: Box<dyn MemoryAccess>, display: Box<dyn MemoryAccess>) -> Interconnect {
         Interconnect {
             memory: Memory::new(MEMORY_SIZE),
-            serial: uart16550::uart_factory(Target::File(path))
-/*
-            serial: match mode {
-                EmulationMode::Test(path) => uart16550::uart_factory(Target::File(path)),
-                _ => uart16550::uart_factory(uart16550::Target::Stdout),
-            },
-            vga_text_buffer: vga_text_buffer,
-*/
+            serial: serial,
+            display: display,
         }
     }
 
@@ -53,7 +46,7 @@ impl MemoryAccess for Interconnect {
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.write_u8(addr as usize, data),
-            //0xb8000...0xb8FA0 => self.vga_text_buffer.write_u8((addr & 0xfff) as usize, data),
+            0xb8000...0xb8FA0 => self.display.write_u8((addr & 0xfff) as usize, data),
             0x10000000 => self.serial.write_u8(0, data),
             _ => Err(MemoryAccessError {}),
         }
@@ -61,12 +54,10 @@ impl MemoryAccess for Interconnect {
 
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
-            0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data),
-/* 
+            0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data), 
             0xb8000...0xb8FA0 => self
-                .vga_text_buffer
+                .display
                 .write_u16((addr & 0xfff) as usize, data as u16),
- */
             0x10000000 => self.serial.write_u8(0, data as u8),
             _ => Err(MemoryAccessError {}),
         }
@@ -76,20 +67,37 @@ impl MemoryAccess for Interconnect {
 #[cfg(test)]
 mod test {
     use super::*;
-//    use gui::display::GtkVgaTextBuffer;
-//    use gui::options::EmulationMode;
+    use crate::uart16550::{self, Target};
     use std::fs::File;
     use std::io::prelude::*;
 
+    struct TestMemory(Vec<u8>);
+    impl MemoryAccess for TestMemory {
+        fn read_u8(&self, addr: usize) -> Result<u8> {
+            match addr {
+                0...7 => Ok(self.0[addr]),
+                _ => Err(MemoryAccessError {}),
+            }
+        }
+
+        fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
+            match addr {
+                0...7 => {
+                    self.0[addr] = data;
+                    Ok(())
+                }
+                _ => Err(MemoryAccessError {}),
+            }
+        }
+    }
+
     #[test]
     fn uart_write() {
-/*
-        let mut interconnect = Interconnect::new(
-            EmulationMode::Test("test".to_string()),
-            GtkVgaTextBuffer::new(),
-        );
-*/
-        let mut interconnect = Interconnect::new("uart_write".to_string());
+        let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+        let display: Box<dyn MemoryAccess> = Box::new( TestMemory(buffer) );
+        let serial = uart16550::uart_factory(Target::File(String::from("uart_write")));
+
+        let mut interconnect = Interconnect::new(serial, display);
         assert!(interconnect.write_u8(0x10000000, 'h' as u8).is_ok());
         assert!(interconnect.write_u8(0x10000000, 'e' as u8).is_ok());
         assert!(interconnect.write_u8(0x10000000, 'l' as u8).is_ok());
@@ -105,14 +113,12 @@ mod test {
 
     #[test]
     fn test_init_memory() {
+        let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
+        let display: Box<dyn MemoryAccess> = Box::new( TestMemory(buffer) );
+        let serial = uart16550::uart_factory(Target::File(String::from("test_init_memory")));
+        let mut interconnect = Interconnect::new(serial, display);
+
         let program = vec![0x48, 0xff, 0xc0];
-        let mut interconnect = Interconnect::new("test_init_memory".to_string());
-/*
-        let mut interconnect = Interconnect::new(
-            EmulationMode::Test("test".to_string()),
-            GtkVgaTextBuffer::new(),
-        );
-*/
         interconnect.init_memory(program, 0);
 
         assert_eq!(interconnect.read_u8(0x0).unwrap(), 0x48);
