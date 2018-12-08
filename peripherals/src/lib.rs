@@ -1,4 +1,4 @@
 pub mod interconnect;
-pub mod memory_access;
 mod memory;
+pub mod memory_access;
 mod uart16550;

@@ -39,6 +39,7 @@ impl MemoryAccess for Interconnect {
     fn read_u8(&self, addr: usize) -> Result<u8> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.read_u8(addr as usize),
+            0x10000000 => self.serial.read_u8(0),
             _ => Err(MemoryAccessError {}),
         }
     }
@@ -54,10 +55,8 @@ impl MemoryAccess for Interconnect {
 
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
-            0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data), 
-            0xb8000...0xb8FA0 => self
-                .display
-                .write_u16((addr & 0xfff) as usize, data as u16),
+            0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data),
+            0xb8000...0xb8FA0 => self.display.write_u16((addr & 0xfff) as usize, data as u16),
             0x10000000 => self.serial.write_u8(0, data as u8),
             _ => Err(MemoryAccessError {}),
         }
@@ -68,8 +67,6 @@ impl MemoryAccess for Interconnect {
 mod test {
     use super::*;
     use crate::uart16550::{self, Target};
-    use std::fs::File;
-    use std::io::prelude::*;
 
     struct TestMemory(Vec<u8>);
     impl MemoryAccess for TestMemory {
@@ -94,28 +91,28 @@ mod test {
     #[test]
     fn uart_write() {
         let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
-        let display: Box<dyn MemoryAccess> = Box::new( TestMemory(buffer) );
-        let serial = uart16550::uart_factory(Target::File(String::from("uart_write")));
+        let display: Box<dyn MemoryAccess> = Box::new(TestMemory(buffer));
+        let serial = uart16550::uart_factory(Target::Buffer);
 
         let mut interconnect = Interconnect::new(serial, display);
-        assert!(interconnect.write_u8(0x10000000, 'h' as u8).is_ok());
-        assert!(interconnect.write_u8(0x10000000, 'e' as u8).is_ok());
-        assert!(interconnect.write_u8(0x10000000, 'l' as u8).is_ok());
-        assert!(interconnect.write_u8(0x10000000, 'l' as u8).is_ok());
-        assert!(interconnect.write_u8(0x10000000, 'o' as u8).is_ok());
+        assert!(interconnect.write_u8(0x10000000, b'h').is_ok());
+        assert!(interconnect.write_u8(0x10000000, b'e').is_ok());
+        assert!(interconnect.write_u8(0x10000000, b'l').is_ok());
+        assert!(interconnect.write_u8(0x10000000, b'l').is_ok());
+        assert!(interconnect.write_u8(0x10000000, b'o').is_ok());
 
-        let created_file = File::open("uart_write");
-        assert!(created_file.is_ok());
-        let mut contents = String::new();
-        created_file.unwrap().read_to_string(&mut contents).unwrap();
-        assert_eq!(contents, "hello");
+        assert_eq!(interconnect.read_u8(0x10000000).unwrap(), b'h');
+        assert_eq!(interconnect.read_u8(0x10000000).unwrap(), b'e');
+        assert_eq!(interconnect.read_u8(0x10000000).unwrap(), b'l');
+        assert_eq!(interconnect.read_u8(0x10000000).unwrap(), b'l');
+        assert_eq!(interconnect.read_u8(0x10000000).unwrap(), b'o');
     }
 
     #[test]
     fn test_init_memory() {
         let buffer = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
-        let display: Box<dyn MemoryAccess> = Box::new( TestMemory(buffer) );
-        let serial = uart16550::uart_factory(Target::File(String::from("test_init_memory")));
+        let display: Box<dyn MemoryAccess> = Box::new(TestMemory(buffer));
+        let serial = uart16550::uart_factory(Target::Buffer);
         let mut interconnect = Interconnect::new(serial, display);
 
         let program = vec![0x48, 0xff, 0xc0];

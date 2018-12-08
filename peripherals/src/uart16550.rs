@@ -1,9 +1,10 @@
 use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
-use std::fmt;
-use std::fmt::Write;
-use std::fs;
+use std::cell::RefCell;
+use std::collections::VecDeque;
+use std::fmt::{self, Write};
 use std::io;
 
+/// UART 16550 but it's not compatible yet.
 pub struct Uart16550 {
     tx_writer: Box<Write>,
 }
@@ -21,22 +22,38 @@ impl MemoryAccess for Uart16550 {
     }
 }
 
+/// Loopback write data to read buffer. This is mainly for integration test.
+struct UartLoopback {
+    buffer: RefCell<VecDeque<u8>>,
+}
+
+impl MemoryAccess for UartLoopback {
+    // Read written data from FIFO buffer.
+    fn read_u8(&self, _addr: usize) -> Result<u8> {
+        Ok(self.buffer.borrow_mut().pop_front().unwrap())
+    }
+
+    // Write to FIFO buffer.
+    fn write_u8(&mut self, _addr: usize, data: u8) -> Result<()> {
+        self.buffer.get_mut().push_back(data);
+        Ok(())
+    }
+}
+
 pub enum Target {
     Stdout,
-    File(String),
+    Buffer,
 }
 
 pub fn uart_factory(target: Target) -> Box<dyn MemoryAccess> {
-    let uart = match target {
-        Target::Stdout => Uart16550 {
+    match target {
+        Target::Stdout => Box::new(Uart16550 {
             tx_writer: Box::new(StdoutWriter::new()),
-        },
-        Target::File(path) => Uart16550 {
-            tx_writer: Box::new(FileWriter::new(&path)),
-        },
-    };
-
-    Box::new( uart )
+        }),
+        Target::Buffer => Box::new(UartLoopback {
+            buffer: RefCell::new(VecDeque::new()),
+        }),
+    }
 }
 
 struct StdoutWriter;
@@ -54,31 +71,9 @@ impl Write for StdoutWriter {
     }
 }
 
-struct FileWriter {
-    file: fs::File,
-}
-
-impl FileWriter {
-    fn new(path: &str) -> FileWriter {
-        let file = fs::File::create(&path).expect("Fail to create file.");
-        FileWriter { file: file }
-    }
-}
-
-impl Write for FileWriter {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        use std::io::Write;
-        write!(self.file, "{}", s).unwrap();
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::memory_access::MemoryAccess;
-    use std::fs::File;
-    use std::io::prelude::*;
 
     #[test]
     fn stdout_write() {
@@ -87,15 +82,12 @@ mod test {
     }
 
     #[test]
-    fn file_write() {
-        let mut uart = uart_factory(Target::File("test_file_write.txt".to_string()));
-        assert!(uart.write_u8(0, b'a').is_ok());
+    fn buffer_write() {
+        let mut loopback_uart = uart_factory(Target::Buffer);
+        assert!(loopback_uart.write_u8(0, b'o').is_ok());
+        assert!(loopback_uart.write_u8(0, b'k').is_ok());
 
-        let created_file = File::open("test_file_write.txt");
-        assert!(created_file.is_ok());
-        let mut contents = String::new();
-        created_file.unwrap().read_to_string(&mut contents).unwrap();
-        assert_eq!(contents, "a");
-        fs::remove_file("test_file_write.txt").unwrap();
+        assert_eq!(loopback_uart.read_u8(0).unwrap(), b'o');
+        assert_eq!(loopback_uart.read_u8(0).unwrap(), b'k');
     }
 }
