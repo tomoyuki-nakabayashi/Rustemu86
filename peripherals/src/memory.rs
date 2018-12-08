@@ -9,11 +9,11 @@ impl Memory {
     pub fn new(size: usize) -> Memory {
         Memory {
             ram: vec![0; size],
-            size: size,
+            size,
         }
     }
 
-    pub fn fill_ram(&mut self, data: Vec<u8>, start: usize) {
+    pub fn fill_ram(&mut self, data: &[u8], start: usize) {
         for (pos, b) in data.iter().enumerate() {
             self.ram[start + pos] = *b;
         }

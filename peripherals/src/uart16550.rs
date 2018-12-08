@@ -40,6 +40,7 @@ impl MemoryAccess for UartLoopback {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Target {
     Stdout,
     Buffer,
@@ -65,8 +66,7 @@ impl StdoutWriter {
 
 impl Write for StdoutWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        use std::io::Write;
-        write!(io::stdout(), "{}", s).unwrap();
+        print!("{}", s);
         Ok(())
     }
 }

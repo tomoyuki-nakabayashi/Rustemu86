@@ -18,13 +18,13 @@ impl Interconnect {
     pub fn new(serial: Box<dyn MemoryAccess>, display: Box<dyn MemoryAccess>) -> Interconnect {
         Interconnect {
             memory: Memory::new(MEMORY_SIZE),
-            serial: serial,
-            display: display,
+            serial,
+            display,
         }
     }
 
-    pub fn init_memory(&mut self, program: Vec<u8>, start: usize) {
-        self.memory.fill_ram(program, start);
+    pub fn init_memory(&mut self, program: &[u8], start: usize) {
+        self.memory.fill_ram(&program, start);
     }
 
     pub fn fetch_inst_candidate(&self, rip: u64) -> Vec<u8> {
@@ -39,7 +39,7 @@ impl MemoryAccess for Interconnect {
     fn read_u8(&self, addr: usize) -> Result<u8> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.read_u8(addr as usize),
-            0x10000000 => self.serial.read_u8(0),
+            0x1000_0000 => self.serial.read_u8(0),
             _ => Err(MemoryAccessError {}),
         }
     }
@@ -47,8 +47,8 @@ impl MemoryAccess for Interconnect {
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.write_u8(addr as usize, data),
-            0xb8000...0xb8FA0 => self.display.write_u8((addr & 0xfff) as usize, data),
-            0x10000000 => self.serial.write_u8(0, data),
+            0x000B_8000...0x000B_8FA0 => self.display.write_u8((addr & 0xfff) as usize, data),
+            0x1000_0000 => self.serial.write_u8(0, data),
             _ => Err(MemoryAccessError {}),
         }
     }
@@ -56,8 +56,8 @@ impl MemoryAccess for Interconnect {
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data),
-            0xb8000...0xb8FA0 => self.display.write_u16((addr & 0xfff) as usize, data as u16),
-            0x10000000 => self.serial.write_u8(0, data as u8),
+            0x000B_8000...0x000B_8FA0 => self.display.write_u16((addr & 0xfff) as usize, data as u16),
+            0x1000_0000 => self.serial.write_u8(0, data as u8),
             _ => Err(MemoryAccessError {}),
         }
     }
@@ -116,7 +116,7 @@ mod test {
         let mut interconnect = Interconnect::new(serial, display);
 
         let program = vec![0x48, 0xff, 0xc0];
-        interconnect.init_memory(program, 0);
+        interconnect.init_memory(&program, 0);
 
         assert_eq!(interconnect.read_u8(0x0).unwrap(), 0x48);
         assert_eq!(interconnect.read_u8(0x1).unwrap(), 0xff);
