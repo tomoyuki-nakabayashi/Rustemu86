@@ -88,7 +88,7 @@ impl GtkVgaTextBuffer {
         GtkVgaTextBuffer {
             gtk_grid: None,
             buffer: [[ScreenChar {
-                ascii_character: ' ' as u8,
+                ascii_character: b' ',
                 background: Color::Black,
                 foreground: Color::Black,
             }; COL]; ROW],
@@ -108,7 +108,7 @@ impl GtkVgaTextBuffer {
 
     fn draw(&self, row: usize, col: usize) {
         use std::fmt::Write;
-        let ref screen_char = self.buffer[row][col];
+        let screen_char = &self.buffer[row][col];
 
         let mut markup = String::new();
         write!(markup,
