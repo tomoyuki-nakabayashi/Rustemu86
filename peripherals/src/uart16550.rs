@@ -2,7 +2,7 @@ use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::fmt::{self, Write};
-use std::io;
+use std::fs;
 
 /// UART 16550 but it's not compatible yet.
 pub struct Uart16550 {
@@ -40,20 +40,49 @@ impl MemoryAccess for UartLoopback {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+/// UART which writes the tx data to a file.
+struct UartFile {
+    file: fs::File,
+}
+
+impl UartFile {
+    fn new(path: &str) -> UartFile {
+        let file = fs::File::create(&path).expect("Fail to create file.");
+        UartFile { file }
+    }
+}
+
+impl MemoryAccess for UartFile {
+    /// Not implemented yet.
+    fn read_u8(&self, _addr: usize) -> Result<u8> {
+        Err(MemoryAccessError {})
+    }
+
+    /// TODO: Allow write only to tx buffer.
+    fn write_u8(&mut self, _addr: usize, data: u8) -> Result<()> {
+        use std::io::Write;
+        write!(self.file, "{}", data as char).map_err(|_| MemoryAccessError{} )?;
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum Target {
     Stdout,
     Buffer,
+    File(String)
 }
 
 pub fn uart_factory(target: Target) -> Box<dyn MemoryAccess> {
+    use self::Target::*;
     match target {
-        Target::Stdout => Box::new(Uart16550 {
+        Stdout => Box::new(Uart16550 {
             tx_writer: Box::new(StdoutWriter::new()),
         }),
-        Target::Buffer => Box::new(UartLoopback {
+        Buffer => Box::new(UartLoopback {
             buffer: RefCell::new(VecDeque::new()),
         }),
+        File(path) => Box::new( UartFile::new(&path) ),
     }
 }
 
