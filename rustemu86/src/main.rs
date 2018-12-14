@@ -1,7 +1,5 @@
-extern crate rustemu86;
-
-use crate::display::GtkVgaTextBuffer;
-use rustemu86::display;
+use gui::display::{self, GtkVgaTextBuffer};
+use rustemu86;
 
 fn start_rustemu86(screen: GtkVgaTextBuffer) {
     let options = rustemu86::options::parse_args();

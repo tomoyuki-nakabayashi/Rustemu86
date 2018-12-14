@@ -13,8 +13,8 @@ use self::exceptions::InternalException;
 use self::fetcher::{FetchUnit, FetchedInst};
 use self::register_file::RegisterFile;
 use crate::cpu::model::{CpuModel, Pipeline};
-use crate::peripherals::interconnect::Interconnect;
-use crate::peripherals::memory_access::MemoryAccess;
+use peripherals::interconnect::Interconnect;
+use peripherals::memory_access::MemoryAccess;
 use crate::rustemu86::DebugMode;
 use std::fmt;
 use std::result;
@@ -149,15 +149,28 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::display::GtkVgaTextBuffer;
-    use crate::options::EmulationMode;
-    use crate::peripherals::interconnect::Interconnect;
+    use peripherals::interconnect::Interconnect;
+    use peripherals::memory_access::MemoryAccessError;
+    use peripherals::uart16550::{self, Target};
     use crate::rustemu86::DebugDesabled;
     use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
 
+    struct FakeDisplay();
+    impl MemoryAccess for FakeDisplay {
+        fn read_u8(&self, addr: usize) -> result::Result<u8, MemoryAccessError> {
+            unimplemented!()
+        }
+
+        fn write_u8(&mut self, addr: usize, data: u8) -> result::Result<(), MemoryAccessError> {
+            unimplemented!()
+        }
+    }
+
     fn execute_program(program: Vec<u8>) -> X86_64 {
-        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        mmio.init_memory(program, 0);
+        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
+        let serial = uart16550::uart_factory(Target::Buffer);
+        let mut mmio = Interconnect::new(serial, display);
+        mmio.init_memory(&program, 0);
         let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         let result = x86_64.run();
 
@@ -166,8 +179,10 @@ mod test {
     }
 
     fn execute_program_after_init(program: Vec<u8>, initializer: &Fn(&mut X86_64)) -> X86_64 {
-        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        mmio.init_memory(program, 0);
+        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
+        let serial = uart16550::uart_factory(Target::Buffer);
+        let mut mmio = Interconnect::new(serial, display);
+        mmio.init_memory(&program, 0);
         let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
         initializer(&mut x86_64);
         let result = x86_64.run();

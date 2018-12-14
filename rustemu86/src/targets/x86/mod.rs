@@ -12,7 +12,7 @@ use self::gpr::{RegisterFile, SegmentRegister};
 use self::isa::eflags::EFlags;
 use self::status_regs::CpuState;
 use crate::cpu::model::{CpuModel, Pipeline};
-use crate::peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
+use peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use crate::rustemu86::DebugMode;
 use std::result;
 
@@ -137,14 +137,28 @@ mod test {
     use self::gpr::SegReg::*;
     use super::*;
     use crate::cpu::model::cpu_factory;
-    use crate::display::GtkVgaTextBuffer;
-    use crate::options::EmulationMode;
+    use peripherals::interconnect::Interconnect;
+    use peripherals::memory_access::MemoryAccessError;
+    use peripherals::uart16550::{self, Target};
     use crate::rustemu86::DebugDesabled;
 
+    struct FakeDisplay();
+    impl MemoryAccess for FakeDisplay {
+        fn read_u8(&self, addr: usize) -> result::Result<u8, MemoryAccessError> {
+            unimplemented!()
+        }
+
+        fn write_u8(&mut self, addr: usize, data: u8) -> result::Result<(), MemoryAccessError> {
+            unimplemented!()
+        }
+    }
+
     fn execute_program(program: Vec<u8>, start_addr: usize) -> X86 {
-        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        interconnect.init_memory(program, start_addr);
-        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled {}));
+        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
+        let serial = uart16550::uart_factory(Target::Buffer);
+        let mut mmio = Interconnect::new(serial, display);
+        mmio.init_memory(&program, start_addr);
+        let mut x86: X86 = cpu_factory(mmio, Box::new(DebugDesabled {}));
         let result = x86.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
@@ -152,8 +166,10 @@ mod test {
     }
 
     fn execute_program_after(program: Vec<u8>, initializer: fn(&mut X86)) -> X86 {
-        let mut mmio = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        mmio.init_memory(program, 0);
+        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
+        let serial = uart16550::uart_factory(Target::Buffer);
+        let mut mmio = Interconnect::new(serial, display);
+        mmio.init_memory(&program, 0);
         let mut x86 = X86::new(mmio, Box::new(DebugDesabled {}));
         initializer(&mut x86);
         let result = x86.run();
@@ -165,10 +181,12 @@ mod test {
     #[test]
     fn skip_bios() {
         let program = vec![0xf4];
-        let mut interconnect = Interconnect::new(EmulationMode::Normal, GtkVgaTextBuffer::new());
-        interconnect.init_memory(program, 0x7c00);
+        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
+        let serial = uart16550::uart_factory(Target::Buffer);
+        let mut mmio = Interconnect::new(serial, display);
+        mmio.init_memory(&program, 0x7c00);
 
-        let mut x86: X86 = cpu_factory(interconnect, Box::new(DebugDesabled {}));
+        let mut x86: X86 = cpu_factory(mmio, Box::new(DebugDesabled {}));
         x86.boot_bios();
 
         assert_eq!(x86.rf.read_u64(Eax), 0xaa55u64);

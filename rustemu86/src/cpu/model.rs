@@ -1,4 +1,4 @@
-use crate::peripherals::interconnect::Interconnect;
+use peripherals::interconnect::Interconnect;
 use crate::rustemu86::DebugMode;
 
 /// The factory to create a CPU object.
