@@ -13,9 +13,9 @@ use self::exceptions::InternalException;
 use self::fetcher::{FetchUnit, FetchedInst};
 use self::register_file::RegisterFile;
 use crate::cpu::model::{CpuModel, Pipeline};
+use crate::rustemu86::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
-use crate::rustemu86::DebugMode;
 use std::fmt;
 use std::result;
 
@@ -37,9 +37,9 @@ impl CpuModel for X86_64 {
             rf: RegisterFile::new(),
             fetch_unit: FetchUnit::new(),
             executed_insts: 0,
-            mmio: mmio,
+            mmio,
             state: CpuState::Running,
-            debug: debug,
+            debug,
         }
     }
 
@@ -149,11 +149,11 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::rustemu86::DebugDesabled;
+    use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;
     use peripherals::uart16550::{self, Target};
-    use crate::rustemu86::DebugDesabled;
-    use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
 
     struct FakeDisplay();
     impl MemoryAccess for FakeDisplay {

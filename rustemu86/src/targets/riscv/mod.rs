@@ -1,6 +1,6 @@
 use crate::cpu::model::CpuModel;
-use peripherals::interconnect::Interconnect;
 use crate::rustemu86::DebugMode;
+use peripherals::interconnect::Interconnect;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
@@ -18,8 +18,8 @@ impl CpuModel for Riscv {
 
     fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> Riscv {
         Riscv {
-            mmio: mmio,
-            debug: debug,
+            mmio,
+            debug,
         }
     }
 
@@ -35,18 +35,18 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::rustemu86::DebugDesabled;
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
     use peripherals::uart16550::{self, Target};
-    use crate::rustemu86::DebugDesabled;
 
     struct FakeDisplay();
     impl MemoryAccess for FakeDisplay {
-        fn read_u8(&self, addr: usize) -> result::Result<u8, MemoryAccessError> {
+        fn read_u8(&self, _addr: usize) -> result::Result<u8, MemoryAccessError> {
             unimplemented!()
         }
 
-        fn write_u8(&mut self, addr: usize, data: u8) -> result::Result<(), MemoryAccessError> {
+        fn write_u8(&mut self, _addr: usize, _data: u8) -> result::Result<(), MemoryAccessError> {
             unimplemented!()
         }
     }

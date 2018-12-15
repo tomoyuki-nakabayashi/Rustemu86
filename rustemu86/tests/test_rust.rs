@@ -1,8 +1,8 @@
 extern crate rustemu86;
-use rustemu86::options::EmulationMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use peripherals::uart16550::{self, Target};
+use rustemu86::options::EmulationMode;
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -28,7 +28,7 @@ fn test_hello_from_rust() {
         program,
         EmulationMode::Test("test_hello_from_rust".to_string()),
         serial,
-        display
+        display,
     );
     assert!(result.is_ok());
 

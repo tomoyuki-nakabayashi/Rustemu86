@@ -1,5 +1,5 @@
-use peripherals::interconnect::Interconnect;
 use crate::rustemu86::DebugMode;
+use peripherals::interconnect::Interconnect;
 
 /// The factory to create a CPU object.
 pub fn cpu_factory<T>(mmio: Interconnect, debug: Box<dyn DebugMode>) -> T

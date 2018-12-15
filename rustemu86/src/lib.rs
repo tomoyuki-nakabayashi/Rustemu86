@@ -1,7 +1,3 @@
-extern crate bit_field;
-extern crate byteorder;
-extern crate getopts;
-extern crate num;
 #[macro_use]
 extern crate failure;
 #[macro_use]
@@ -21,7 +17,6 @@ use crate::options::EmulationMode;
 use crate::rustemu86::{DebugDesabled, DebugMode, Interactive, PerCycleDump};
 use crate::targets::x86_64::{self, X86_64};
 
-use gui::display::GtkVgaTextBuffer;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
 
@@ -73,7 +68,7 @@ mod test {
         let mut reader = loader::load("./tests/asms/simple_add").unwrap();
         let program = loader::map_to_memory(&mut reader).unwrap();
         let serial = uart_factory(Target::Buffer);
-        let display = Box::new( GtkVgaTextBuffer::new() );
+        let display = Box::new(GtkVgaTextBuffer::new());
 
         let result = start_emulation(program, EmulationMode::Normal, serial, display);
         assert!(result.is_ok());
@@ -84,14 +79,9 @@ mod test {
         let mut reader = loader::load("./tests/asms/simple_add").unwrap();
         let program = loader::map_to_memory(&mut reader).unwrap();
         let serial = uart_factory(Target::Buffer);
-        let display = Box::new( GtkVgaTextBuffer::new() );
+        let display = Box::new(GtkVgaTextBuffer::new());
 
-        let result = start_emulation(
-            program,
-            EmulationMode::PerCycleDump,
-            serial,
-            display
-        );
+        let result = start_emulation(program, EmulationMode::PerCycleDump, serial, display);
         assert!(result.is_ok());
     }
 }

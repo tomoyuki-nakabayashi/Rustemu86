@@ -1,10 +1,10 @@
-use bit_field::BitField;
-use byteorder::{LittleEndian, ReadBytesExt};
 use crate::x86_64::isa::modrm::{ModRm, ModRmModeField, Sib};
 use crate::x86_64::isa::opcode::{self, Opcode, OperandSize};
 use crate::x86_64::isa::opcode::{REX, REX_WRXB};
 use crate::x86_64::isa::registers::Reg64Id;
 use crate::x86_64::{InternalException, Result};
+use bit_field::BitField;
+use byteorder::{LittleEndian, ReadBytesExt};
 use num::FromPrimitive;
 
 #[derive(Debug)]
@@ -85,7 +85,7 @@ impl<'a> FetchedInstBuilder<'a> {
             op_size: None,
             rip_base: rip,
             rip_offset: 0,
-            program: program,
+            program,
         }
     }
 

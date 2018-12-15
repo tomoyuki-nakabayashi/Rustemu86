@@ -48,28 +48,28 @@ pub(super) fn execute(inst: &ExecuteInst) -> Result<WriteBackType> {
             let (target, value) = inst.execute();
             Ok(WriteBackType::Gpr(GprWriteBack {
                 index: target,
-                value: value,
+                value,
             }))
         }
         Store(inst) => {
             let (target, value) = inst.execute();
             Ok(WriteBackType::Store(StoreWriteBack {
                 index: target,
-                value: value,
+                value,
             }))
         }
         Segment(inst) => {
             let (target, value) = inst.execute();
             Ok(WriteBackType::Segment(SegmentWriteBack {
                 index: target,
-                value: value,
+                value,
             }))
         }
         StatusOp(inst) => {
             let (target, value) = inst.execute();
             Ok(WriteBackType::EFlags(EFlagsWriteBack {
-                target: target,
-                value: value,
+                target,
+                value,
             }))
         }
         Privileged(inst) => Ok(WriteBackType::Status(StatusWriteBack {

@@ -1,11 +1,11 @@
 //! Fetch unit for x86 real mode.
 
-use bit_field::BitField;
-use byteorder::{LittleEndian, ReadBytesExt};
 use crate::targets::x86::gpr::Reg32;
 use crate::targets::x86::isa::modrm::ModRm;
 use crate::targets::x86::isa::opcode::{self, DataType, MetaInst, Opcode};
 use crate::targets::x86::Result;
+use bit_field::BitField;
+use byteorder::{LittleEndian, ReadBytesExt};
 use num::FromPrimitive;
 
 pub struct FetchedInst {
@@ -27,8 +27,7 @@ impl FetchedInst {
     }
 
     pub(crate) fn get_modrm(&self) -> ModRm {
-        let modrm = self.modrm.expect("Mod RM filed was not fetched.");
-        modrm
+        self.modrm.expect("Mod RM filed was not fetched.")
     }
 
     pub(crate) fn get_rd(&self) -> Reg32 {
@@ -36,8 +35,7 @@ impl FetchedInst {
     }
 
     pub(crate) fn get_imm(&self) -> u64 {
-        let imm = self.imm.expect("Immediate filed was not fetched.");
-        imm
+        self.imm.expect("Immediate filed was not fetched.")
     }
 
     pub(crate) fn get_disp(&self) -> u64 {
@@ -80,7 +78,7 @@ impl<'a> FetchedInstBuilder<'a> {
             rd: 0,
             imm: None,
             disp: None,
-            program: program,
+            program,
             current_offset: 0,
             meta_inst: MetaInst::default(),
         }

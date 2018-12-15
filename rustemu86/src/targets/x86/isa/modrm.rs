@@ -1,5 +1,5 @@
-use bit_field::BitField;
 use crate::targets::x86::gpr::{Reg32, SegReg};
+use bit_field::BitField;
 use num::FromPrimitive;
 
 /// Mod R/M.
@@ -28,12 +28,12 @@ impl ModRm {
     pub fn get_reg_rm(&self) -> (Reg32, Reg32) {
         let reg = Reg32::from_u8(self.reg).expect("Never fail.");
         let rm = Reg32::from_u8(self.rm).expect("Never fail.");
-        return (reg, rm);
+        (reg, rm)
     }
 
     pub fn get_sreg_rm(&self) -> (SegReg, Reg32) {
         let sreg = SegReg::from_u8(self.reg).expect("Cannot convert to Segment register index.");
         let rm = Reg32::from_u8(self.rm).expect("Never fail.");
-        return (sreg, rm);
+        (sreg, rm)
     }
 }

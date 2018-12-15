@@ -1,16 +1,14 @@
-extern crate rustemu86;
-use rustemu86::options::EmulationMode;
-use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use peripherals::uart16550::{self, Target};
+use rustemu86::options::EmulationMode;
 
 struct FakeDisplay();
 impl MemoryAccess for FakeDisplay {
-    fn read_u8(&self, addr: usize) -> Result<u8, MemoryAccessError> {
+    fn read_u8(&self, _addr: usize) -> Result<u8, MemoryAccessError> {
         unimplemented!()
     }
 
-    fn write_u8(&mut self, addr: usize, data: u8) -> Result<(), MemoryAccessError> {
+    fn write_u8(&mut self, _addr: usize, _data: u8) -> Result<(), MemoryAccessError> {
         unimplemented!()
     }
 }
@@ -22,8 +20,7 @@ fn test_simple_add() {
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::Buffer);
 
-    let result =
-        rustemu86::start_emulation(program, EmulationMode::Normal, serial, display);
+    let result = rustemu86::start_emulation(program, EmulationMode::Normal, serial, display);
     assert!(result.is_ok());
 }
 
@@ -34,7 +31,6 @@ fn test_jump() {
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::Buffer);
 
-    let result =
-        rustemu86::start_emulation(program, EmulationMode::Normal, serial, display);
+    let result = rustemu86::start_emulation(program, EmulationMode::Normal, serial, display);
     assert!(result.is_ok());
 }

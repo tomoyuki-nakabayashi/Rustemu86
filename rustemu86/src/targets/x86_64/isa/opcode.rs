@@ -44,8 +44,8 @@ impl Opcode {
             | Opcode::MovToRm
             | Opcode::MovToReg
             | Opcode::MovRmImm
-            | Opcode::MovRmImm8 => return Some(ModRm::new(candidate)),
-            _ => return None,
+            | Opcode::MovRmImm8 => Some(ModRm::new(candidate)),
+            _ => None,
         }
     }
 }

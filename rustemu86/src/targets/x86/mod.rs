@@ -12,8 +12,8 @@ use self::gpr::{RegisterFile, SegmentRegister};
 use self::isa::eflags::EFlags;
 use self::status_regs::CpuState;
 use crate::cpu::model::{CpuModel, Pipeline};
-use peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use crate::rustemu86::DebugMode;
+use peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use std::result;
 
 pub type Result<T> = result::Result<T, CompatibleException>;
@@ -52,7 +52,7 @@ impl CpuModel for X86 {
     fn new(mmio: Interconnect, _debug: Box<dyn DebugMode>) -> X86 {
         X86 {
             ip: 0,
-            mmio: mmio,
+            mmio,
             rf: RegisterFile::new(),
             segment: SegmentRegister::new(),
             eflags: EFlags::empty(),
@@ -137,18 +137,18 @@ mod test {
     use self::gpr::SegReg::*;
     use super::*;
     use crate::cpu::model::cpu_factory;
+    use crate::rustemu86::DebugDesabled;
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;
     use peripherals::uart16550::{self, Target};
-    use crate::rustemu86::DebugDesabled;
 
     struct FakeDisplay();
     impl MemoryAccess for FakeDisplay {
-        fn read_u8(&self, addr: usize) -> result::Result<u8, MemoryAccessError> {
+        fn read_u8(&self, _addr: usize) -> result::Result<u8, MemoryAccessError> {
             unimplemented!()
         }
 
-        fn write_u8(&mut self, addr: usize, data: u8) -> result::Result<(), MemoryAccessError> {
+        fn write_u8(&mut self, _addr: usize, _data: u8) -> result::Result<(), MemoryAccessError> {
             unimplemented!()
         }
     }

@@ -114,10 +114,10 @@ fn decode_al_modrm(
 ) -> Result<ExecuteInst> {
     let (target, left, right) = decode_modrm(inst.get_modrm(), &gpr, inst);
     let inst = ArithLogicInst {
-        target: target,
-        left: left,
-        right: right,
-        expr: expr,
+        target,
+        left,
+        right,
+        expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
 }
@@ -141,7 +141,7 @@ fn decode_seg_modrm(
         target: sreg,
         left: 0, // Never use
         right: gpr.read_u64(rm),
-        expr: expr,
+        expr,
     };
     Ok(ExecuteInst::Segment(inst))
 }
@@ -155,15 +155,15 @@ fn decode_al_rd(
         target: inst.get_rd(),
         left: gpr.read_u64(inst.get_rd()),
         right: inst.get_imm(),
-        expr: expr,
+        expr,
     };
     Ok(ExecuteInst::ArithLogic(inst))
 }
 
 fn decode_eflags_operation(target: EFlags, value: bool) -> Result<ExecuteInst> {
     let inst = StatusOpInst {
-        target: target,
-        value: value,
+        target,
+        value,
     };
     Ok(ExecuteInst::StatusOp(inst))
 }
