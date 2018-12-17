@@ -6,7 +6,6 @@ extern crate enum_primitive;
 extern crate bitflags;
 
 mod cpu;
-pub mod loader;
 pub mod options;
 pub mod rustemu86;
 mod targets;
@@ -62,6 +61,7 @@ mod test {
     use super::*;
     use gui::display::GtkVgaTextBuffer;
     use peripherals::uart16550::{uart_factory, Target};
+    use loader;
 
     #[test]
     fn success_emulation() {

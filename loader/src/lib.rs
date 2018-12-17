@@ -1,3 +1,5 @@
+//! This crate will be an elf loader.
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
@@ -48,3 +50,4 @@ mod test {
         assert!(non_exist_file_open.is_err());
     }
 }
+

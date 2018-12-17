@@ -1,7 +1,7 @@
 extern crate rustemu86;
-use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use peripherals::uart16550::{self, Target};
+use loader;
 use rustemu86::options::EmulationMode;
 use std::fs::File;
 use std::io::prelude::*;
@@ -19,8 +19,8 @@ impl MemoryAccess for FakeDisplay {
 
 #[test]
 fn test_hello_from_rust() {
-    let mut reader = rustemu86::loader::load("./tests/bins/hello-x86_64.bin").unwrap();
-    let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+    let mut reader = loader::load("./tests/bins/hello-x86_64.bin").unwrap();
+    let program = loader::map_to_memory(&mut reader).unwrap();
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::File("test_hello_from_rust".to_string()));
 

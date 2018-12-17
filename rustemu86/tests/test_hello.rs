@@ -1,5 +1,6 @@
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use peripherals::uart16550::{self, Target};
+use loader;
 use rustemu86::options::EmulationMode;
 use std::fs::File;
 use std::io::prelude::*;
@@ -17,8 +18,8 @@ impl MemoryAccess for FakeDisplay {
 
 #[test]
 fn test_hello() {
-    let mut reader = rustemu86::loader::load("./tests/asms/hello").unwrap();
-    let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+    let mut reader = loader::load("./tests/asms/hello").unwrap();
+    let program = loader::map_to_memory(&mut reader).unwrap();
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::File("test_hello".to_string()));
 
@@ -40,8 +41,8 @@ fn test_hello() {
 
 #[test]
 fn test_push_pop() {
-    let mut reader = rustemu86::loader::load("./tests/asms/push_pop").unwrap();
-    let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+    let mut reader = loader::load("./tests/asms/push_pop").unwrap();
+    let program = loader::map_to_memory(&mut reader).unwrap();
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::File("test_push_pop".to_string()));
 

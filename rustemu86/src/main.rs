@@ -1,8 +1,8 @@
 use gui::display::{start_with_gtk, GtkVgaTextBuffer};
 use peripherals::memory_access::MemoryAccess;
 use peripherals::uart16550::{uart_factory, Target};
+use loader::{load, map_to_memory};
 use rustemu86::{
-    loader::{load, map_to_memory},
     options::parse_args,
     start_emulation,
 };

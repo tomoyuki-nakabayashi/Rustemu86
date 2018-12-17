@@ -1,5 +1,6 @@
 use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
 use peripherals::uart16550::{self, Target};
+use loader;
 use rustemu86::options::EmulationMode;
 
 struct FakeDisplay();
@@ -15,8 +16,8 @@ impl MemoryAccess for FakeDisplay {
 
 #[test]
 fn test_simple_add() {
-    let mut reader = rustemu86::loader::load("./tests/asms/simple_add").unwrap();
-    let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+    let mut reader = loader::load("./tests/asms/simple_add").unwrap();
+    let program = loader::map_to_memory(&mut reader).unwrap();
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::Buffer);
 
@@ -26,8 +27,8 @@ fn test_simple_add() {
 
 #[test]
 fn test_jump() {
-    let mut reader = rustemu86::loader::load("./tests/asms/jump").unwrap();
-    let program = rustemu86::loader::map_to_memory(&mut reader).unwrap();
+    let mut reader = loader::load("./tests/asms/jump").unwrap();
+    let program = loader::map_to_memory(&mut reader).unwrap();
     let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
     let serial = uart16550::uart_factory(Target::Buffer);
 
