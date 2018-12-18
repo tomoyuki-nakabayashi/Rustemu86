@@ -5,7 +5,7 @@ extern crate enum_primitive;
 #[macro_use]
 extern crate bitflags;
 
-mod cpu;
+pub mod cpu;
 pub mod options;
 pub mod rustemu86;
 mod targets;
