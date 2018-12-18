@@ -1,11 +1,11 @@
-use crate::targets::x86::executor::Execute;
-use crate::targets::x86::fetcher::FetchedInst;
-use crate::targets::x86::gpr::{Reg32, RegisterFile, SegReg};
-use crate::targets::x86::isa::eflags::EFlags;
-use crate::targets::x86::isa::modrm::ModRm;
-use crate::targets::x86::isa::opcode::Opcode;
-use crate::targets::x86::status_regs::CpuState;
-use crate::targets::x86::Result;
+use crate::executor::Execute;
+use crate::fetcher::FetchedInst;
+use crate::gpr::{Reg32, RegisterFile, SegReg};
+use crate::isa::eflags::EFlags;
+use crate::isa::modrm::ModRm;
+use crate::isa::opcode::Opcode;
+use crate::status_regs::CpuState;
+use crate::Result;
 
 pub enum ExecuteInst {
     ArithLogic(ArithLogicInst),

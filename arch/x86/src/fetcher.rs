@@ -1,9 +1,9 @@
 //! Fetch unit for x86 real mode.
 
-use crate::targets::x86::gpr::Reg32;
-use crate::targets::x86::isa::modrm::ModRm;
-use crate::targets::x86::isa::opcode::{self, DataType, MetaInst, Opcode};
-use crate::targets::x86::Result;
+use crate::gpr::Reg32;
+use crate::isa::modrm::ModRm;
+use crate::isa::opcode::{self, DataType, MetaInst, Opcode};
+use crate::Result;
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use num::FromPrimitive;

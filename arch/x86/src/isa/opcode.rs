@@ -1,4 +1,4 @@
-use crate::targets::x86::CompatibleException;
+use crate::CompatibleException;
 use num::FromPrimitive;
 
 pub const OPERAND_SIZE_OVERRIDE_PREFIX: u8 = 0x66;

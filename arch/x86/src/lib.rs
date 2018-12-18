@@ -1,3 +1,8 @@
+#[macro_use]
+extern crate enum_primitive;
+#[macro_use]
+extern crate bitflags;
+
 mod decoder;
 mod executor;
 mod fetcher;
@@ -5,14 +10,14 @@ mod gpr;
 mod isa;
 mod status_regs;
 
-use self::decoder::ExecuteInst;
-use self::executor::WriteBackType;
-use self::fetcher::FetchedInst;
-use self::gpr::{RegisterFile, SegmentRegister};
-use self::isa::eflags::EFlags;
-use self::status_regs::CpuState;
-use crate::cpu::model::{CpuModel, Pipeline};
-use crate::rustemu86::DebugMode;
+use crate::decoder::ExecuteInst;
+use crate::executor::WriteBackType;
+use crate::fetcher::FetchedInst;
+use crate::gpr::{RegisterFile, SegmentRegister};
+use crate::isa::eflags::EFlags;
+use crate::status_regs::CpuState;
+use rustemu86::cpu::model::{CpuModel, Pipeline};
+use rustemu86::rustemu86::DebugMode;
 use peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use std::result;
 
@@ -136,8 +141,8 @@ mod test {
     use self::gpr::Reg32::*;
     use self::gpr::SegReg::*;
     use super::*;
-    use crate::cpu::model::cpu_factory;
-    use crate::rustemu86::DebugDesabled;
+    use rustemu86::cpu::model::cpu_factory;
+    use rustemu86::rustemu86::DebugDesabled;
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;
     use peripherals::uart16550::{self, Target};

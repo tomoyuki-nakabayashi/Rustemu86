@@ -1,4 +1,4 @@
-use crate::targets::x86::gpr::{Reg32, SegReg};
+use crate::gpr::{Reg32, SegReg};
 use bit_field::BitField;
 use num::FromPrimitive;
 

@@ -1,8 +1,8 @@
-use crate::targets::x86::decoder::ExecuteInst;
-use crate::targets::x86::gpr::{Reg32, SegReg};
-use crate::targets::x86::isa::eflags::EFlags;
-use crate::targets::x86::status_regs::CpuState;
-use crate::targets::x86::Result;
+use crate::decoder::ExecuteInst;
+use crate::gpr::{Reg32, SegReg};
+use crate::isa::eflags::EFlags;
+use crate::status_regs::CpuState;
+use crate::Result;
 
 pub trait Execute {
     type ResultValue;
