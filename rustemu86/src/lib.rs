@@ -6,13 +6,12 @@ extern crate enum_primitive;
 extern crate bitflags;
 
 pub mod options;
-mod targets;
 
 use cpu::model::cpu_factory;
 use cpu::model::CpuModel;
 use crate::options::EmulationMode;
 use debug::DebugMode;
-use crate::targets::x86_64::{self, X86_64};
+use x86_64::{self, X86_64};
 
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;

@@ -1,4 +1,4 @@
-use crate::x86_64::isa::registers::Reg64Id;
+use crate::isa::registers::Reg64Id;
 use std::fmt;
 
 #[derive(Debug)]

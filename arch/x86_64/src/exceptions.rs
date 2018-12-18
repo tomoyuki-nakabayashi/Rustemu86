@@ -1,4 +1,4 @@
-use crate::x86_64::isa::opcode::Opcode;
+use crate::isa::opcode::Opcode;
 
 #[derive(Debug, Fail)]
 pub enum InternalException {

@@ -1,4 +1,4 @@
-use crate::x86_64::isa::modrm::ModRm;
+use crate::isa::modrm::ModRm;
 
 pub const REX: u8 = 0x40;
 pub const REX_WRXB: u8 = 0x4F;

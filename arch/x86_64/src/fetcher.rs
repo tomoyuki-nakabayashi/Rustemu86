@@ -1,8 +1,8 @@
-use crate::x86_64::isa::modrm::{ModRm, ModRmModeField, Sib};
-use crate::x86_64::isa::opcode::{self, Opcode, OperandSize};
-use crate::x86_64::isa::opcode::{REX, REX_WRXB};
-use crate::x86_64::isa::registers::Reg64Id;
-use crate::x86_64::{InternalException, Result};
+use crate::isa::modrm::{ModRm, ModRmModeField, Sib};
+use crate::isa::opcode::{self, Opcode, OperandSize};
+use crate::isa::opcode::{REX, REX_WRXB};
+use crate::isa::registers::Reg64Id;
+use crate::{InternalException, Result};
 use bit_field::BitField;
 use byteorder::{LittleEndian, ReadBytesExt};
 use num::FromPrimitive;

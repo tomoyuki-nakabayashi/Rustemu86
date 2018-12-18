@@ -16,4 +16,5 @@ gui = { path = "../gui" }
 peripherals = { path = "../peripherals" }
 loader = { path = "../loader" }
 cpu = { path = "../cpu" }
+x86_64 = { path = "../arch/x86_64" }
 debug = { path = "../debug" }
