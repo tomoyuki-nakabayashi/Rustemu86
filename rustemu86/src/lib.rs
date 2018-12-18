@@ -5,15 +5,13 @@ extern crate enum_primitive;
 #[macro_use]
 extern crate bitflags;
 
-pub mod cpu;
 pub mod options;
-pub mod rustemu86;
 mod targets;
 
-use crate::cpu::model::cpu_factory;
-use crate::cpu::model::CpuModel;
+use cpu::model::cpu_factory;
+use cpu::model::CpuModel;
 use crate::options::EmulationMode;
-use crate::rustemu86::DebugMode;
+use debug::DebugMode;
 use crate::targets::x86_64::{self, X86_64};
 
 use peripherals::interconnect::Interconnect;

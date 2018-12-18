@@ -15,3 +15,5 @@ num = "0.2.0"
 gui = { path = "../gui" }
 peripherals = { path = "../peripherals" }
 loader = { path = "../loader" }
+cpu = { path = "../cpu" }
+debug = { path = "../debug" }

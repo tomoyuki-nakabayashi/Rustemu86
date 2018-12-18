@@ -1,8 +1,8 @@
-use crate::rustemu86::DebugMode;
+use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 
 /// The factory to create a CPU object.
-pub fn cpu_factory<T>(mmio: Interconnect, debug: Box<dyn DebugMode>) -> T
+pub fn cpu_factory<T>(mmio: Interconnect, debug: DebugMode) -> T
 where
     T: CpuModel + Pipeline,
 {
@@ -14,7 +14,7 @@ pub trait CpuModel {
     type Error;
 
     /// Create instance which holds an interface to the interconnect.
-    fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> Self;
+    fn new(mmio: Interconnect, debug: DebugMode) -> Self;
 
     /// Initialize x86_64 state and register including program counter.
     fn init(&mut self);

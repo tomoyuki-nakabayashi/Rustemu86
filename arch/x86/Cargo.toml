@@ -5,7 +5,8 @@ authors = ["tomoyuki-nakabayashi <tomo.wait.for.it.yuki@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rustemu86 = { path = "../../rustemu86" }
+cpu = { path = "../../cpu" }
+debug = { path = "../../debug" }
 peripherals = { path = "../../peripherals" }
 byteorder = "1.2.3"
 bit_field = "0.9.0"

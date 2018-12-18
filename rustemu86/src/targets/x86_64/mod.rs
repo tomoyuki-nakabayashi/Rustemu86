@@ -12,8 +12,8 @@ use self::ex_stage::{WriteBack, WriteBackData};
 use self::exceptions::InternalException;
 use self::fetcher::{FetchUnit, FetchedInst};
 use self::register_file::RegisterFile;
-use crate::cpu::model::{CpuModel, Pipeline};
-use crate::rustemu86::DebugMode;
+use cpu::model::{CpuModel, Pipeline};
+use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::memory_access::MemoryAccess;
 use std::fmt;
@@ -149,7 +149,7 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::rustemu86::DebugMode;
+    use debug::DebugMode;
     use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;

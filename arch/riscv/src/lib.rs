@@ -1,5 +1,5 @@
-use rustemu86::cpu::model::CpuModel;
-use rustemu86::rustemu86::DebugMode;
+use cpu::model::CpuModel;
+use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 
 use std::result;
@@ -10,13 +10,13 @@ pub struct InternalError(String);
 #[allow(dead_code)]
 pub struct Riscv {
     mmio: Interconnect,
-    debug: Box<dyn DebugMode>,
+    debug: DebugMode,
 }
 
 impl CpuModel for Riscv {
     type Error = InternalError;
 
-    fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> Riscv {
+    fn new(mmio: Interconnect, debug: DebugMode) -> Riscv {
         Riscv {
             mmio,
             debug,
@@ -35,7 +35,6 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
-    use rustemu86::rustemu86::DebugDesabled;
     use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
     use peripherals::uart16550::{self, Target};
 
@@ -57,7 +56,7 @@ mod test {
         let serial = uart16550::uart_factory(Target::Buffer);
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, 0);
-        let mut riscv = Riscv::new(mmio, Box::new(DebugDesabled {}));
+        let mut riscv = Riscv::new(mmio, DebugMode::Disabled);
 
         let result = riscv.run();
         assert!(result.is_ok());

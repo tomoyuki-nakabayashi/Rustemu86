@@ -16,8 +16,8 @@ use crate::fetcher::FetchedInst;
 use crate::gpr::{RegisterFile, SegmentRegister};
 use crate::isa::eflags::EFlags;
 use crate::status_regs::CpuState;
-use rustemu86::cpu::model::{CpuModel, Pipeline};
-use rustemu86::rustemu86::DebugMode;
+use cpu::model::{CpuModel, Pipeline};
+use debug::DebugMode;
 use peripherals::{interconnect::Interconnect, memory_access::MemoryAccess};
 use std::result;
 
@@ -54,7 +54,7 @@ impl X86 {
 impl CpuModel for X86 {
     type Error = CompatibleException;
 
-    fn new(mmio: Interconnect, _debug: Box<dyn DebugMode>) -> X86 {
+    fn new(mmio: Interconnect, _debug: DebugMode) -> X86 {
         X86 {
             ip: 0,
             mmio,
@@ -141,8 +141,7 @@ mod test {
     use self::gpr::Reg32::*;
     use self::gpr::SegReg::*;
     use super::*;
-    use rustemu86::cpu::model::cpu_factory;
-    use rustemu86::rustemu86::DebugDesabled;
+    use cpu::model::cpu_factory;
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;
     use peripherals::uart16550::{self, Target};
@@ -163,7 +162,7 @@ mod test {
         let serial = uart16550::uart_factory(Target::Buffer);
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, start_addr);
-        let mut x86: X86 = cpu_factory(mmio, Box::new(DebugDesabled {}));
+        let mut x86: X86 = cpu_factory(mmio, DebugMode::Disabled);
         let result = x86.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
@@ -175,7 +174,7 @@ mod test {
         let serial = uart16550::uart_factory(Target::Buffer);
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, 0);
-        let mut x86 = X86::new(mmio, Box::new(DebugDesabled {}));
+        let mut x86 = X86::new(mmio, DebugMode::Disabled);
         initializer(&mut x86);
         let result = x86.run();
 
@@ -191,7 +190,7 @@ mod test {
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, 0x7c00);
 
-        let mut x86: X86 = cpu_factory(mmio, Box::new(DebugDesabled {}));
+        let mut x86: X86 = cpu_factory(mmio, DebugMode::Disabled);
         x86.boot_bios();
 
         assert_eq!(x86.rf.read_u64(Eax), 0xaa55u64);
