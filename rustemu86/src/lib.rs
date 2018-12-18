@@ -13,7 +13,7 @@ mod targets;
 use crate::cpu::model::cpu_factory;
 use crate::cpu::model::CpuModel;
 use crate::options::EmulationMode;
-use crate::rustemu86::{DebugDesabled, DebugMode, Interactive, PerCycleDump};
+use crate::rustemu86::DebugMode;
 use crate::targets::x86_64::{self, X86_64};
 
 use peripherals::interconnect::Interconnect;
@@ -38,10 +38,10 @@ pub fn start_emulation(
     let mut interconnect = Interconnect::new(serial, display);
     // Need to initialize according to elf.
     interconnect.init_memory(&program, 0);
-    let debug: Box<dyn DebugMode> = match mode_option {
-        EmulationMode::Normal | EmulationMode::Test(_) => Box::new(DebugDesabled {}),
-        EmulationMode::PerCycleDump => Box::new(PerCycleDump {}),
-        EmulationMode::InteractiveMode => Box::new(Interactive {}),
+    let debug: DebugMode = match mode_option {
+        EmulationMode::Normal | EmulationMode::Test(_) => DebugMode::Disabled,
+        EmulationMode::PerCycleDump => DebugMode::PerCycleDump,
+        EmulationMode::InteractiveMode => DebugMode::Interactive,
     };
 
     let mut cpu = cpu_factory::<X86_64>(interconnect, debug);

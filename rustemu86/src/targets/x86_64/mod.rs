@@ -26,13 +26,13 @@ pub struct X86_64 {
     executed_insts: u64,
     mmio: Interconnect,
     state: CpuState,
-    debug: Box<dyn DebugMode>,
+    debug: DebugMode,
 }
 
 impl CpuModel for X86_64 {
     type Error = InternalException;
 
-    fn new(mmio: Interconnect, debug: Box<dyn DebugMode>) -> X86_64 {
+    fn new(mmio: Interconnect, debug: DebugMode) -> X86_64 {
         X86_64 {
             rf: RegisterFile::new(),
             fetch_unit: FetchUnit::new(),
@@ -149,7 +149,7 @@ pub enum CpuState {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::rustemu86::DebugDesabled;
+    use crate::rustemu86::DebugMode;
     use crate::x86_64::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use peripherals::interconnect::Interconnect;
     use peripherals::memory_access::MemoryAccessError;
@@ -171,7 +171,7 @@ mod test {
         let serial = uart16550::uart_factory(Target::Buffer);
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, 0);
-        let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
+        let mut x86_64 = X86_64::new(mmio, DebugMode::Disabled);
         let result = x86_64.run();
 
         assert!(result.is_ok(), "{:?}", result.err());
@@ -183,7 +183,7 @@ mod test {
         let serial = uart16550::uart_factory(Target::Buffer);
         let mut mmio = Interconnect::new(serial, display);
         mmio.init_memory(&program, 0);
-        let mut x86_64 = X86_64::new(mmio, Box::new(DebugDesabled {}));
+        let mut x86_64 = X86_64::new(mmio, DebugMode::Disabled);
         initializer(&mut x86_64);
         let result = x86_64.run();
 
