@@ -8,3 +8,4 @@ edition = "2018"
 cpu = { path = "../../cpu" }
 debug = { path = "../../debug" }
 peripherals = { path = "../../peripherals" }
+bitfield = "0.13.1"
