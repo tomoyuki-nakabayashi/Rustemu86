@@ -1,6 +1,7 @@
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
+use peripherals::mmio::Mmio;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
@@ -10,19 +11,25 @@ pub struct InternalError(String);
 #[allow(dead_code)]
 pub struct Riscv {
     pc: u32,
-    mmio: Interconnect,
+    mmio: Mmio,
     debug: DebugMode,
+}
+
+impl Riscv {
+    pub fn fabricate(mmio: Mmio, debug: DebugMode) -> Riscv {
+        Riscv {
+            pc: 0,
+            mmio,
+            debug,
+        }
+    }
 }
 
 impl CpuModel for Riscv {
     type Error = InternalError;
 
-    fn new(mmio: Interconnect, debug: DebugMode) -> Riscv {
-        Riscv {
-            pc: 0u32,
-            mmio,
-            debug,
-        }
+    fn new(_mmio: Interconnect, _debug: DebugMode) -> Riscv {
+        unimplemented!()
     }
 
     fn init(&mut self) {
@@ -37,29 +44,15 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
-    use peripherals::error::MemoryAccessError;
-    use peripherals::memory_access::MemoryAccess;
-    use peripherals::uart16550::{self, Target};
-
-    struct FakeDisplay();
-    impl MemoryAccess for FakeDisplay {
-        fn read_u8(&self, _addr: usize) -> result::Result<u8, MemoryAccessError> {
-            unimplemented!()
-        }
-
-        fn write_u8(&mut self, _addr: usize, _data: u8) -> result::Result<(), MemoryAccessError> {
-            unimplemented!()
-        }
-    }
+    use peripherals::memory::Memory;
 
     #[test]
     fn stop_at_wfi() {
         let program = vec![0x73, 0x00, 0x50, 0x10];
-        let display: Box<dyn MemoryAccess> = Box::new(FakeDisplay());
-        let serial = uart16550::uart_factory(Target::Buffer);
-        let mut mmio = Interconnect::new(serial, display);
-        mmio.init_memory(&program, 0);
-        let mut riscv = Riscv::new(mmio, DebugMode::Disabled);
+        let dram = Memory::new_with_filled_ram(&program, program.len());
+        let mut mmio = Mmio::empty();
+        mmio.add((0, 4), Box::new(dram)).unwrap();
+        let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
 
         let result = riscv.run();
         assert!(result.is_ok());

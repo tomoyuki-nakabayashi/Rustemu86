@@ -14,6 +14,16 @@ impl Memory {
         }
     }
 
+    /// Create new Memory object in which is filled by `data`.
+    /// The Memory is filled from 0x0000_0000.
+    /// If you want to specify starat address, use new() and fill_ram() pair instead.
+    pub fn new_with_filled_ram(data: &[u8], size: usize) -> Memory {
+        Memory {
+            ram: data.to_vec(),
+            size,
+        }
+    }
+
     pub fn fill_ram(&mut self, data: &[u8], start: usize) {
         for (pos, b) in data.iter().enumerate() {
             self.ram[start + pos] = *b;
