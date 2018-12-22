@@ -50,7 +50,12 @@ impl MemoryAccess for Mmio {
     }
 
     fn write_u8(&mut self, addr: usize, data: u8) -> memory_access::Result<()> {
-        Ok(())
+        for (range, device) in &mut self.memory_map {
+            if range.0 <= addr && addr <= range.1 {
+                return device.write_u8(addr, data)
+            }
+        }
+        Err(MemoryAccessError{})
     }
 }
 
@@ -67,6 +72,18 @@ mod test {
         let result = mmio.add((0, 64), dram);
         assert!(true, result.is_ok());
 
-        assert_eq!(0, mmio.read_u8(0).unwrap());
+        assert!(mmio.write_u8(0, 1).is_ok());
+        assert_eq!(1, mmio.read_u8(0).unwrap());
+    }
+
+    #[test]
+    fn out_of_range() {
+        let dram = Box::new(Memory::new(64));
+
+        let mut mmio = Mmio::empty();
+        mmio.add((0, 64), dram).unwrap();
+
+        assert!(mmio.read_u8(65).is_err());
+        assert!(mmio.write_u8(65, 1).is_err());
     }
 }
