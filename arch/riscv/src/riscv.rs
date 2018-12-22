@@ -1,8 +1,8 @@
+use crate::fetch::fetch;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::mmio::Mmio;
-use crate::fetch::fetch;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
@@ -18,11 +18,7 @@ pub struct Riscv {
 
 impl Riscv {
     pub fn fabricate(mmio: Mmio, debug: DebugMode) -> Riscv {
-        Riscv {
-            pc: 0,
-            mmio,
-            debug,
-        }
+        Riscv { pc: 0, mmio, debug }
     }
 }
 
@@ -66,8 +62,8 @@ mod test {
 
     #[test]
     fn parse_wfi() {
-        use byteorder::{LittleEndian, ReadBytesExt};
         use bit_field::BitField;
+        use byteorder::{LittleEndian, ReadBytesExt};
 
         let program = vec![0x73, 0x00, 0x50, 0x10];
         let mut instr = &program[0..4];
