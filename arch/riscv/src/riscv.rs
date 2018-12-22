@@ -1,13 +1,14 @@
 use crate::fetch::fetch;
+use crate::decode::decode;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::mmio::Mmio;
 
 use std::result;
-pub type Result<T> = result::Result<T, InternalError>;
+pub type Result<T> = result::Result<T, InternalExceptions>;
 
-pub struct InternalError(String);
+pub struct InternalExceptions(String);
 
 #[allow(dead_code)]
 pub struct Riscv {
@@ -23,7 +24,7 @@ impl Riscv {
 }
 
 impl CpuModel for Riscv {
-    type Error = InternalError;
+    type Error = InternalExceptions;
 
     fn new(_mmio: Interconnect, _debug: DebugMode) -> Riscv {
         unimplemented!()
@@ -35,10 +36,10 @@ impl CpuModel for Riscv {
 
     fn run(&mut self) -> Result<()> {
         let instr = fetch(&self.mmio, self.pc as usize).unwrap();
-        if instr == 0x1050_0073 {
-            Ok(())
-        } else {
-            Err(InternalError("Error".to_string()))
+        let instr = decode(instr);
+        match instr {
+            Ok(_) => Ok(()),
+            Err(err) => Err(InternalExceptions(format!("{}", err))),
         }
     }
 }

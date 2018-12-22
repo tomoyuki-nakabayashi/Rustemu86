@@ -2,19 +2,21 @@
 //! Returns an instruction to the next stage.
 //!
 //! An instruction is either u32 or u16. `u16` is for compressed instruction extension.
+//! 
+//! According to RISC-V mailing list, Instruction fetch misaligned exceptions are not
+//! possible on machines the support compressed instruction set extension.
 
 use peripherals::error::MemoryAccessError;
 use peripherals::memory_access::MemoryAccess;
-use bit_field::BitField;
 
-/// Errors occur in fetch stage.
+/// Exceptions occur in fetch stage.
 #[derive(Debug, Fail, PartialEq)]
 pub enum FetchError {
     #[fail(display = "{}", error)]
     InvalidMemoryAccess { error: MemoryAccessError },
 
-    #[fail(display = "undefined opcode: 0b{:7b}", opcode)]
-    UndefinedInstruction { opcode: u32 },
+    #[fail(display = "instruction fetch misaligned at {}", pc)]
+    MisalingedFetch { pc: u32 },
 }
 
 impl From<MemoryAccessError> for FetchError {
@@ -25,13 +27,19 @@ impl From<MemoryAccessError> for FetchError {
 
 /// Fetches an instruction from the `instr_mem` of the `pc`.
 pub fn fetch(instr_mem: &dyn MemoryAccess, pc: usize) -> Result<u32, FetchError> {
+    alignment_check(pc)?;
+
     let instr = instr_mem.read_u32(pc)?;
-    let opcode = instr.get_bits(0..8);
-    if opcode != 0x73 {
-        Err(FetchError::UndefinedInstruction { opcode: opcode })
-    } else {
-        Ok(instr)
+    Ok(instr)
+}
+
+#[inline(always)]
+fn alignment_check(pc: usize) -> Result<(), FetchError> {
+    // TODO: If compressed extension is supported, this check should be disabled.
+    if pc % 4 != 0 {
+        return Err(FetchError::MisalingedFetch { pc: pc as u32 })
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -53,7 +61,8 @@ mod test {
         let program = vec![0x73, 0x00, 0x50, 0x10];
         let dram = Memory::new_with_filled_ram(&program, program.len());
 
-        let instr = fetch(&dram, 5);
+        // Well alignmented but out of range.
+        let instr = fetch(&dram, 8);
         match instr {
             Err(FetchError::InvalidMemoryAccess { .. }) => (),
             _ => panic!(),
@@ -61,11 +70,11 @@ mod test {
     }
 
     #[test]
-    fn fetch_undefined_opcode() {
-        let program = vec![0x07, 0x00, 0x00, 0x00]; // FLW won't implement for the present.
+    fn fetch_istr_misaligned() {
+        let program = vec![0x00, 0x00, 0x00, 0x00]; // Don't care
         let dram = Memory::new_with_filled_ram(&program, program.len());
 
-        let instr = fetch(&dram, 0);
-        assert_eq!(Err(FetchError::UndefinedInstruction { opcode: 0b0000111 }), instr);
+        let instr = fetch(&dram, 1);
+        assert_eq!(Err(FetchError::MisalingedFetch { pc: 1 }), instr);
     }
 }
