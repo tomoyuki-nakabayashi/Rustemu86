@@ -1,4 +1,5 @@
-use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::error::MemoryAccessError;
+use crate::memory_access::{MemoryAccess, Result};
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::fmt::{self, Write};
@@ -12,7 +13,7 @@ pub struct Uart16550 {
 impl MemoryAccess for Uart16550 {
     /// Not implemented yet.
     fn read_u8(&self, _addr: usize) -> Result<u8> {
-        Err(MemoryAccessError {})
+        Err(MemoryAccessError::NoPermission)
     }
 
     /// TODO: Allow write only to tx buffer.
@@ -55,13 +56,13 @@ impl UartFile {
 impl MemoryAccess for UartFile {
     /// Not implemented yet.
     fn read_u8(&self, _addr: usize) -> Result<u8> {
-        Err(MemoryAccessError {})
+        Err(MemoryAccessError::NoPermission)
     }
 
     /// TODO: Allow write only to tx buffer.
     fn write_u8(&mut self, _addr: usize, data: u8) -> Result<()> {
         use std::io::Write;
-        write!(self.file, "{}", data as char).map_err(|_| MemoryAccessError{} )?;
+        write!(self.file, "{}", data as char).map_err(|_| MemoryAccessError::NoPermission)?;
         Ok(())
     }
 }
@@ -70,7 +71,7 @@ impl MemoryAccess for UartFile {
 pub enum Target {
     Stdout,
     Buffer,
-    File(String)
+    File(String),
 }
 
 pub fn uart_factory(target: Target) -> Box<dyn MemoryAccess> {
@@ -82,7 +83,7 @@ pub fn uart_factory(target: Target) -> Box<dyn MemoryAccess> {
         Buffer => Box::new(UartLoopback {
             buffer: RefCell::new(VecDeque::new()),
         }),
-        File(path) => Box::new( UartFile::new(&path) ),
+        File(path) => Box::new(UartFile::new(&path)),
     }
 }
 

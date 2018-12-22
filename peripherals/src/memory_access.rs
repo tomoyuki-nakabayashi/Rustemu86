@@ -1,11 +1,12 @@
+use crate::error::MemoryAccessError;
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::mem;
 use std::result;
 
 pub type Result<T> = result::Result<T, MemoryAccessError>;
 
-#[derive(Debug)]
-pub struct MemoryAccessError;
+//#[derive(Debug)]
+//pub struct MemoryAccessError;
 
 /// Provides memory access interface for different byte size.
 ///
@@ -19,14 +20,15 @@ pub struct MemoryAccessError;
 /// # Example
 ///
 /// ```rust
-/// use peripherals::memory_access::{MemoryAccess, MemoryAccessError, Result};
+/// use peripherals::error::MemoryAccessError;
+/// use peripherals::memory_access::{MemoryAccess, Result};
 ///
 /// struct TestMemory(Vec<u8>);
 /// impl MemoryAccess for TestMemory {
 ///     fn read_u8(&self, addr: usize) -> Result<u8> {
 ///         match addr {
 ///             0...7 => Ok(self.0[addr]),
-///             _ => Err(MemoryAccessError {}),
+///             _ => Err(MemoryAccessError::DeviceNotMapped{ addr }),
 ///         }
 ///     }
 ///
@@ -36,7 +38,7 @@ pub struct MemoryAccessError;
 ///                 self.0[addr] = data;
 ///                 Ok(())
 ///             }
-///             _ => Err(MemoryAccessError {}),
+///             _ => Err(MemoryAccessError::DeviceNotMapped{ addr }),
 ///         }
 ///     }
 /// }
@@ -54,7 +56,7 @@ pub trait MemoryAccess {
         let mut bytes: &[u8] = &[self.read_u8(addr)?, self.read_u8(addr + 1)?];
         bytes
             .read_u16::<LittleEndian>()
-            .or(Err(MemoryAccessError {}))
+            .or(Err(MemoryAccessError::UnexpectedEom))
     }
 
     fn read_u32(&self, addr: usize) -> Result<u32> {
@@ -64,7 +66,7 @@ pub trait MemoryAccess {
         {
             Ok(bytes) => (&bytes[..])
                 .read_u32::<LittleEndian>()
-                .or(Err(MemoryAccessError {})),
+                .or(Err(MemoryAccessError::UnexpectedEom)),
             Err(err) => Err(err),
         }
     }
@@ -76,7 +78,7 @@ pub trait MemoryAccess {
         {
             Ok(bytes) => (&bytes[..])
                 .read_u64::<LittleEndian>()
-                .or(Err(MemoryAccessError {})),
+                .or(Err(MemoryAccessError::UnexpectedEom)),
             Err(err) => Err(err),
         }
     }
@@ -115,7 +117,7 @@ mod test {
         fn read_u8(&self, addr: usize) -> Result<u8> {
             match addr {
                 0...7 => Ok(self.0[addr]),
-                _ => Err(MemoryAccessError {}),
+                _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
             }
         }
 
@@ -125,7 +127,7 @@ mod test {
                     self.0[addr] = data;
                     Ok(())
                 }
-                _ => Err(MemoryAccessError {}),
+                _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
             }
         }
     }

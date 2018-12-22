@@ -1,6 +1,7 @@
 //! Memory mapped IOs.
 //! Users create their own memory mapping.
-use crate::memory_access::{self, MemoryAccess, MemoryAccessError};
+use crate::error::MemoryAccessError;
+use crate::memory_access::{self, MemoryAccess};
 use std::collections::HashMap;
 
 /// start adderess, size of the memory map can be accessed.
@@ -16,11 +17,13 @@ pub struct Mmio {
 impl Mmio {
     /// Create empty memory mapped IO.
     pub fn empty() -> Mmio {
-        Mmio { memory_map: MemoryMap::new() }
+        Mmio {
+            memory_map: MemoryMap::new(),
+        }
     }
 
     /// Add a memory mapped device.
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use peripherals::{mmio::Mmio, memory::Memory};
@@ -29,7 +32,7 @@ impl Mmio {
     /// let result = mmio.add((0, 64), dram);
     /// assert!(true, result.is_ok());
     /// ```
-    /// 
+    ///
     /// TODO:
     /// - Fail if MemoryRange overlapping existing memory mapped device.
     /// - Validate the `range`. MemoryAccess must know the range can be accessed.
@@ -43,24 +46,25 @@ impl MemoryAccess for Mmio {
     fn read_u8(&self, addr: usize) -> memory_access::Result<u8> {
         for (range, device) in &self.memory_map {
             if range.0 <= addr && addr <= range.1 {
-                return device.read_u8(addr)
+                return device.read_u8(addr);
             }
         }
-        Err(MemoryAccessError{})
+        Err(MemoryAccessError::DeviceNotMapped { addr })
     }
 
     fn write_u8(&mut self, addr: usize, data: u8) -> memory_access::Result<()> {
         for (range, device) in &mut self.memory_map {
             if range.0 <= addr && addr <= range.1 {
-                return device.write_u8(addr, data)
+                return device.write_u8(addr, data);
             }
         }
-        Err(MemoryAccessError{})
+        Err(MemoryAccessError::DeviceNotMapped { addr })
     }
 }
 
 #[cfg(test)]
 mod test {
+    use self::MemoryAccessError::*;
     use super::*;
     use crate::memory::Memory;
 
@@ -83,7 +87,7 @@ mod test {
         let mut mmio = Mmio::empty();
         mmio.add((0, 64), dram).unwrap();
 
-        assert!(mmio.read_u8(65).is_err());
-        assert!(mmio.write_u8(65, 1).is_err());
+        assert_eq!(Err(DeviceNotMapped { addr: 65 }), mmio.read_u8(65));
+        assert_eq!(Err(DeviceNotMapped { addr: 65 }), mmio.write_u8(65, 1));
     }
 }

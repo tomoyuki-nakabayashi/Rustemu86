@@ -155,7 +155,7 @@ mod test {
     use debug::DebugMode;
     use crate::isa::registers::Reg64Id::{Rax, Rbx, Rcx, Rsp};
     use peripherals::interconnect::Interconnect;
-    use peripherals::memory_access::MemoryAccessError;
+    use peripherals::error::MemoryAccessError;
     use peripherals::uart16550::{self, Target};
 
     struct FakeDisplay();

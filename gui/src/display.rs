@@ -1,5 +1,6 @@
 use bit_field::BitField;
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
+use peripherals::error::MemoryAccessError;
+use peripherals::memory_access::MemoryAccess;
 use gio::ApplicationExt;
 use gtk::{Cast, Grid};
 use gtk::{ContainerExt, GridExt, LabelExt, WidgetExt, WindowExt};
@@ -133,7 +134,7 @@ impl GtkVgaTextBuffer {
 impl MemoryAccess for GtkVgaTextBuffer {
     /// Cannot read a while.
     fn read_u8(&self, _addr: usize) -> Result<u8, MemoryAccessError> {
-        Err(MemoryAccessError {})
+        Err(MemoryAccessError::NoPermission)
     }
 
     fn write_u8(&mut self, addr: usize, byte: u8) -> Result<(), MemoryAccessError> {

@@ -1,4 +1,5 @@
-use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::error::MemoryAccessError;
+use crate::memory_access::{MemoryAccess, Result};
 
 pub struct Memory {
     ram: Vec<u8>,
@@ -27,7 +28,7 @@ impl MemoryAccess for Memory {
 
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         if addr >= self.size {
-            return Err(MemoryAccessError {});
+            return Err(MemoryAccessError::NoPermission);
         }
 
         self.ram[addr] = data;

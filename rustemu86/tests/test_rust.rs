@@ -1,5 +1,6 @@
 extern crate rustemu86;
-use peripherals::memory_access::{MemoryAccess, MemoryAccessError};
+use peripherals::error::MemoryAccessError;
+use peripherals::memory_access::MemoryAccess;
 use peripherals::uart16550::{self, Target};
 use loader;
 use rustemu86::options::EmulationMode;

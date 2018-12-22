@@ -143,7 +143,7 @@ mod test {
     use super::*;
     use cpu::model::cpu_factory;
     use peripherals::interconnect::Interconnect;
-    use peripherals::memory_access::MemoryAccessError;
+    use peripherals::error::MemoryAccessError;
     use peripherals::uart16550::{self, Target};
 
     struct FakeDisplay();

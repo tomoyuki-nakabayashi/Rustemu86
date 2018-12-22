@@ -1,7 +1,8 @@
 //! Memory mapped system bus.
 //! Currently memory map assumes AT&T compatible machine.
+use crate::error::MemoryAccessError;
 use crate::memory::Memory;
-use crate::memory_access::{MemoryAccess, MemoryAccessError, Result};
+use crate::memory_access::{MemoryAccess, Result};
 
 // From x86_64 specification.
 const MAX_INSTRUCTION_LENGTH: usize = 15;
@@ -40,7 +41,7 @@ impl MemoryAccess for Interconnect {
         match addr {
             0x0...MEMORY_SIZE => self.memory.read_u8(addr as usize),
             0x1000_0000 => self.serial.read_u8(0),
-            _ => Err(MemoryAccessError {}),
+            _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
         }
     }
 
@@ -49,16 +50,18 @@ impl MemoryAccess for Interconnect {
             0x0...MEMORY_SIZE => self.memory.write_u8(addr as usize, data),
             0x000B_8000...0x000B_8FA0 => self.display.write_u8((addr & 0xfff) as usize, data),
             0x1000_0000 => self.serial.write_u8(0, data),
-            _ => Err(MemoryAccessError {}),
+            _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
         }
     }
 
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
         match addr {
             0x0...MEMORY_SIZE => self.memory.write_u64(addr as usize, data),
-            0x000B_8000...0x000B_8FA0 => self.display.write_u16((addr & 0xfff) as usize, data as u16),
+            0x000B_8000...0x000B_8FA0 => {
+                self.display.write_u16((addr & 0xfff) as usize, data as u16)
+            }
             0x1000_0000 => self.serial.write_u8(0, data as u8),
-            _ => Err(MemoryAccessError {}),
+            _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
         }
     }
 }
@@ -73,7 +76,7 @@ mod test {
         fn read_u8(&self, addr: usize) -> Result<u8> {
             match addr {
                 0...7 => Ok(self.0[addr]),
-                _ => Err(MemoryAccessError {}),
+                _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
             }
         }
 
@@ -83,7 +86,7 @@ mod test {
                     self.0[addr] = data;
                     Ok(())
                 }
-                _ => Err(MemoryAccessError {}),
+                _ => Err(MemoryAccessError::DeviceNotMapped { addr }),
             }
         }
     }
