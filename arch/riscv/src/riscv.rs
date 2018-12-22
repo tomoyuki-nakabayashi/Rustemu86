@@ -2,6 +2,7 @@ use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::mmio::Mmio;
+use crate::fetch::fetch;
 
 use std::result;
 pub type Result<T> = result::Result<T, InternalError>;
@@ -37,7 +38,12 @@ impl CpuModel for Riscv {
     }
 
     fn run(&mut self) -> Result<()> {
-        Ok(())
+        let instr = fetch(&self.mmio, self.pc as usize).unwrap();
+        if instr == 0x1050_0073 {
+            Ok(())
+        } else {
+            Err(InternalError("Error".to_string()))
+        }
     }
 }
 

@@ -33,12 +33,16 @@ impl Memory {
 
 impl MemoryAccess for Memory {
     fn read_u8(&self, addr: usize) -> Result<u8> {
+        if addr >= self.size {
+            return Err(MemoryAccessError::UnexpectedEom)
+        }
+
         Ok(self.ram[addr])
     }
 
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()> {
         if addr >= self.size {
-            return Err(MemoryAccessError::NoPermission);
+            return Err(MemoryAccessError::NoPermission)
         }
 
         self.ram[addr] = data;
