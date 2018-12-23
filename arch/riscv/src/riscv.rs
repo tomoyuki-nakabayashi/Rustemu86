@@ -1,25 +1,28 @@
 use crate::fetch::fetch;
 use crate::decode::decode;
+use crate::execute::execute;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::mmio::Mmio;
 
 use std::result;
+use crate::isa::exceptions::InternalExceptions;
 pub type Result<T> = result::Result<T, InternalExceptions>;
-
-pub struct InternalExceptions(String);
 
 #[allow(dead_code)]
 pub struct Riscv {
     pc: u32,
     mmio: Mmio,
     debug: DebugMode,
+    halted: bool,
 }
 
 impl Riscv {
+    /// Temporary `new`.
+    /// TODO: This must be a new. It requires to modify CpuModel interface.
     pub fn fabricate(mmio: Mmio, debug: DebugMode) -> Riscv {
-        Riscv { pc: 0, mmio, debug }
+        Riscv { pc: 0, mmio, debug, halted: true }
     }
 }
 
@@ -30,17 +33,26 @@ impl CpuModel for Riscv {
         unimplemented!()
     }
 
+    /// Initialize CPU state for run.
     fn init(&mut self) {
-        unimplemented!()
+        self.halted = false;
     }
 
+    /// Executes instructions until WFI.
     fn run(&mut self) -> Result<()> {
-        let instr = fetch(&self.mmio, self.pc as usize).unwrap();
-        let instr = decode(instr);
-        match instr {
-            Ok(_) => Ok(()),
-            Err(err) => Err(InternalExceptions(format!("{}", err))),
+        while !self.halted {
+            let instr = fetch(&self.mmio, self.pc as usize)?;
+            let instr = decode(instr)?;
+            let wb = execute(&instr)?;
+
+            // Change CPU state only here.
+            use crate::execute::WriteBackData;
+            match wb {
+                WriteBackData::Halt => { self.halted = true; },
+            }
+            self.pc += 4;
         }
+        Ok(())
     }
 }
 
