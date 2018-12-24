@@ -37,11 +37,11 @@ bitfield! {
     #[derive(Clone, Copy, Debug)]
     pub struct RTypeInstrFormat(u32);
     u32;
-    pub funct7, _: 25, 31;
-    pub rs2, _: 20, 24;
-    pub rs1, _: 15, 19;
-    pub funct3, _: 12, 14;
-    pub rd, _: 7, 11;
+    pub funct7, _: 31, 25;
+    pub rs2, _: 24, 20;
+    pub rs1, _: 19, 15;
+    pub funct3, _: 14, 12;
+    pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }
 
@@ -50,10 +50,21 @@ bitfield! {
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ITypeInstrFormat(u32);
-    u32;
-    pub imm12, _: 20, 31;
-    pub rs1, _: 15, 19;
-    pub funct3, _: 12, 14;
-    pub rd, _: 7, 11;
+    pub imm12, _: 31, 20;
+    pub rs1, _: 19, 15;
+    pub funct3, _: 14, 12;
+    pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_bitfield() {
+        let instr = ITypeInstrFormat(0x0001_8093);
+        assert_eq!(1, instr.rd());
+    }
 }

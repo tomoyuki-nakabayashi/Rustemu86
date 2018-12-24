@@ -25,7 +25,9 @@ pub fn execute(instr: DecodedInstr) -> Result<WriteBackData, ExecuteError> {
     let opcode = Opcode::from_u32(instr.opcode()).unwrap();
     match opcode {
         Opcode::OpWfi =>  Ok(WriteBackData::Halt),
-        _ => Ok(WriteBackData::Gpr { target: 1, value: 1 }),
+        _ => {
+            Ok(WriteBackData::Gpr { target: instr.rd() as usize, value: 1 })
+        },
     }
    
 }
