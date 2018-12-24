@@ -1,8 +1,10 @@
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate enum_primitive;
 
-pub mod riscv;
-mod fetch;
 mod decode;
 mod execute;
+mod fetch;
 mod isa;
+pub mod riscv;

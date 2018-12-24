@@ -1,15 +1,16 @@
-use crate::fetch::fetch;
 use crate::decode::decode;
 use crate::execute::execute;
+use crate::fetch::fetch;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
 use peripherals::mmio::Mmio;
 
-use std::result;
 use crate::isa::exceptions::InternalExceptions;
+use std::result;
 pub type Result<T> = result::Result<T, InternalExceptions>;
 
+/// RISC-V CPU model.
 #[allow(dead_code)]
 pub struct Riscv {
     pc: u32,
@@ -22,7 +23,12 @@ impl Riscv {
     /// Temporary `new`.
     /// TODO: This must be a new. It requires to modify CpuModel interface.
     pub fn fabricate(mmio: Mmio, debug: DebugMode) -> Riscv {
-        Riscv { pc: 0, mmio, debug, halted: true }
+        Riscv {
+            pc: 0,
+            mmio,
+            debug,
+            halted: true,
+        }
     }
 }
 
@@ -48,7 +54,9 @@ impl CpuModel for Riscv {
             // Change CPU state only here.
             use crate::execute::WriteBackData;
             match wb {
-                WriteBackData::Halt => { self.halted = true; },
+                WriteBackData::Halt => {
+                    self.halted = true;
+                }
             }
             self.pc += 4;
         }

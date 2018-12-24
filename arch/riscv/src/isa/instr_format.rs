@@ -1,10 +1,15 @@
+//! Instruction format for rv32ic.
+
 use bitfield::bitfield;
 
+/// Instruction format is either `Base` (32-bit) or `Compressed` (16-bit).
 pub enum InstrFormat {
     Base(BaseInstrFormat),
-    Compressed(CompressedInstrFormt),
+    Compressed(CompressedInstrFormat),
 }
 
+/// `Base` (32-bit) format for rv32i.
+#[allow(dead_code, non_camel_case_types)]
 pub enum BaseInstrFormat {
     R_FORMAT(RTypeInstrFormat),
     I_FORMAT,
@@ -14,6 +19,8 @@ pub enum BaseInstrFormat {
     J_FORMAT,
 }
 
+/// `Compressed` (16-bit) format for rv32ic.
+#[allow(dead_code, non_camel_case_types)]
 pub enum CompressedInstrFormat {
     CR_FORMAT,
     CI_FORMAT,
@@ -25,13 +32,26 @@ pub enum CompressedInstrFormat {
     CJ_FORMAT,
 }
 
+/// R type format. dst = rs1 op rs2
 bitfield! {
     #[derive(Clone, Copy, Debug)]
     pub struct RTypeInstrFormat(u32);
-    opcode: 6, 0;
-    rd: 7, 11;
-    funct3: 12, 14;
-    rs1: 15, 19;
-    rs2: 20, 24;
-    funct7: 25, 31;
+    funct7, _: 25, 31;
+    rs2, _: 20, 24;
+    rs1, _: 15, 19;
+    funct3, _: 12, 14;
+    rd, _: 7, 11;
+    opcode, _: 6, 0;
+}
+
+/// I type format. dst = rs1 op imm[11:0]
+/// ADDI / SLTI[U] / ANDI / ORI / XORI
+bitfield! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct ITypeInstrFormat(u32);
+    imm12, _: 20, 31;
+    rs1, _: 15, 19;
+    funct3, _: 12, 14;
+    rd, _: 7, 11;
+    opcode, _: 6, 0;
 }

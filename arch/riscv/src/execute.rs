@@ -3,6 +3,7 @@
 
 use crate::decode::DecodedInstr;
 
+/// Packet to modify CPU state finally.
 pub enum WriteBackData {
     Halt,
 }

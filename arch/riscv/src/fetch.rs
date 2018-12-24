@@ -2,7 +2,7 @@
 //! Returns an instruction to the next stage.
 //!
 //! An instruction is either u32 or u16. `u16` is for compressed instruction extension.
-//! 
+//!
 //! According to RISC-V mailing list, Instruction fetch misaligned exceptions are not
 //! possible on machines the support compressed instruction set extension.
 
@@ -37,7 +37,7 @@ pub fn fetch(instr_mem: &dyn MemoryAccess, pc: usize) -> Result<u32, FetchError>
 fn alignment_check(pc: usize) -> Result<(), FetchError> {
     // TODO: If compressed extension is supported, this check should be disabled.
     if pc % 4 != 0 {
-        return Err(FetchError::MisalingedFetch { pc: pc as u32 })
+        return Err(FetchError::MisalingedFetch { pc: pc as u32 });
     }
     Ok(())
 }
