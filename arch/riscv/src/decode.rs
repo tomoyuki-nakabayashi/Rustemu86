@@ -1,5 +1,7 @@
 //! Decode stage.
 use crate::isa::opcode::Opcode;
+use crate::isa::instr_format::ITypeInstrFormat;
+use crate::gpr::Gpr;
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -12,14 +14,17 @@ pub enum DecodeError {
 
 /// Decoded instruction.
 #[derive(Debug, PartialEq)]
-pub struct DecodedInstr(u32);
+pub struct DecodedInstr(pub ITypeInstrFormat);
 
 /// Decode an instruction.
-pub fn decode(instr: u32) -> Result<DecodedInstr, DecodeError> {
+/// There are two sub-stage in the decode.
+///   - Decode an instruction according to opcode.
+///   - Prepare operand either reading GPR or zero/sign extending the immediate.
+pub fn decode(instr: u32, gpr: &Gpr) -> Result<DecodedInstr, DecodeError> {
     let opcode = get_opcode(instr)?;
     match opcode {
-        Opcode::OpImm => unimplemented!(),
-        Opcode::OpWfi => Ok(DecodedInstr(instr)),
+        Opcode::OpImm => Ok(DecodedInstr(ITypeInstrFormat(instr))),
+        Opcode::OpWfi => Ok(DecodedInstr(ITypeInstrFormat(instr))),
     }
 }
 
@@ -35,8 +40,9 @@ mod test {
 
     #[test]
     fn decode_undefined_opcode() {
+        let gpr = Gpr::new();
         let instr = 0x0000_0007u32; // FLW won't implement for the present.
-        let result = decode(instr);
+        let result = decode(instr, &gpr);
 
         assert_eq!(
             Err(DecodeError::UndefinedInstr { opcode: 0b0000111 }),

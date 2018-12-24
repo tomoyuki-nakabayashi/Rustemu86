@@ -1,6 +1,7 @@
 use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
+use crate::gpr::{Gpr, GprIndex};
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
@@ -16,6 +17,7 @@ pub struct Riscv {
     pc: u32,
     mmio: Mmio,
     debug: DebugMode,
+    gpr: Gpr,
     halted: bool,
 }
 
@@ -27,6 +29,7 @@ impl Riscv {
             pc: 0,
             mmio,
             debug,
+            gpr: Gpr::new(),
             halted: true,
         }
     }
@@ -48,13 +51,16 @@ impl CpuModel for Riscv {
     fn run(&mut self) -> Result<()> {
         while !self.halted {
             let instr = fetch(&self.mmio, self.pc as usize)?;
-            let instr = decode(instr)?;
-            let wb = execute(&instr)?;
+            let instr = decode(instr, &self.gpr)?;
+            let wb = execute(instr)?;
 
             // Change CPU state only here.
-            use crate::execute::WriteBackData;
+            use crate::execute::WriteBackData::*;;
             match wb {
-                WriteBackData::Halt => {
+                Gpr { target, value } => {
+                    self.gpr.write_u32(GprIndex::try_from(target).unwrap(), value);
+                }
+                Halt => {
                     self.halted = true;
                 }
             }
@@ -76,21 +82,28 @@ mod test {
         let mut mmio = Mmio::empty();
         mmio.add((0, 4), Box::new(dram)).unwrap();
         let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+        riscv.init();
 
         let result = riscv.run();
         assert!(result.is_ok());
     }
 
     #[test]
-    fn parse_wfi() {
-        use bit_field::BitField;
-        use byteorder::{LittleEndian, ReadBytesExt};
+    fn add_imm() {
+        let program = vec![
+            0x93, 0x80, 0x01, 0x00, // addi ra, zero, 1
+            0x73, 0x00, 0x50, 0x10  // wfi
+        ];
 
-        let program = vec![0x73, 0x00, 0x50, 0x10];
-        let mut instr = &program[0..4];
-        let instr = instr.read_u32::<LittleEndian>().unwrap();
-        let opcode = instr.get_bits(0..7);
+        let dram = Memory::new_with_filled_ram(&program, program.len());
+        let mut mmio = Mmio::empty();
+        mmio.add((0, 8), Box::new(dram)).unwrap();
+        let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+        riscv.init();
 
-        assert_eq!(0b1110011, opcode);
+        let result = riscv.run();
+        assert!(result.is_ok());
+        assert_eq!(riscv.gpr.read_u32(GprIndex::try_from(1).unwrap()), 1);
     }
+
 }
