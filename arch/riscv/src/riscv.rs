@@ -51,8 +51,8 @@ impl CpuModel for Riscv {
     fn run(&mut self) -> Result<()> {
         while !self.halted {
             let instr = fetch(&self.mmio, self.pc as usize)?;
-            let instr = decode(instr, &self.gpr)?;
-            let wb = execute(instr)?;
+            let instr = decode(instr)?;
+            let wb = execute(instr, &self.gpr)?;
 
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;
@@ -91,7 +91,7 @@ mod test {
     #[test]
     fn add_imm() {
         let program = vec![
-            0x93, 0x80, 0x01, 0x00, // addi ra, zero, 1
+            0x93, 0x80, 0x10, 0x00, // addi ra, zero, 1
             0x73, 0x00, 0x50, 0x10  // wfi
         ];
 

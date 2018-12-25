@@ -64,7 +64,7 @@ mod test {
 
     #[test]
     fn test_bitfield() {
-        let instr = ITypeInstrFormat(0x0001_8093);
+        let instr = ITypeInstrFormat(0x0010_8093);
         assert_eq!(1, instr.rd());
     }
 }
