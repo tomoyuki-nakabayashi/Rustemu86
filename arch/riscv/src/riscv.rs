@@ -1,7 +1,7 @@
 use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
-use crate::gpr::{Gpr, GprIndex};
+use crate::gpr::Gpr;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
@@ -58,7 +58,7 @@ impl CpuModel for Riscv {
             use crate::execute::WriteBackData::*;;
             match wb {
                 Gpr { target, value } => {
-                    self.gpr.write_u32(GprIndex::try_from(target).unwrap(), value);
+                    self.gpr.write_u32(target, value);
                 }
                 Halt => {
                     self.halted = true;
@@ -103,7 +103,7 @@ mod test {
 
         let result = riscv.run();
         assert!(result.is_ok());
-        assert_eq!(riscv.gpr.read_u32(GprIndex::try_from(1).unwrap()), 1);
+        assert_eq!(riscv.gpr.read_u32(1), 1);
     }
 
 }
