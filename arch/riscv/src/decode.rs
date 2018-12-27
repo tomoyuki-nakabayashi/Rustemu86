@@ -1,6 +1,6 @@
 //! Decode stage.
-use crate::isa::opcode::Opcode;
 use crate::isa::instr_format::ITypeInstrFormat;
+use crate::isa::opcode::Opcode;
 use bit_field::BitField;
 use num::FromPrimitive;
 

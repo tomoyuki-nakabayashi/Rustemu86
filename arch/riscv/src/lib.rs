@@ -3,9 +3,9 @@ extern crate failure;
 #[macro_use]
 extern crate enum_primitive;
 
-mod fetch;
 mod decode;
 mod execute;
+mod fetch;
 mod gpr;
 mod isa;
 pub mod riscv;

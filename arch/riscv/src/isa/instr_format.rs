@@ -50,13 +50,14 @@ bitfield! {
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ITypeInstrFormat(u32);
+    i32;
     pub imm12, _: 31, 20;
+    u32;
     pub rs1, _: 19, 15;
     pub funct3, _: 14, 12;
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }
-
 
 #[cfg(test)]
 mod test {

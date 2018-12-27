@@ -13,7 +13,9 @@ pub struct Gpr {
 impl Gpr {
     /// Initialize all register as `0`.
     pub fn new() -> Gpr {
-        Gpr { ram: [0u32; NUM_OF_GPR] }
+        Gpr {
+            ram: [0u32; NUM_OF_GPR],
+        }
     }
 
     /// Read data. Range check shouldn't be required.

@@ -2,13 +2,13 @@
 //! Returns write back data.
 
 use crate::decode::DecodedInstr;
-use crate::isa::opcode::Opcode;
 use crate::gpr::Gpr;
+use crate::isa::opcode::Opcode;
 use num::FromPrimitive;
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
-    Gpr{ target: usize, value: u32 },
+    Gpr { target: usize, value: u32 },
     Halt,
 }
 
@@ -26,12 +26,12 @@ pub fn execute(instr: DecodedInstr, gpr: &Gpr) -> Result<WriteBackData, ExecuteE
     let opcode = Opcode::from_u32(instr.opcode()).unwrap();
     let (rs1, _rs2) = fetch_operand(instr.rs1() as usize, 0, &gpr);
     match opcode {
-        Opcode::OpWfi =>  Ok(WriteBackData::Halt),
-        _ => {
-            Ok(WriteBackData::Gpr { target: instr.rd() as usize, value: rs1 + instr.imm12() })
-        },
+        Opcode::OpWfi => Ok(WriteBackData::Halt),
+        _ => Ok(WriteBackData::Gpr {
+            target: instr.rd() as usize,
+            value: (rs1 as i32 + instr.imm12()) as u32,
+        }),
     }
-   
 }
 
 // Operand fetch
