@@ -1,11 +1,8 @@
-use crate::riscv::Riscv;
 use crate::isa::abi_name::*;
+use crate::riscv::Riscv;
 use cpu::model::CpuModel;
-use peripherals::{
-    mmio::Mmio,
-    memory::Memory,
-};
 use debug::DebugMode;
+use peripherals::{memory::Memory, mmio::Mmio};
 
 // Helper for test.
 // Simply execute the program with memory.

@@ -62,7 +62,7 @@ impl CpuModel for Riscv {
         while !self.halted {
             let instr = fetch(&self.mmio, self.pc as usize)?;
             let instr = decode(instr, &self.gpr)?;
-            let wb = execute(instr)?;
+            let wb = execute(&instr)?;
 
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;

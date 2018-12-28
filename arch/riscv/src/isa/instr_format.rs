@@ -32,7 +32,7 @@ pub enum CompressedInstrFormat {
     CJ_FORMAT,
 }
 
-/// R type format: 
+/// R type format:
 /// dst = rs1 op rs2
 bitfield! {
     #[derive(Clone, Copy, Debug)]
@@ -60,7 +60,6 @@ bitfield! {
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }
-
 
 #[cfg(test)]
 mod test {
