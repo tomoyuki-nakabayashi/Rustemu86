@@ -9,3 +9,6 @@ mod fetch;
 mod gpr;
 mod isa;
 pub mod riscv;
+
+#[cfg(test)]
+mod instruction_level_tests;

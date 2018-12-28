@@ -33,6 +33,16 @@ impl Riscv {
             halted: true,
         }
     }
+
+    #[cfg(test)]
+    pub fn get_gpr(&self, index: usize) -> u32 {
+        self.gpr.read_u32(index)
+    }
+
+    #[cfg(test)]
+    pub fn get_pc(&self) -> u32 {
+        self.pc
+    }
 }
 
 impl CpuModel for Riscv {
@@ -73,7 +83,6 @@ impl CpuModel for Riscv {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::isa::abi_name::*;
     use peripherals::memory::Memory;
 
     #[test]
@@ -87,45 +96,5 @@ mod test {
 
         let result = riscv.run();
         assert!(result.is_ok());
-    }
-
-    #[test]
-    fn add_imm() {
-        let program = vec![
-            0x93, 0x80, 0x10, 0x00, // addi ra, zero, 1
-            0x13, 0x01, 0xf1, 0xff, // addi sp, sp -1
-            0x73, 0x00, 0x50, 0x10, // wfi
-        ];
-
-        let dram = Memory::new_with_filled_ram(&program, program.len());
-        let mut mmio = Mmio::empty();
-        mmio.add((0, program.len()), Box::new(dram)).unwrap();
-        let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
-        riscv.init();
-
-        let result = riscv.run();
-        assert!(result.is_ok());
-        assert_eq!(riscv.gpr.read_u32(ra), 1);
-        assert_eq!(riscv.gpr.read_u32(sp) as i32, -1);
-    }
-
-    #[test]
-    fn or_imm() {
-        let program = vec![
-            0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
-            0x13, 0x61, 0xf1, 0xff, // ori sp, sp -1
-            0x73, 0x00, 0x50, 0x10, // wfi
-        ];
-
-        let dram = Memory::new_with_filled_ram(&program, program.len());
-        let mut mmio = Mmio::empty();
-        mmio.add((0, program.len()), Box::new(dram)).unwrap();
-        let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
-        riscv.init();
-
-        let result = riscv.run();
-        assert!(result.is_ok());
-        assert_eq!(riscv.gpr.read_u32(ra), 2);
-        assert_eq!(riscv.gpr.read_u32(sp), 0xffff_ffff);
     }
 }
