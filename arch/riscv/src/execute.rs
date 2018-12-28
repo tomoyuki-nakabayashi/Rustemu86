@@ -1,18 +1,12 @@
 //! Execute stage.
 //! Returns write back data.
 
-use crate::decode::DecodedInstr;
-use crate::gpr::Gpr;
-use crate::isa::{
-    opcode::Opcode,
-    instr_format::ITypeInstrFormat,
-    funct::Rv32iOpImmFunct3,
-};
-use num::FromPrimitive;
+use crate::decode::{DecodedInstr, AluInstr};
+use crate::isa::opcode::ALU_OPCODE;
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
-    Gpr { target: usize, value: u32 },
+    Gpr { target: u32, value: u32 },
     Halt,
 }
 
@@ -24,32 +18,24 @@ pub enum ExecuteError {
 }
 
 /// Executes an instruction.
-pub fn execute(instr: DecodedInstr, gpr: &Gpr) -> Result<WriteBackData, ExecuteError> {
-    let DecodedInstr(instr) = instr;
-    let opcode = Opcode::from_u32(instr.opcode()).unwrap();
-    match opcode {
-        Opcode::OpWfi => Ok(WriteBackData::Halt),
-        Opcode::OpImm => execute_op_imm(instr, &gpr),
+pub fn execute(instr: DecodedInstr) -> Result<WriteBackData, ExecuteError> {
+    match instr {
+        DecodedInstr::System(_) => Ok(WriteBackData::Halt),
+        DecodedInstr::Alu(decoded) => execute_op_imm(decoded),
+        DecodedInstr::Lsu(_) => unimplemented!(),
     }
 }
 
-// Operand fetch
-fn fetch_operand(rs1: usize, rs2: usize, gpr: &Gpr) -> (u32, u32) {
-    (gpr.read_u32(rs1), gpr.read_u32(rs2))
-}
-
 // Executes OP-IMM instruction.
-fn execute_op_imm(instr: ITypeInstrFormat, gpr: &Gpr) -> Result<WriteBackData, ExecuteError> {
-    let funct3 = Rv32iOpImmFunct3::from_u32(instr.funct3()).unwrap();
-    let (rs1, _rs2) = fetch_operand(instr.rs1() as usize, 0, &gpr);
-    match funct3 {
-        Rv32iOpImmFunct3::ADDI => Ok(WriteBackData::Gpr {
-            target: instr.rd() as usize,
-            value: (rs1 as i32 + instr.imm12()) as u32,
+fn execute_op_imm(instr: AluInstr) -> Result<WriteBackData, ExecuteError> {
+    match instr.alu_opcode {
+        ALU_OPCODE::ADD => Ok(WriteBackData::Gpr {
+            target: instr.dest,
+            value: (instr.operand1 as i32 + instr.operand2 as i32) as u32,
         }),
-        Rv32iOpImmFunct3::ORI => Ok(WriteBackData::Gpr {
-            target: instr.rd() as usize,
-            value: (rs1 | instr.imm12() as u32) as u32,
+        ALU_OPCODE::OR => Ok(WriteBackData::Gpr {
+            target: instr.dest,
+            value: (instr.operand1 | instr.operand2),
         }),
         _ => unimplemented!(),
     }

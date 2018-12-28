@@ -1,5 +1,7 @@
 //! General purpose integer 32-bit register.
 
+use num::FromPrimitive;
+
 const NUM_OF_GPR: usize = 32;
 const MAX_GPR_INDEX: usize = NUM_OF_GPR - 1;
 const ZERO_REGISTER: usize = 0;
@@ -20,14 +22,17 @@ impl Gpr {
 
     /// Read data. Range check shouldn't be required.
     /// Because GprIndex must have a valid index.
-    pub fn read_u32(&self, index: usize) -> u32 {
-        assert!(index <= MAX_GPR_INDEX, "Invalid register index");
+    pub fn read_u32(&self, index: u32) -> u32
+    {
+        let index = usize::from_u32(index).expect("invalid register index");
+        assert!(index <= MAX_GPR_INDEX, "register index must be smaller than 31 but {}", index);
         self.ram[index]
     }
 
     /// Write data to the index. Always ignores write to zero register.
-    pub fn write_u32(&mut self, index: usize, value: u32) {
-        assert!(index <= MAX_GPR_INDEX, "Invalid register index");
+    pub fn write_u32(&mut self, index: u32, value: u32) {
+        let index = usize::from_u32(index).expect("invalid register index");
+        assert!(index <= MAX_GPR_INDEX, "register index must be smaller than 31 but {}", index);
 
         if index == ZERO_REGISTER {
             return;

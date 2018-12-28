@@ -35,7 +35,7 @@ impl Riscv {
     }
 
     #[cfg(test)]
-    pub fn get_gpr(&self, index: usize) -> u32 {
+    pub fn get_gpr(&self, index: u32) -> u32 {
         self.gpr.read_u32(index)
     }
 
@@ -61,8 +61,8 @@ impl CpuModel for Riscv {
     fn run(&mut self) -> Result<()> {
         while !self.halted {
             let instr = fetch(&self.mmio, self.pc as usize)?;
-            let instr = decode(instr)?;
-            let wb = execute(instr, &self.gpr)?;
+            let instr = decode(instr, &self.gpr)?;
+            let wb = execute(instr)?;
 
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;
