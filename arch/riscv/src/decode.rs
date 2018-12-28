@@ -1,6 +1,6 @@
 //! Decode stage.
 use crate::gpr::Gpr;
-use crate::isa::instr_format::ITypeInstrFormat;
+use crate::isa::instr_format::{ITypeInstrFormat, RTypeInstrFormat};
 use crate::isa::opcode::{AluOpcode, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
@@ -8,10 +8,10 @@ use num::FromPrimitive;
 /// Exceptions occur in decode stage.
 #[derive(Debug, Fail, PartialEq)]
 pub enum DecodeError {
-    #[fail(display = "undefined opcode: 0b{:7b}", opcode)]
+    #[fail(display = "undefined opcode: 0b{:07b}", opcode)]
     UndefinedInstr { opcode: u32 },
 
-    #[fail(display = "undefined funct3: 0b{:3b}", funct3)]
+    #[fail(display = "undefined funct3: 0b{:03b}", funct3)]
     UndefinedFunct3 { funct3: u32 },
 }
 
@@ -47,6 +47,17 @@ impl AluInstr {
             operand3: 0,
         }
     }
+
+    fn from_r_type(alu_opcode: AluOpcode, instr: RTypeInstrFormat, gpr: &Gpr) -> AluInstr {
+        let (rs1, rs2) = fetch_operand(instr.rs1(), instr.rs2(), &gpr);
+        AluInstr {
+            alu_opcode,
+            dest: instr.rd(),
+            operand1: rs1,
+            operand2: rs2,
+            operand3: 0,
+        }
+    }
 }
 
 /// Decoded format for instructions going to LSU.
@@ -70,6 +81,10 @@ pub fn decode(instr: u32, gpr: &Gpr) -> Result<DecodedInstr, DecodeError> {
             Ok(decoded) => Ok(DecodedInstr::Alu(decoded)),
             Err(err) => Err(err),
         },
+        Opcode::Op => match decode_op(RTypeInstrFormat(instr), &gpr) {
+            Ok(decoded) => Ok(DecodedInstr::Alu(decoded)),
+            Err(err) => Err(err),
+        }
     }
 }
 
@@ -90,6 +105,18 @@ fn decode_op_imm(instr: ITypeInstrFormat, gpr: &Gpr) -> Result<AluInstr, DecodeE
         ADDI => Ok(AluInstr::from_i_type(AluOpcode::ADD, instr, &gpr)),
         ORI => Ok(AluInstr::from_i_type(AluOpcode::OR, instr, &gpr)),
         _ => unimplemented!(),
+    }
+}
+
+// decode OP
+fn decode_op(instr: RTypeInstrFormat, gpr: &Gpr) -> Result<AluInstr, DecodeError> {
+    use crate::isa::funct::Rv32iOpFunct3::{self, *};
+    let funct3 =
+        Rv32iOpFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+            funct3: instr.funct3(),
+        })?;
+    match funct3 {
+        ADD => Ok(AluInstr::from_r_type(AluOpcode::ADD, instr, &gpr)),
     }
 }
 

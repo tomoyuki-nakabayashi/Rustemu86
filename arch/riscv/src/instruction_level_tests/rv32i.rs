@@ -18,7 +18,7 @@ fn execute_program(program: Vec<u8>) -> Riscv {
     let result = riscv.run();
 
     // check the execution successfully finished.
-    assert!(result.is_ok(), "fail to execute program.");
+    assert!(result.is_ok(), "{}", result.unwrap_err());
 
     // return the cpu state.
     riscv
@@ -50,4 +50,17 @@ fn or_imm() {
 
     assert_eq!(riscv.get_gpr(ra), 2);
     assert_eq!(riscv.get_gpr(sp), 0xffff_ffff);
+}
+
+#[test]
+fn add() {
+    let program = vec![
+        0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
+        0xb3, 0x80, 0x10, 0x00, // add ra, ra, ra 
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 4);
 }

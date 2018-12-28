@@ -12,3 +12,11 @@ enum_from_primitive! {
         ANDI = 0b111,
     }
 }
+
+/// funct3 for OP of RV32I
+enum_from_primitive! {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Rv32iOpFunct3 {
+        ADD = 0b000
+    }
+}
