@@ -81,7 +81,7 @@ mod test {
         let program = vec![0x73, 0x00, 0x50, 0x10];
         let dram = Memory::new_with_filled_ram(&program, program.len());
         let mut mmio = Mmio::empty();
-        mmio.add((0, 4), Box::new(dram)).unwrap();
+        mmio.add((0, program.len()), Box::new(dram)).unwrap();
         let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
         riscv.init();
 
@@ -109,4 +109,23 @@ mod test {
         assert_eq!(riscv.gpr.read_u32(sp) as i32, -1);
     }
 
+    #[test]
+    fn or_imm() {
+        let program = vec![
+            0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
+            0x13, 0x61, 0xf1, 0xff, // ori sp, sp -1
+            0x73, 0x00, 0x50, 0x10, // wfi
+        ];
+
+        let dram = Memory::new_with_filled_ram(&program, program.len());
+        let mut mmio = Mmio::empty();
+        mmio.add((0, program.len()), Box::new(dram)).unwrap();
+        let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+        riscv.init();
+
+        let result = riscv.run();
+        assert!(result.is_ok());
+        assert_eq!(riscv.gpr.read_u32(ra), 2);
+        assert_eq!(riscv.gpr.read_u32(sp), 0xffff_ffff);
+    }
 }

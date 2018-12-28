@@ -32,7 +32,8 @@ pub enum CompressedInstrFormat {
     CJ_FORMAT,
 }
 
-/// R type format. dst = rs1 op rs2
+/// R type format: 
+/// dst = rs1 op rs2
 bitfield! {
     #[derive(Clone, Copy, Debug)]
     pub struct RTypeInstrFormat(u32);
@@ -45,7 +46,8 @@ bitfield! {
     pub opcode, _: 6, 0;
 }
 
-/// I type format. dst = rs1 op imm[11:0]
+/// I type format:
+/// dst = rs1 op imm[11:0]
 /// ADDI / SLTI[U] / ANDI / ORI / XORI
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -58,6 +60,7 @@ bitfield! {
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }
+
 
 #[cfg(test)]
 mod test {
