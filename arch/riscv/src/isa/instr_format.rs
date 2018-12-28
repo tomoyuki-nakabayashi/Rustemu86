@@ -11,7 +11,7 @@ pub enum InstrFormat {
 /// `Base` (32-bit) format for rv32i.
 #[allow(dead_code, non_camel_case_types)]
 pub enum BaseInstrFormat {
-    R_FORMAT(RTypeInstrFormat),
+    R_FORMAT(RTypeInstr),
     I_FORMAT,
     S_FORMAT,
     B_FORMAT,
@@ -36,7 +36,7 @@ pub enum CompressedInstrFormat {
 /// dst = rs1 op rs2
 bitfield! {
     #[derive(Clone, Copy, Debug)]
-    pub struct RTypeInstrFormat(u32);
+    pub struct RTypeInstr(u32);
     u32;
     pub funct7, _: 31, 25;
     pub rs2, _: 24, 20;
@@ -51,7 +51,7 @@ bitfield! {
 /// ADDI / SLTI[U] / ANDI / ORI / XORI
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct ITypeInstrFormat(u32);
+    pub struct ITypeInstr(u32);
     i32;
     pub imm12, _: 31, 20;
     u32;
@@ -67,7 +67,7 @@ mod test {
 
     #[test]
     fn test_bitfield() {
-        let instr = ITypeInstrFormat(0x0010_8093);
+        let instr = ITypeInstr(0x0010_8093);
         assert_eq!(1, instr.rd());
     }
 }
