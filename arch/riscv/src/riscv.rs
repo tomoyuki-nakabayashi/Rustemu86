@@ -60,9 +60,9 @@ impl CpuModel for Riscv {
     /// Executes instructions until WFI.
     fn run(&mut self) -> Result<()> {
         while !self.halted {
-            let instr = fetch(&self.mmio, self.pc as usize)?;
-            let instr = decode(instr, &self.gpr)?;
-            let wb = execute(&instr)?;
+            let (instr, next_pc) = fetch(&self.mmio, self.pc)?;
+            let instr = decode(instr, &self.gpr, next_pc)?;
+            let (wb, next_pc) = execute(&instr)?;
 
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;
@@ -74,7 +74,7 @@ impl CpuModel for Riscv {
                     self.halted = true;
                 }
             }
-            self.pc += 4;
+            self.pc = next_pc;
         }
         Ok(())
     }

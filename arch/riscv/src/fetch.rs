@@ -26,18 +26,21 @@ impl From<MemoryAccessError> for FetchError {
 }
 
 /// Fetches an instruction from the `instr_mem` of the `pc`.
-pub fn fetch(instr_mem: &dyn MemoryAccess, pc: usize) -> Result<u32, FetchError> {
+/// Result contains (a 32-bit instruction, next pc).
+/// TODO: Improve the type information of Ok().
+pub fn fetch(instr_mem: &dyn MemoryAccess, pc: u32) -> Result<(u32, u32), FetchError> {
     alignment_check(pc)?;
 
-    let instr = instr_mem.read_u32(pc)?;
-    Ok(instr)
+    let instr = instr_mem.read_u32(pc as usize)?;
+    let next_pc = pc + 4;
+    Ok((instr, next_pc))
 }
 
 #[inline(always)]
-fn alignment_check(pc: usize) -> Result<(), FetchError> {
+fn alignment_check(pc: u32) -> Result<(), FetchError> {
     // TODO: If compressed extension is supported, this check should be disabled.
     if pc % 4 != 0 {
-        return Err(FetchError::MisalingedFetch { pc: pc as u32 });
+        return Err(FetchError::MisalingedFetch { pc });
     }
     Ok(())
 }
@@ -52,8 +55,9 @@ mod test {
         let program = vec![0x73, 0x00, 0x50, 0x10];
         let dram = Memory::new_with_filled_ram(&program, program.len());
 
-        let instr = fetch(&dram, 0).expect("fail to fetch instruction from DRAM");
+        let (instr, npc) = fetch(&dram, 0).expect("fail to fetch instruction from DRAM");
         assert_eq!(0x1050_0073, instr, "endianess is not converted!");
+        assert_eq!(4, npc, "invalid next pc");
     }
 
     #[test]

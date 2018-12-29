@@ -18,21 +18,24 @@ pub enum ExecuteError {
 }
 
 /// Executes an instruction.
-pub fn execute(instr: &DecodedInstr) -> Result<WriteBackData, ExecuteError> {
+pub fn execute(instr: &DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr {
-        DecodedInstr::System(_) => Ok(WriteBackData::Halt),
+        DecodedInstr::System(ref decoded) => Ok((WriteBackData::Halt, decoded.next_pc)),
         DecodedInstr::Alu(ref decoded) => execute_alu(decoded),
         DecodedInstr::Lsu(_) => unimplemented!(),
     }
 }
 
 // Executes ALU operation.
-fn execute_alu(instr: &AluInstr) -> Result<WriteBackData, ExecuteError> {
+fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     let value = alu_op(instr.alu_opcode, instr.operand1, instr.operand2);
-    Ok(WriteBackData::Gpr {
-        target: instr.dest,
-        value,
-    })
+    Ok((
+        WriteBackData::Gpr {
+            target: instr.dest,
+            value,
+        },
+        instr.next_pc,
+    ))
 }
 
 // Must not be failed.

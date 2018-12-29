@@ -1,10 +1,10 @@
 //! Decode stage.
 mod operand_fetch;
 
+use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::{ITypeInstr, RTypeInstr};
 use crate::isa::opcode::{AluOpcode, Opcode};
-use self::operand_fetch::OperandFetch;
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -18,15 +18,17 @@ pub enum DecodeError {
     UndefinedFunct3 { funct3: u32 },
 }
 
-/// Decoded instruction.
-//#[derive(Debug, PartialEq)]
-//pub struct DecodedInstr(pub ITypeInstr);
-
 #[derive(Debug, PartialEq)]
 pub enum DecodedInstr {
-    System(ITypeInstr),
+    System(SystemInstr),
     Alu(AluInstr),
     Lsu(LsuInstr),
+}
+
+/// Decoded format for instructions executed in ALU.
+#[derive(Debug, PartialEq)]
+pub struct SystemInstr {
+    pub next_pc: u32,
 }
 
 /// Decoded format for instructions executed in ALU.
@@ -36,17 +38,17 @@ pub struct AluInstr {
     pub dest: u32,
     pub operand1: u32,
     pub operand2: u32,
-    pub operand3: u32,
+    pub next_pc: u32,
 }
 
 impl AluInstr {
-    fn from<T: OperandFetch>(op: AluOpcode, instr: &T, gpr: &Gpr) -> AluInstr {
+    fn from<T: OperandFetch>(op: AluOpcode, instr: T, gpr: &Gpr, npc: u32) -> AluInstr {
         AluInstr {
             alu_opcode: op,
             dest: instr.dest(),
             operand1: instr.operand1(&gpr),
             operand2: instr.operand2(&gpr),
-            operand3: 0,
+            next_pc: npc,
         }
     }
 }
@@ -64,16 +66,12 @@ pub struct LsuInstr {
 /// There are two sub-stage in the decode.
 ///   - Decode an instruction according to opcode.
 ///   - Prepare operand either reading GPR or zero/sign extending the immediate.
-pub fn decode(instr: u32, gpr: &Gpr) -> Result<DecodedInstr, DecodeError> {
+pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeError> {
     let opcode = get_opcode(instr)?;
     match opcode {
-        Opcode::OpSystem => Ok(DecodedInstr::System(ITypeInstr(instr))),
-        Opcode::OpImm => {
-            decode_op_imm(ITypeInstr(instr), &gpr).map(|i| DecodedInstr::Alu(i))
-        }
-        Opcode::Op => {
-            decode_op(RTypeInstr(instr), &gpr).map(|i| DecodedInstr::Alu(i))
-        }
+        Opcode::OpSystem => Ok(DecodedInstr::System(SystemInstr { next_pc: npc })),
+        Opcode::OpImm => decode_op_imm(ITypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
+        Opcode::Op => decode_op(RTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
     }
 }
 
@@ -84,7 +82,7 @@ fn get_opcode(instr: u32) -> Result<Opcode, DecodeError> {
 }
 
 // decode OP-IMM
-fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr) -> Result<AluInstr, DecodeError> {
+fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeError> {
     use crate::isa::funct::Rv32iOpImmFunct3::{self, *};
     let funct3 =
         Rv32iOpImmFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
@@ -92,20 +90,20 @@ fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr) -> Result<AluInstr, DecodeError> 
         })?;
     match funct3 {
         //ADDI => Ok(AluInstr::from_i_type(AluOpcode::ADD, instr, &gpr)),
-        ADDI => Ok(AluInstr::from(AluOpcode::ADD, &instr, &gpr)),
-        ORI => Ok(AluInstr::from(AluOpcode::OR, &instr, &gpr)),
+        ADDI => Ok(AluInstr::from(AluOpcode::ADD, instr, &gpr, npc)),
+        ORI => Ok(AluInstr::from(AluOpcode::OR, instr, &gpr, npc)),
         _ => unimplemented!(),
     }
 }
 
 // decode OP
-fn decode_op(instr: RTypeInstr, gpr: &Gpr) -> Result<AluInstr, DecodeError> {
+fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeError> {
     use crate::isa::funct::Rv32iOpFunct3::{self, *};
     let funct3 = Rv32iOpFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
         funct3: instr.funct3(),
     })?;
     match funct3 {
-        ADD => Ok(AluInstr::from(AluOpcode::ADD, &instr, &gpr)),
+        ADD => Ok(AluInstr::from(AluOpcode::ADD, instr, &gpr, npc)),
     }
 }
 
@@ -117,7 +115,7 @@ mod test {
     fn decode_undefined_opcode() {
         let gpr = Gpr::new();
         let instr = 0x0000_0007u32; // FLW won't implement for the present.
-        let result = decode(instr, &gpr);
+        let result = decode(instr, &gpr, 4);
 
         assert_eq!(
             Err(DecodeError::UndefinedInstr { opcode: 0b0000111 }),

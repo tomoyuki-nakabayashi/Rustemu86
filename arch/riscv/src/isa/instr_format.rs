@@ -33,7 +33,8 @@ pub enum CompressedInstrFormat {
 }
 
 /// R type format:
-/// dst = rs1 op rs2
+/// funct7 | rs2 | rs1 | funct3 | rd | opcode
+/// OP /
 bitfield! {
     #[derive(Clone, Copy, Debug)]
     pub struct RTypeInstr(u32);
@@ -47,8 +48,8 @@ bitfield! {
 }
 
 /// I type format:
-/// dst = rs1 op imm[11:0]
-/// ADDI / SLTI[U] / ANDI / ORI / XORI
+/// imm[11:0] | rs1 | funct3 | rd | opcode
+/// OP-IMM /
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ITypeInstr(u32);
@@ -57,6 +58,19 @@ bitfield! {
     u32;
     pub rs1, _: 19, 15;
     pub funct3, _: 14, 12;
+    pub rd, _: 11, 7;
+    pub opcode, _: 6, 0;
+}
+
+/// U type format:
+/// imm[31:12] | rd | opcode
+/// JAL
+bitfield! {
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct UTypeInstr(u32);
+    i32;
+    pub imm20, _: 31, 12;
+    u32;
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }

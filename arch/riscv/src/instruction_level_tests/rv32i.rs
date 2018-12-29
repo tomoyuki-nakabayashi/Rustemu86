@@ -64,3 +64,19 @@ fn add() {
 
     assert_eq!(riscv.get_gpr(ra), 4);
 }
+
+/*
+#[test]
+fn jal() {
+    let program = vec![
+        0xef, 0x00, 0x80, 0x00, // jal ra, 0x8
+        0x93, 0xe0, 0x00, 0x00, // ori ra, zero, 0
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x4);
+    assert_eq!(riscv.get_pc(), 0xc);
+}
+ */
