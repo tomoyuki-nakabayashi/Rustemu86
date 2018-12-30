@@ -92,15 +92,14 @@ fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError>
 
 // Execute load/store operation
 fn execute_lsu(instr: &LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
-    let sub_op = &instr.alu;
-    let addr = alu_op(sub_op.alu_opcode, sub_op.operand1, sub_op.operand2);
+    let addr = instr.base + instr.offset;
     Ok((
         WriteBackData::Lsu(LsuOp {
             op: instr.op,
-            dest: sub_op.dest,
+            dest: instr.dest,
             addr,
             value: 0,
         }),
-        sub_op.next_pc,
+        instr.next_pc,
     ))
 }

@@ -1,7 +1,13 @@
 //! Instruction format translator.
 
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{BTypeInstr, ITypeInstr, JTypeInstr, RTypeInstr};
+use crate::isa::instr_format::*;
+
+// TODO: rename like
+// dest -> rd
+// operand1 -> rs1
+// operand2 -> rs2
+// operand3 -> imm
 
 pub trait OperandFetch {
     fn dest(&self) -> u32;
@@ -40,6 +46,22 @@ impl OperandFetch for ITypeInstr {
     }
 }
 
+impl OperandFetch for STypeInstr {
+    fn dest(&self) -> u32 {
+        // ignore
+        0
+    }
+    fn operand1(&self, gpr: &Gpr) -> u32 {
+        gpr.read_u32(self.rs1())
+    }
+    fn operand2(&self, gpr: &Gpr) -> u32 {
+        gpr.read_u32(self.rs2())
+    }
+    fn operand3(&self) -> u32 {
+        self.offset_11_0() as u32
+    }
+}
+
 impl OperandFetch for BTypeInstr {
     fn dest(&self) -> u32 {
         // ignore
@@ -70,3 +92,4 @@ impl OperandFetch for JTypeInstr {
         panic!("Never call");
     }
 }
+

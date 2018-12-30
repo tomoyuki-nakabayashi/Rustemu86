@@ -3,7 +3,7 @@ mod operand_fetch;
 
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{BTypeInstr, ITypeInstr, JTypeInstr, RTypeInstr};
+use crate::isa::instr_format::*;
 use crate::isa::opcode::{AluOpcode, BranchType, LoadStoreType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
@@ -97,15 +97,34 @@ impl BrInstr {
 #[derive(Debug, PartialEq)]
 pub struct LsuInstr {
     pub op: LoadStoreType,
-    pub alu: AluInstr,
+    pub dest: u32,
+    pub base: u32,
+    pub src: u32,
+    pub offset: u32,
+    pub next_pc: u32,
 }
 
 impl LsuInstr {
     pub fn from<T: OperandFetch>(op: LoadStoreType, instr: &T, gpr: &Gpr, npc: u32) -> LsuInstr {
-        LsuInstr {
-            op,
-            alu: AluInstr::from(AluOpcode::ADD, instr, &gpr, npc),
+        match op {
+            LoadStoreType::LW => LsuInstr {
+                op,
+                dest: instr.dest(),
+                base: instr.operand1(&gpr),
+                src: 0,
+                offset: instr.operand2(&gpr),
+                next_pc: npc,
+            },
+            LoadStoreType::SW => LsuInstr {
+                op,
+                dest: instr.dest(),
+                base: instr.operand1(&gpr),
+                src: instr.operand2(&gpr),
+                offset: instr.operand3(),
+                next_pc: npc,
+            },
         }
+        
     }
 }
 
@@ -119,6 +138,7 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
     use self::Opcode::*;
     match opcode {
         Load => Ok(Lsu(decode_load(ITypeInstr(instr), &gpr, npc)?)),
+        Store => Ok(Lsu(decode_store(STypeInstr(instr), &gpr, npc)?)),
         OpSystem => Ok(System(SystemInstr { next_pc: npc })),
         OpImm => Ok(Alu(decode_op_imm(ITypeInstr(instr), &gpr, npc)?)),
         Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
@@ -172,6 +192,11 @@ fn decode_branch(instr: BTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, Deco
 // decode LOAD
 fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
     Ok(LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc))
+}
+
+// docode STORE
+fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
+    Ok(LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc))
 }
 
 #[cfg(test)]

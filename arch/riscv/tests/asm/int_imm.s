@@ -13,3 +13,5 @@ nop
 j2:
 wfi
 lw  x1, 4(x2)
+sw  x1, 0xc(x2)
+

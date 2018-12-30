@@ -77,7 +77,7 @@ impl CpuModel for Riscv {
             match wb {
                 Gpr { target, value } => self.gpr.write_u32(target, value),
                 Lsu(ref op) => {
-                    let wb = load_store(&self.mmio, op)?;
+                    let wb = load_store(&mut self.mmio, op)?;
                     if let Gpr { target, value } = wb {
                         self.gpr.write_u32(target, value);
                     };

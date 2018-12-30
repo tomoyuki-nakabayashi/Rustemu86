@@ -63,6 +63,31 @@ bitfield! {
     pub opcode, _: 6, 0;
 }
 
+/// S type format:
+/// imm[11:5] | rs2 | rs1 | funct3 | imm[4:0] | opcode
+/// STORE
+bitfield! {
+    #[derive(Clone, Copy, Debug)]
+    pub struct STypeInstr(u32);
+    u32;
+    imm11_5, _: 31, 25;
+    pub rs2, _: 24, 20;
+    pub rs1, _: 19, 15;
+    pub funct3, _: 14, 12;
+    imm4_0, _: 11, 7;
+    pub opcode, _: 6, 0;
+}
+
+impl STypeInstr {
+    pub fn offset_11_0(self) -> i32 {
+        let imm11_5 = self.imm11_5() << (5 - 1);
+        let imm4_0 = self.imm4_0();
+        let imm11_0 = imm11_5 | imm4_0;
+
+        sign_extend_at(imm11_0, 11) as i32
+    }
+}
+
 /// B type format:
 /// imm[12] | imm[10:5] | rs2 | rs1 | funct3 | imm[4:1] | imm[11] | opcode
 /// BRANCH

@@ -6,6 +6,7 @@ enum_from_primitive! {
     pub enum Opcode {
         Load     = 0b000_0011,
         OpImm    = 0b001_0011,
+        Store    = 0b010_0011,
         Op       = 0b011_0011,
         Branch   = 0b110_0011,
         Jal      = 0b110_1111,
@@ -35,4 +36,5 @@ pub enum BranchType {
 #[allow(non_camel_case_types)]
 pub enum LoadStoreType {
     LW,
+    SW,
 }

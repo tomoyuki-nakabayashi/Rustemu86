@@ -89,6 +89,21 @@ fn load() {
     assert_eq!(riscv.get_gpr(ra), 0x1050_0073);
 }
 
+// Store to third instruction position.
+#[test]
+fn store() {
+    let program = vec![
+        0x23, 0x26, 0x11, 0x00, // sw ra, 0xc(sp)
+        0x83, 0x20, 0xc1, 0x00, // lw ra, 0xc(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xff, 0xff, 0xff, 0xff, // dummy initial data at address 0xc.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0);
+}
+
 // Helper for test.
 // Simply execute the program with memory.
 fn execute_program(program: Vec<u8>) -> Riscv {
