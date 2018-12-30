@@ -62,8 +62,38 @@ bitfield! {
     pub opcode, _: 6, 0;
 }
 
-/// U type format:
-/// imm[31:12] | rd | opcode
+/// B type format:
+/// imm[12] | imm[10:5] | rs2 | rs1 | funct3 | imm[4:1] | imm[11] | opcode
+/// BRANCH
+bitfield! {
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct BTypeInstr(u32);
+    u32;
+    imm12, _: 31;
+    imm10_5, _: 30, 25;
+    pub rs2, _: 24, 20;
+    pub rs1, _: 19, 15;
+    pub funct3, _: 14, 12;
+    imm4_1, _: 11, 8;
+    imm11, _: 7;
+    u32;
+    pub opcode, _: 6, 0;
+}
+
+impl BTypeInstr {
+    pub fn offset_12_1(self) -> i32 {
+        let imm12 = (self.imm12() as u32) << (12 - 1);
+        let imm11 = (self.imm11() as u32) << (11 - 1);
+        let imm10_5 = self.imm10_5() << (5 - 1);
+        let imm4_1 = self.imm4_1() << 1;
+        let imm12_0 = imm12 | imm11 | imm10_5 | imm4_1;
+
+        sign_extend_at(imm12_0, 12) as i32
+    }
+}
+
+/// J type format:
+/// imm[20] | imm[10:1] | imm[11] | imm[19:12] | rd | opcode
 /// JAL
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]

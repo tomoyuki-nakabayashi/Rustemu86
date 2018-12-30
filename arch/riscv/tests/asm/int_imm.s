@@ -8,4 +8,7 @@ nop
 j1:
 wfi
 jal x1, j1
-
+beq  x1, x2, j2
+nop
+j2:
+wfi

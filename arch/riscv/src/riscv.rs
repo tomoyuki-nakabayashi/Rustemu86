@@ -34,6 +34,8 @@ impl Riscv {
         }
     }
 
+    /// These get/set functions are only used for test.
+    /// These will be a trait like `DebugInterface`.
     #[cfg(test)]
     pub fn get_gpr(&self, index: u32) -> u32 {
         self.gpr.read_u32(index)
@@ -42,6 +44,11 @@ impl Riscv {
     #[cfg(test)]
     pub fn get_pc(&self) -> u32 {
         self.pc
+    }
+
+    #[cfg(test)]
+    pub fn set_gpr(&mut self, index: u32, value: u32) {
+        self.gpr.write_u32(index, value);
     }
 }
 

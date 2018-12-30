@@ -4,26 +4,6 @@ use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::{memory::Memory, mmio::Mmio};
 
-// Helper for test.
-// Simply execute the program with memory.
-fn execute_program(program: Vec<u8>) -> Riscv {
-    // prepare minimum peripherals.
-    let dram = Memory::new_with_filled_ram(&program, program.len());
-    let mut mmio = Mmio::empty();
-    mmio.add((0, program.len()), Box::new(dram)).unwrap();
-
-    // create object and run.
-    let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
-    riscv.init();
-    let result = riscv.run();
-
-    // check the execution successfully finished.
-    assert!(result.is_ok(), "{}", result.unwrap_err());
-
-    // return the cpu state.
-    riscv
-}
-
 #[test]
 fn add_imm() {
     let program = vec![
@@ -77,4 +57,61 @@ fn jal() {
 
     assert_eq!(riscv.get_gpr(ra), 0x4);
     assert_eq!(riscv.get_pc(), 0xc);
+}
+
+#[test]
+fn beq() {
+    let program = vec![
+        0x63, 0x84, 0x20, 0x00, // beq ra, sp, 0x4
+        0x93, 0xe0, 0x00, 0x00, // ori ra, zero, 0
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 1);
+        riscv.set_gpr(sp, 1);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+}
+
+// Helper for test.
+// Simply execute the program with memory.
+fn execute_program(program: Vec<u8>) -> Riscv {
+    let mut riscv = create_riscv_cpu(program);
+    let result = riscv.run();
+
+    // check the execution successfully finished.
+    assert!(result.is_ok(), "{}", result.unwrap_err());
+
+    // return the cpu state.
+    riscv
+}
+
+// Helper for test.
+fn execute_program_init_by(program: Vec<u8>, initializer: fn(&mut Riscv)) -> Riscv {
+    let mut riscv = create_riscv_cpu(program);
+    initializer(&mut riscv);
+    let result = riscv.run();
+
+    // check the execution successfully finished.
+    assert!(result.is_ok(), "{}", result.unwrap_err());
+
+    // return the cpu state.
+    riscv
+}
+
+// helper for test.
+fn create_riscv_cpu(program: Vec<u8>) -> Riscv {
+    // prepare minimum peripherals.
+    let dram = Memory::new_with_filled_ram(&program, program.len());
+    let mut mmio = Mmio::empty();
+    mmio.add((0, program.len()), Box::new(dram)).unwrap();
+
+    // create object and run.
+    let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+    riscv.init();
+
+    riscv
 }

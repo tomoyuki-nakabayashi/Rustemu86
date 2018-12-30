@@ -3,7 +3,7 @@ mod operand_fetch;
 
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{ITypeInstr, RTypeInstr, JTypeInstr};
+use crate::isa::instr_format::{BTypeInstr, ITypeInstr, JTypeInstr, RTypeInstr};
 use crate::isa::opcode::{AluOpcode, BranchType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
@@ -61,17 +61,32 @@ pub struct BrInstr {
     pub dest: u32,
     pub operand1: u32,
     pub operand2: u32,
+    pub base: u32,
+    pub offset: u32,
     pub next_pc: u32,
 }
 
 impl BrInstr {
     fn from<T: OperandFetch>(op: BranchType, instr: &T, gpr: &Gpr, npc: u32) -> BrInstr {
-        BrInstr {
-            op,
-            dest: instr.dest(),
-            operand1: npc - 4,
-            operand2: instr.operand2(&gpr),
-            next_pc: npc,
+        match op {
+            BranchType::JAL => BrInstr {
+                op,
+                dest: instr.dest(),
+                operand1: 0, // do not use
+                operand2: 0, // do not use
+                base: npc - 4,
+                offset: instr.operand1(&gpr),
+                next_pc: npc,
+            },
+            BranchType::COND_EQ => BrInstr {
+                op,
+                dest: instr.dest(), // ignore the result.
+                operand1: instr.operand1(&gpr),
+                operand2: instr.operand2(&gpr),
+                base: npc - 4,
+                offset: instr.operand3(),
+                next_pc: npc,
+            },
         }
     }
 }
@@ -97,6 +112,11 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
         OpImm => decode_op_imm(ITypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
         Op => decode_op(RTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
         Jal => decode_jal(JTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Br(i)),
+        Branch => Ok(DecodedInstr::Br(decode_branch(
+            BTypeInstr(instr),
+            &gpr,
+            npc,
+        )?)),
     }
 }
 
@@ -135,6 +155,11 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeE
 // decode JAL
 fn decode_jal(instr: JTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
     Ok(BrInstr::from(BranchType::JAL, &instr, &gpr, npc))
+}
+
+// decode BRANCH
+fn decode_branch(instr: BTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
+    Ok(BrInstr::from(BranchType::COND_EQ, &instr, &gpr, npc))
 }
 
 #[cfg(test)]

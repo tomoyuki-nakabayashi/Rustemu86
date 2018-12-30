@@ -1,12 +1,13 @@
 //! Instruction format translator.
 
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{ITypeInstr, RTypeInstr, JTypeInstr};
+use crate::isa::instr_format::{BTypeInstr, ITypeInstr, JTypeInstr, RTypeInstr};
 
 pub trait OperandFetch {
     fn dest(&self) -> u32;
     fn operand1(&self, gpr: &Gpr) -> u32;
     fn operand2(&self, gpr: &Gpr) -> u32;
+    fn operand3(&self) -> u32;
 }
 
 impl OperandFetch for RTypeInstr {
@@ -18,6 +19,9 @@ impl OperandFetch for RTypeInstr {
     }
     fn operand2(&self, gpr: &Gpr) -> u32 {
         gpr.read_u32(self.rs2())
+    }
+    fn operand3(&self) -> u32 {
+        panic!("Never call");
     }
 }
 
@@ -31,6 +35,25 @@ impl OperandFetch for ITypeInstr {
     fn operand2(&self, _gpr: &Gpr) -> u32 {
         self.imm12() as u32
     }
+    fn operand3(&self) -> u32 {
+        panic!("Never call");
+    }
+}
+
+impl OperandFetch for BTypeInstr {
+    fn dest(&self) -> u32 {
+        // ignore
+        0
+    }
+    fn operand1(&self, gpr: &Gpr) -> u32 {
+        gpr.read_u32(self.rs1())
+    }
+    fn operand2(&self, gpr: &Gpr) -> u32 {
+        gpr.read_u32(self.rs2())
+    }
+    fn operand3(&self) -> u32 {
+        self.offset_12_1() as u32
+    }
 }
 
 impl OperandFetch for JTypeInstr {
@@ -38,10 +61,12 @@ impl OperandFetch for JTypeInstr {
         self.rd()
     }
     fn operand1(&self, _gpr: &Gpr) -> u32 {
-        unimplemented!()
-    }
-    // Something wrong
-    fn operand2(&self, _gpr: &Gpr) -> u32 {
         self.offset_20_1() as u32
+    }
+    fn operand2(&self, _gpr: &Gpr) -> u32 {
+        panic!("Never call");
+    }
+    fn operand3(&self) -> u32 {
+        panic!("Never call");
     }
 }

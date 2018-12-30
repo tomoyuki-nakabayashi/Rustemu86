@@ -2,12 +2,20 @@
 //! Returns write back data.
 
 use crate::decode::{AluInstr, BrInstr, DecodedInstr};
-use crate::isa::opcode::AluOpcode;
+use crate::isa::opcode::{AluOpcode, BranchType};
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
     Gpr { target: u32, value: u32 },
     Halt,
+}
+
+impl Default for WriteBackData {
+    /// Create dummy data which will be ignored because destination is zero
+    /// register.
+    fn default() -> WriteBackData {
+        WriteBackData::Gpr { target: 0, value: 0 }
+    }
 }
 
 /// Exceptions occur in execute stage.
@@ -51,10 +59,22 @@ fn alu_op(op: AluOpcode, rs1: u32, rs2: u32) -> u32 {
 
 // Execute branch operation.
 fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
-    let link = WriteBackData::Gpr {
-        target: instr.dest,
-        value: instr.next_pc,
-    };
-    let next_pc = instr.operand1 + instr.operand2;
-    Ok((link, next_pc))
+    match instr.op {
+        BranchType::JAL => {
+            let link = WriteBackData::Gpr {
+                target: instr.dest,
+                value: instr.next_pc,
+            };
+            let next_pc = instr.base + instr.offset;
+            Ok((link, next_pc))
+        }
+        BranchType::COND_EQ => {
+            let next_pc = if instr.operand1 == instr.operand2 {
+                instr.base + instr.offset
+            } else {
+                instr.next_pc
+            };
+            Ok((WriteBackData::default(), next_pc))
+        }
+    }
 }
