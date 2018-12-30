@@ -2,6 +2,7 @@ use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
 use crate::gpr::Gpr;
+use crate::lsu::load_store;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
@@ -75,6 +76,12 @@ impl CpuModel for Riscv {
             use crate::execute::WriteBackData::*;;
             match wb {
                 Gpr { target, value } => self.gpr.write_u32(target, value),
+                Lsu(ref op) => {
+                    let wb = load_store(&self.mmio, op)?;
+                    if let Gpr { target, value } = wb {
+                        self.gpr.write_u32(target, value);
+                    };
+                }
                 Halt => self.halted = true,
             }
             self.pc = next_pc;

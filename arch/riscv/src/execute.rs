@@ -1,12 +1,13 @@
 //! Execute stage.
 //! Returns write back data.
 
-use crate::decode::{AluInstr, BrInstr, DecodedInstr};
-use crate::isa::opcode::{AluOpcode, BranchType};
+use crate::decode::{AluInstr, BrInstr, DecodedInstr, LsuInstr};
+use crate::isa::opcode::{AluOpcode, BranchType, LoadStoreType};
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
     Gpr { target: u32, value: u32 },
+    Lsu(LsuOp),
     Halt,
 }
 
@@ -14,8 +15,18 @@ impl Default for WriteBackData {
     /// Create dummy data which will be ignored because destination is zero
     /// register.
     fn default() -> WriteBackData {
-        WriteBackData::Gpr { target: 0, value: 0 }
+        WriteBackData::Gpr {
+            target: 0,
+            value: 0,
+        }
     }
+}
+
+pub struct LsuOp {
+    pub op: LoadStoreType,
+    pub dest: u32,
+    pub addr: u32,
+    pub value: u32,
 }
 
 /// Exceptions occur in execute stage.
@@ -31,7 +42,7 @@ pub fn execute(instr: &DecodedInstr) -> Result<(WriteBackData, u32), ExecuteErro
         DecodedInstr::System(ref decoded) => Ok((WriteBackData::Halt, decoded.next_pc)),
         DecodedInstr::Alu(ref decoded) => execute_alu(decoded),
         DecodedInstr::Br(ref decoded) => execute_branch(decoded),
-        DecodedInstr::Lsu(_) => unimplemented!(),
+        DecodedInstr::Lsu(ref decoded) => execute_lsu(decoded),
     }
 }
 
@@ -77,4 +88,19 @@ fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError>
             Ok((WriteBackData::default(), next_pc))
         }
     }
+}
+
+// Execute load/store operation
+fn execute_lsu(instr: &LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+    let sub_op = &instr.alu;
+    let addr = alu_op(sub_op.alu_opcode, sub_op.operand1, sub_op.operand2);
+    Ok((
+        WriteBackData::Lsu(LsuOp {
+            op: instr.op,
+            dest: sub_op.dest,
+            addr,
+            value: 0,
+        }),
+        sub_op.next_pc,
+    ))
 }

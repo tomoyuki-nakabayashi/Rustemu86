@@ -3,6 +3,7 @@
 use bitfield::bitfield;
 
 /// Instruction format is either `Base` (32-bit) or `Compressed` (16-bit).
+#[allow(dead_code)]
 pub enum InstrFormat {
     Base(BaseInstrFormat),
     Compressed(CompressedInstrFormat),
@@ -124,7 +125,7 @@ impl JTypeInstr {
 // Assumption: bits in `n` above position `sign_bit_pos` are already zero.
 #[inline(always)]
 fn sign_extend_at(n: u32, sign_bit_pos: u32) -> u32 {
-    let sign_bit_mask = 1u32 << sign_bit_pos - 1;
+    let sign_bit_mask = 1u32 << (sign_bit_pos - 1);
     (n ^ sign_bit_mask).wrapping_sub(sign_bit_mask)
 }
 

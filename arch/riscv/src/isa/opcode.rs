@@ -4,6 +4,7 @@
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Opcode {
+        Load     = 0b000_0011,
         OpImm    = 0b001_0011,
         Op       = 0b011_0011,
         Branch   = 0b110_0011,
@@ -27,4 +28,11 @@ pub enum BranchType {
     JAL,
     //JALR,
     COND_EQ,
+}
+
+/// Load/Store type
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum LoadStoreType {
+    LW,
 }

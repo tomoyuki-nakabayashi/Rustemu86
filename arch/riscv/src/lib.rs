@@ -8,6 +8,7 @@ mod execute;
 mod fetch;
 mod gpr;
 mod isa;
+mod lsu;
 pub mod riscv;
 
 #[cfg(test)]

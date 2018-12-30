@@ -2,6 +2,7 @@
 use crate::decode::DecodeError;
 use crate::execute::ExecuteError;
 use crate::fetch::FetchError;
+use crate::lsu::LsuError;
 
 /// This is just an wrapper of each stage exception.
 #[derive(Debug, Fail, PartialEq)]
@@ -14,6 +15,9 @@ pub enum InternalExceptions {
 
     #[fail(display = "{}", error)]
     ExecuteException { error: ExecuteError },
+
+    #[fail(display = "{}", error)]
+    MemoryAccessException { error: LsuError },
 }
 
 impl From<FetchError> for InternalExceptions {
@@ -31,5 +35,11 @@ impl From<DecodeError> for InternalExceptions {
 impl From<ExecuteError> for InternalExceptions {
     fn from(error: ExecuteError) -> InternalExceptions {
         InternalExceptions::ExecuteException { error }
+    }
+}
+
+impl From<LsuError> for InternalExceptions {
+    fn from(error: LsuError) -> InternalExceptions {
+        InternalExceptions::MemoryAccessException { error }
     }
 }

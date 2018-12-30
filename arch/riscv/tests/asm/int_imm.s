@@ -12,3 +12,4 @@ beq  x1, x2, j2
 nop
 j2:
 wfi
+lw  x1, 4(x2)

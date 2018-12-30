@@ -4,7 +4,7 @@ mod operand_fetch;
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::{BTypeInstr, ITypeInstr, JTypeInstr, RTypeInstr};
-use crate::isa::opcode::{AluOpcode, BranchType, Opcode};
+use crate::isa::opcode::{AluOpcode, BranchType, LoadStoreType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -96,8 +96,17 @@ impl BrInstr {
 /// So that, it also has `AluInstr`.
 #[derive(Debug, PartialEq)]
 pub struct LsuInstr {
-    alu: AluInstr,
-    // TODO: Add fields to let LSU know operation.
+    pub op: LoadStoreType,
+    pub alu: AluInstr,
+}
+
+impl LsuInstr {
+    pub fn from<T: OperandFetch>(op: LoadStoreType, instr: &T, gpr: &Gpr, npc: u32) -> LsuInstr {
+        LsuInstr {
+            op,
+            alu: AluInstr::from(AluOpcode::ADD, instr, &gpr, npc),
+        }
+    }
 }
 
 /// Decode an instruction.
@@ -106,17 +115,15 @@ pub struct LsuInstr {
 ///   - Prepare operand either reading GPR or zero/sign extending the immediate.
 pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeError> {
     let opcode = get_opcode(instr)?;
+    use self::DecodedInstr::*;
     use self::Opcode::*;
     match opcode {
-        OpSystem => Ok(DecodedInstr::System(SystemInstr { next_pc: npc })),
-        OpImm => decode_op_imm(ITypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
-        Op => decode_op(RTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
-        Jal => decode_jal(JTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Br(i)),
-        Branch => Ok(DecodedInstr::Br(decode_branch(
-            BTypeInstr(instr),
-            &gpr,
-            npc,
-        )?)),
+        Load => Ok(Lsu(decode_load(ITypeInstr(instr), &gpr, npc)?)),
+        OpSystem => Ok(System(SystemInstr { next_pc: npc })),
+        OpImm => Ok(Alu(decode_op_imm(ITypeInstr(instr), &gpr, npc)?)),
+        Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
+        Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, npc)?)),
+        Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, npc)?)),
     }
 }
 
@@ -160,6 +167,11 @@ fn decode_jal(instr: JTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeE
 // decode BRANCH
 fn decode_branch(instr: BTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
     Ok(BrInstr::from(BranchType::COND_EQ, &instr, &gpr, npc))
+}
+
+// decode LOAD
+fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
+    Ok(LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc))
 }
 
 #[cfg(test)]

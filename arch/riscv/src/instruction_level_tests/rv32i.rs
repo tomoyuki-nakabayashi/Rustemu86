@@ -76,6 +76,19 @@ fn beq() {
     assert_eq!(riscv.get_pc(), 0xc);
 }
 
+// Load second instruction in program, i.e., wfi.
+#[test]
+fn load() {
+    let program = vec![
+        0x83, 0x20, 0x41, 0x00, // lw ra, 4(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x1050_0073);
+}
+
 // Helper for test.
 // Simply execute the program with memory.
 fn execute_program(program: Vec<u8>) -> Riscv {
