@@ -67,12 +67,8 @@ impl CpuModel for Riscv {
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;
             match wb {
-                Gpr { target, value } => {
-                    self.gpr.write_u32(target, value);
-                }
-                Halt => {
-                    self.halted = true;
-                }
+                Gpr { target, value } => self.gpr.write_u32(target, value),
+                Halt => self.halted = true,
             }
             self.pc = next_pc;
         }

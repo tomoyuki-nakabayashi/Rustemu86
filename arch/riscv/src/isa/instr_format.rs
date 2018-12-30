@@ -1,5 +1,6 @@
 //! Instruction format for rv32ic.
 
+use bit_field::BitField;
 use bitfield::bitfield;
 
 /// Instruction format is either `Base` (32-bit) or `Compressed` (16-bit).
@@ -75,6 +76,19 @@ bitfield! {
     pub opcode, _: 6, 0;
 }
 
+impl UTypeInstr {
+    pub fn offset_20_1(self) -> i32 {
+        let UTypeInstr(ref instr) = self;
+        let imm20 = (instr.get_bit(31) as u32) << (20 - 1);
+        let imm19_12 = instr.get_bits(12..20) << (12 - 1);
+        let imm11 = (instr.get_bit(20) as u32) << (11 - 1);
+        let imm10_1 = instr.get_bits(21..31) << 1;
+
+        let imm20_0 = imm20 | imm19_12 | imm11 | imm10_1;
+        imm20_0 as i32
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -83,5 +97,13 @@ mod test {
     fn test_bitfield() {
         let instr = ITypeInstr(0x0010_8093);
         assert_eq!(1, instr.rd());
+    }
+
+    #[test]
+    fn test_offset_20_1() {
+        let instr = UTypeInstr(0x008000ef);
+        let offset = instr.offset_20_1();
+
+        assert_eq!(8, offset);
     }
 }

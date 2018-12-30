@@ -65,7 +65,6 @@ fn add() {
     assert_eq!(riscv.get_gpr(ra), 4);
 }
 
-/*
 #[test]
 fn jal() {
     let program = vec![
@@ -79,4 +78,3 @@ fn jal() {
     assert_eq!(riscv.get_gpr(ra), 0x4);
     assert_eq!(riscv.get_pc(), 0xc);
 }
- */

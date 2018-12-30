@@ -1,7 +1,7 @@
 //! Execute stage.
 //! Returns write back data.
 
-use crate::decode::{AluInstr, DecodedInstr};
+use crate::decode::{AluInstr, BrInstr, DecodedInstr};
 use crate::isa::opcode::AluOpcode;
 
 /// Packet to modify CPU state finally.
@@ -22,6 +22,7 @@ pub fn execute(instr: &DecodedInstr) -> Result<(WriteBackData, u32), ExecuteErro
     match instr {
         DecodedInstr::System(ref decoded) => Ok((WriteBackData::Halt, decoded.next_pc)),
         DecodedInstr::Alu(ref decoded) => execute_alu(decoded),
+        DecodedInstr::Br(ref decoded) => execute_branch(decoded),
         DecodedInstr::Lsu(_) => unimplemented!(),
     }
 }
@@ -46,4 +47,14 @@ fn alu_op(op: AluOpcode, rs1: u32, rs2: u32) -> u32 {
         ADD => (rs1 as i32 + rs2 as i32) as u32,
         OR => rs1 | rs2,
     }
+}
+
+// Execute branch operation.
+fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+    let link = WriteBackData::Gpr {
+        target: instr.dest,
+        value: instr.next_pc,
+    };
+    let next_pc = instr.operand1 + instr.operand2;
+    Ok((link, next_pc))
 }
