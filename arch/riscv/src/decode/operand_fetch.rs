@@ -1,7 +1,7 @@
 //! Instruction format translator.
 
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{ITypeInstr, RTypeInstr, UTypeInstr};
+use crate::isa::instr_format::{ITypeInstr, RTypeInstr, JTypeInstr};
 
 pub trait OperandFetch {
     fn dest(&self) -> u32;
@@ -33,7 +33,7 @@ impl OperandFetch for ITypeInstr {
     }
 }
 
-impl OperandFetch for UTypeInstr {
+impl OperandFetch for JTypeInstr {
     fn dest(&self) -> u32 {
         self.rd()
     }

@@ -1,6 +1,5 @@
 //! Instruction format for rv32ic.
 
-use bit_field::BitField;
 use bitfield::bitfield;
 
 /// Instruction format is either `Base` (32-bit) or `Compressed` (16-bit).
@@ -68,21 +67,23 @@ bitfield! {
 /// JAL
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
-    pub struct UTypeInstr(u32);
-    i32;
-    pub imm20, _: 31, 12;
+    pub struct JTypeInstr(u32);
+    u32;
+    imm20, _: 31;
+    imm10_1, _: 30, 21;
+    imm11, _: 20;
+    imm19_12, _: 19, 12;
     u32;
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
 }
 
-impl UTypeInstr {
+impl JTypeInstr {
     pub fn offset_20_1(self) -> i32 {
-        let UTypeInstr(ref instr) = self;
-        let imm20 = (instr.get_bit(31) as u32) << (20 - 1);
-        let imm19_12 = instr.get_bits(12..20) << (12 - 1);
-        let imm11 = (instr.get_bit(20) as u32) << (11 - 1);
-        let imm10_1 = instr.get_bits(21..31) << 1;
+        let imm20 = (self.imm20() as u32) << (20 - 1);
+        let imm19_12 = self.imm19_12() << (12 - 1);
+        let imm11 = (self.imm11() as u32) << (11 - 1);
+        let imm10_1 = self.imm10_1() << 1;
         let imm20_0 = imm20 | imm19_12 | imm11 | imm10_1;
 
         sign_extend_at(imm20_0, 20) as i32
@@ -110,12 +111,12 @@ mod test {
     #[test]
     fn test_offset_20_1() {
         // positive offset.
-        let instr = UTypeInstr(0x008000ef);
+        let instr = JTypeInstr(0x008000ef);
         let offset = instr.offset_20_1();
         assert_eq!(8, offset);
 
         // negative offset.
-        let instr = UTypeInstr(0xffdff0ef);
+        let instr = JTypeInstr(0xffdff0ef);
         let offset = instr.offset_20_1();
         assert_eq!(-4, offset);
     }

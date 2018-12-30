@@ -3,7 +3,7 @@ mod operand_fetch;
 
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
-use crate::isa::instr_format::{ITypeInstr, RTypeInstr, UTypeInstr};
+use crate::isa::instr_format::{ITypeInstr, RTypeInstr, JTypeInstr};
 use crate::isa::opcode::{AluOpcode, BranchType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
@@ -96,7 +96,7 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
         OpSystem => Ok(DecodedInstr::System(SystemInstr { next_pc: npc })),
         OpImm => decode_op_imm(ITypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
         Op => decode_op(RTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Alu(i)),
-        Jal => decode_jal(UTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Br(i)),
+        Jal => decode_jal(JTypeInstr(instr), &gpr, npc).map(|i| DecodedInstr::Br(i)),
     }
 }
 
@@ -133,7 +133,7 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeE
 }
 
 // decode JAL
-fn decode_jal(instr: UTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
+fn decode_jal(instr: JTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
     Ok(BrInstr::from(BranchType::JAL, &instr, &gpr, npc))
 }
 
