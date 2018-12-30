@@ -83,10 +83,18 @@ impl UTypeInstr {
         let imm19_12 = instr.get_bits(12..20) << (12 - 1);
         let imm11 = (instr.get_bit(20) as u32) << (11 - 1);
         let imm10_1 = instr.get_bits(21..31) << 1;
-
         let imm20_0 = imm20 | imm19_12 | imm11 | imm10_1;
-        imm20_0 as i32
+
+        sign_extend_at(imm20_0, 20) as i32
     }
+}
+
+// helper function for sign extension
+// Assumption: bits in `n` above position `sign_bit_pos` are already zero.
+#[inline(always)]
+fn sign_extend_at(n: u32, sign_bit_pos: u32) -> u32 {
+    let sign_bit_mask = 1u32 << sign_bit_pos - 1;
+    (n ^ sign_bit_mask).wrapping_sub(sign_bit_mask)
 }
 
 #[cfg(test)]
@@ -101,9 +109,14 @@ mod test {
 
     #[test]
     fn test_offset_20_1() {
+        // positive offset.
         let instr = UTypeInstr(0x008000ef);
         let offset = instr.offset_20_1();
-
         assert_eq!(8, offset);
+
+        // negative offset.
+        let instr = UTypeInstr(0xffdff0ef);
+        let offset = instr.offset_20_1();
+        assert_eq!(-4, offset);
     }
 }

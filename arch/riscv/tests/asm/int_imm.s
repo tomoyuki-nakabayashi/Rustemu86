@@ -7,4 +7,5 @@ jal  x1, j1
 nop
 j1:
 wfi
+jal x1, j1
 
