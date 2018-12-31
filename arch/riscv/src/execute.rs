@@ -64,7 +64,8 @@ fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
 fn alu_op(op: AluOp, src1: u32, src2: u32) -> u32 {
     use self::AluOp::*;
     match op {
-        ADD => (src1 as i32 + src2 as i32) as u32,
+        ADD => (src1 as i32).wrapping_add(src2 as i32) as u32,
+        SUB => (src1 as i32).wrapping_sub(src2 as i32) as u32,
         OR => src1 | src2,
         SLT => {
             if (src1 as i32) < (src2 as i32) {

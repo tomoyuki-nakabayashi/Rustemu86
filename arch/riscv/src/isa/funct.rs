@@ -19,6 +19,13 @@ enum_from_primitive! {
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Rv32iOpFunct3 {
-        ADD = 0b000
+        ADD = 0b000,
+        SLL = 0b001,
+        SLT = 0b010,
+        SLTU = 0b011,
+        XOR = 0b100,
+        SRx = 0b101,
+        OR = 0b110,
+        AND = 0b111,
     }
 }

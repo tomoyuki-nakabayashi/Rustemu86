@@ -197,9 +197,30 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr> {
     let funct3 = Rv32iOpFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
         funct3: instr.funct3(),
     })?;
-    match funct3 {
-        ADD => Ok(AluInstr::from(AluOp::ADD, false, &instr, &gpr, npc)),
-    }
+    let builder = AluInstrBuilder::new(false, &instr, &gpr, npc);
+    let decoded = match funct3 {
+        ADD => {
+            if instr.funct7() == 0b010_0000 {
+                builder.build_instr(AluOp::SUB)
+            } else {
+                builder.build_instr(AluOp::ADD)
+            }
+        }
+        SLT => builder.build_instr(AluOp::SLT),
+        SLTU => builder.build_instr(AluOp::SLTU),
+        AND => builder.build_instr(AluOp::AND),
+        OR => builder.build_instr(AluOp::OR),
+        XOR => builder.build_instr(AluOp::XOR),
+        SLL => builder.build_instr(AluOp::SLL),
+        SRx => {
+            if instr.funct7() == 0b010_0000 {
+                builder.build_instr(AluOp::SRA)
+            } else {
+                builder.build_instr(AluOp::SRL)
+            }
+        }
+    };
+    Ok(decoded)
 }
 
 // decode LUI

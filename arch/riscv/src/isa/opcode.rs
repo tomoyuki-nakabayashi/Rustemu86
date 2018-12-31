@@ -21,6 +21,7 @@ enum_from_primitive! {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AluOp {
     ADD,
+    SUB,
     OR,
     SLT,
     SLTU,

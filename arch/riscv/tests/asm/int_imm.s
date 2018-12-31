@@ -31,4 +31,15 @@ addi x1, x0, -256
 srai x2, x1, 5
 lui  x1, 0x12345
 auipc x1, 0x12345
+slt x2, x0, x1
+slt x3, x1, x0
+sltu x2, x0, x1
+sltu x3, x1, x0
+and x3, x1, x2
+or  x3, x1, x2
+xor x3, x1, x2
+sll x3, x1, x2
+srl x3, x1, x2
+add x2, x2, x1
+sub x2, x2, x1
 

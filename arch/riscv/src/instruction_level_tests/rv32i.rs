@@ -163,14 +163,168 @@ fn auipc() {
 #[test]
 fn add() {
     let program = vec![
-        0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
         0xb3, 0x80, 0x10, 0x00, // add ra, ra, ra
+        0x33, 0x01, 0x11, 0x00, // add sp, sp, ra
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let riscv = execute_program(program);
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 2);
+        riscv.set_gpr(sp, 0x7fff_ffff);
+    };
+    let riscv = execute_program_init_by(program, initializer);
 
     assert_eq!(riscv.get_gpr(ra), 4);
+    // ignore overflow
+    assert_eq!(riscv.get_gpr(sp), 0x8000_0003);
+}
+
+#[test]
+fn sub() {
+    let program = vec![
+        0x33, 0x01, 0x11, 0x40, // sub sp, sp, ra
+        0x33, 0x01, 0x11, 0x40, // sub sp, sp, ra
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 2);
+        riscv.set_gpr(sp, 3);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    // ignore overflow
+    assert_eq!(riscv.get_gpr(sp), 0xffff_ffff);
+}
+
+#[test]
+fn slt() {
+    let program = vec![
+        0x33, 0x21, 0x10, 0x00, // slt sp, zero, ra
+        0xb3, 0xa1, 0x00, 0x00, // slt gp, ra, zero
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xffff_ffff);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(sp), 0);
+    assert_eq!(riscv.get_gpr(gp), 1);
+}
+
+#[test]
+fn sltu() {
+    let program = vec![
+        0x33, 0x31, 0x10, 0x00, // sltu sp, zero, ra
+        0xb3, 0xb1, 0x00, 0x00, // sltu gp, ra, zero
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xffff_ffff);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(sp), 1);
+    assert_eq!(riscv.get_gpr(gp), 0);
+}
+
+#[test]
+fn and() {
+    let program = vec![
+        0xb3, 0xf1, 0x20, 0x00, // and gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 0xaaaa_aaaa);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0xaa00_aa00);
+}
+
+#[test]
+fn or() {
+    let program = vec![
+        0xb3, 0xe1, 0x20, 0x00, // or gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 0xaaaa_aaaa);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0xffaa_ffaa);
+}
+
+#[test]
+fn xor() {
+    let program = vec![
+        0xb3, 0xc1, 0x20, 0x00, // xor gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 0xaaaa_aaaa);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0x55aa_55aa);
+}
+
+#[test]
+fn sll() {
+    let program = vec![
+        0xb3, 0x91, 0x20, 0x00, // sll gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 5);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0xe01f_e000);
+}
+
+#[test]
+fn srl() {
+    let program = vec![
+        0xb3, 0xd1, 0x20, 0x00, // srl gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 5);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0x07f8_07f8);
+}
+
+#[test]
+fn sra() {
+    let program = vec![
+        0xb3, 0xd1, 0x20, 0x40, // sra gp, ra, sp
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xff00_ff00);
+        riscv.set_gpr(sp, 5);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(gp), 0xfff8_07f8);
 }
 
 #[test]
