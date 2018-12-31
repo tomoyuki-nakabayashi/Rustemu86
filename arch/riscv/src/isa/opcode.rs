@@ -7,8 +7,10 @@ enum_from_primitive! {
         Load     = 0b000_0011,
         MiscMem  = 0b000_1111,
         OpImm    = 0b001_0011,
+        Auipc    = 0b001_0111,
         Store    = 0b010_0011,
         Op       = 0b011_0011,
+        Lui      = 0b011_0111,
         Branch   = 0b110_0011,
         Jal      = 0b110_1111,
         OpSystem = 0b111_0011,
@@ -27,6 +29,8 @@ pub enum AluOp {
     SLL,
     SRL,
     SRA,
+    LUI,
+    AUIPC,
 }
 
 /// Branch type

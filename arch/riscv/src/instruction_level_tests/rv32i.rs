@@ -133,6 +133,31 @@ fn sra_imm() {
     assert_eq!(riscv.get_gpr(sp), 0xffff_fff8);
 }
 
+#[test]
+fn lui() {
+    let program = vec![
+        0xb7, 0x50, 0x34, 0x12, // lui ra, 0x12345
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x1234_5000);
+}
+
+#[test]
+fn auipc() {
+    let program = vec![
+        0x13, 0x00, 0x00, 0x00, // nop
+        0x97, 0x50, 0x34, 0x12, // auipc ra, 0x12345
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x1234_5004);
+}
+
 // # Integer Regiser-Register Instructions
 
 #[test]

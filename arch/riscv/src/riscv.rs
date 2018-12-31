@@ -69,7 +69,7 @@ impl CpuModel for Riscv {
     fn run(&mut self) -> Result<()> {
         while !self.halted {
             let (instr, next_pc) = fetch(&self.mmio, self.pc)?;
-            let instr = decode(instr, &self.gpr, next_pc)?;
+            let instr = decode(instr, &self.gpr, self.pc, next_pc)?;
             let (wb, next_pc) = execute(&instr)?;
 
             // Change CPU state only here.

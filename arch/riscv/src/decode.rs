@@ -8,6 +8,9 @@ use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
 
+use std::result;
+type Result<T> = result::Result<T, DecodeError>;
+
 /// Exceptions occur in decode stage.
 #[derive(Debug, Fail, PartialEq)]
 pub enum DecodeError {
@@ -94,26 +97,15 @@ pub struct BrInstr {
 }
 
 impl BrInstr {
-    fn from<T: OperandFetch>(op: BranchType, instr: &T, gpr: &Gpr, npc: u32) -> BrInstr {
-        match op {
-            BranchType::JAL => BrInstr {
-                op,
-                dest: instr.rd(),
-                src1: 0, // do not use
-                src2: 0, // do not use
-                base: npc - 4,
-                offset: instr.imm(),
-                next_pc: npc,
-            },
-            BranchType::COND_EQ => BrInstr {
-                op,
-                dest: instr.rd(), // ignore the result.
-                src1: instr.rs1(&gpr),
-                src2: instr.rs2(&gpr),
-                base: npc - 4,
-                offset: instr.imm(),
-                next_pc: npc,
-            },
+    fn from<T: OperandFetch>(op: BranchType, instr: &T, gpr: &Gpr, pc: u32, npc: u32) -> BrInstr {
+        BrInstr {
+            op,
+            dest: instr.rd(),
+            src1: instr.rs1(&gpr),
+            src2: instr.rs2(&gpr),
+            base: pc,
+            offset: instr.imm(),
+            next_pc: npc,
         }
     }
 }
@@ -133,23 +125,13 @@ pub struct LsuInstr {
 
 impl LsuInstr {
     pub fn from<T: OperandFetch>(op: LoadStoreType, instr: &T, gpr: &Gpr, npc: u32) -> LsuInstr {
-        match op {
-            LoadStoreType::LW => LsuInstr {
-                op,
-                dest: instr.rd(),
-                base: instr.rs1(&gpr),
-                src: 0,
-                offset: instr.imm(),
-                next_pc: npc,
-            },
-            LoadStoreType::SW => LsuInstr {
-                op,
-                dest: instr.rd(),
-                base: instr.rs1(&gpr),
-                src: instr.rs2(&gpr),
-                offset: instr.imm(),
-                next_pc: npc,
-            },
+        LsuInstr {
+            op,
+            dest: instr.rd(),
+            base: instr.rs1(&gpr),
+            src: instr.rs2(&gpr),
+            offset: instr.imm(),
+            next_pc: npc,
         }
     }
 }
@@ -158,7 +140,7 @@ impl LsuInstr {
 /// There are two sub-stage in the decode.
 ///   - Decode an instruction according to opcode.
 ///   - Prepare operand either reading GPR or zero/sign extending the immediate.
-pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeError> {
+pub fn decode(instr: u32, gpr: &Gpr, pc: u32, npc: u32) -> Result<DecodedInstr> {
     let opcode = get_opcode(instr)?;
     use self::DecodedInstr::*;
     use self::Opcode::*;
@@ -167,21 +149,23 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
         Store => Ok(Lsu(decode_store(STypeInstr(instr), &gpr, npc)?)),
         MiscMem => Ok(Alu(decode_as_nop(npc).unwrap())),
         OpImm => Ok(Alu(decode_op_imm(ITypeInstr(instr), &gpr, npc)?)),
+        Auipc => Ok(Alu(decode_auipc(UTypeInstr(instr), pc, npc)?)),
         Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
-        Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, npc)?)),
-        Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, npc)?)),
+        Lui => Ok(Alu(decode_lui(UTypeInstr(instr), &gpr, npc)?)),
+        Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, pc, npc)?)),
+        Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, pc, npc)?)),
         OpSystem => Ok(System(SystemInstr { next_pc: npc })),
     }
 }
 
 // get opcode
-fn get_opcode(instr: u32) -> Result<Opcode, DecodeError> {
+fn get_opcode(instr: u32) -> Result<Opcode> {
     let opcode = instr.get_bits(0..7);
     Opcode::from_u32(opcode).ok_or(DecodeError::UndefinedInstr { opcode })
 }
 
 // decode OP-IMM
-fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeError> {
+fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr> {
     use crate::isa::funct::Rv32iOpImmFunct3::{self, *};
     let funct3 =
         Rv32iOpImmFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
@@ -197,18 +181,18 @@ fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, Dec
         ANDI => builder.build_instr(AluOp::AND),
         XORI => builder.build_instr(AluOp::XOR),
         SRxI => {
-            if instr.funct7() == 0b0100000 {
+            if instr.funct7() == 0b010_0000 {
                 builder.build_instr(AluOp::SRA)
             } else {
                 builder.build_instr(AluOp::SRL)
             }
-        },
+        }
     };
     Ok(decoded)
 }
 
 // decode OP
-fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeError> {
+fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr> {
     use crate::isa::funct::Rv32iOpFunct3::{self, *};
     let funct3 = Rv32iOpFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
         funct3: instr.funct3(),
@@ -218,28 +202,44 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeE
     }
 }
 
+// decode LUI
+fn decode_lui(instr: UTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr> {
+    Ok(AluInstr::from(AluOp::LUI, true, &instr, &gpr, npc))
+}
+
+// decode AUIPC
+fn decode_auipc(instr: UTypeInstr, pc: u32, npc: u32) -> Result<AluInstr> {
+    Ok(AluInstr {
+        alu_opcode: AluOp::AUIPC,
+        dest: instr.rd(),
+        src1: pc,
+        src2: instr.imm() as u32,
+        next_pc: npc,
+    })
+}
+
 // decode JAL
-fn decode_jal(instr: JTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
-    Ok(BrInstr::from(BranchType::JAL, &instr, &gpr, npc))
+fn decode_jal(instr: JTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
+    Ok(BrInstr::from(BranchType::JAL, &instr, &gpr, pc, npc))
 }
 
 // decode BRANCH
-fn decode_branch(instr: BTypeInstr, gpr: &Gpr, npc: u32) -> Result<BrInstr, DecodeError> {
-    Ok(BrInstr::from(BranchType::COND_EQ, &instr, &gpr, npc))
+fn decode_branch(instr: BTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
+    Ok(BrInstr::from(BranchType::COND_EQ, &instr, &gpr, pc, npc))
 }
 
 // decode LOAD
-fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
+fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
     Ok(LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc))
 }
 
 // decode STORE
-fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
+fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
     Ok(LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc))
 }
 
 // decode as NOP for fence.i
-fn decode_as_nop(npc: u32) -> Result<AluInstr, DecodeError> {
+fn decode_as_nop(npc: u32) -> Result<AluInstr> {
     Ok(AluInstr {
         alu_opcode: AluOp::ADD,
         dest: 0,
@@ -257,10 +257,10 @@ mod test {
     fn decode_undefined_opcode() {
         let gpr = Gpr::new();
         let instr = 0x0000_0007u32; // FLW won't implement for the present.
-        let result = decode(instr, &gpr, 4);
+        let result = decode(instr, &gpr, 0, 4);
 
         assert_eq!(
-            Err(DecodeError::UndefinedInstr { opcode: 0b0000111 }),
+            Err(DecodeError::UndefinedInstr { opcode: 0b000_0111 }),
             result
         );
     }

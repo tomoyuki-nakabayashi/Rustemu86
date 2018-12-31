@@ -29,4 +29,6 @@ srli x3, x1, 4
 addi x1, x0, -1
 addi x1, x0, -256
 srai x2, x1, 5
+lui  x1, 0x12345
+auipc x1, 0x12345
 

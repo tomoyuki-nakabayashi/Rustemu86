@@ -50,7 +50,7 @@ bitfield! {
 
 /// I type format:
 /// imm[11:0] | rs1 | funct3 | rd | opcode
-/// OP-IMM /
+/// OP-IMM / Load
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ITypeInstr(u32);
@@ -118,6 +118,19 @@ impl BTypeInstr {
 
         sign_extend_at(imm12_0, 12) as i32
     }
+}
+
+/// U type format:
+/// imm[31:12] | rd | opcode
+/// LUI / AUIPC
+bitfield! {
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct UTypeInstr(u32);
+    u32;
+    pub imm31_12, _: 31, 12;
+    u32;
+    pub rd, _: 11, 7;
+    pub opcode, _: 6, 0;
 }
 
 /// J type format:
