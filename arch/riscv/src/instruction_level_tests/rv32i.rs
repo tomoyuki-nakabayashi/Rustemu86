@@ -17,7 +17,7 @@ fn add_imm() {
     let riscv = execute_program(program);
 
     assert_eq!(riscv.get_gpr(ra), 1);
-    assert_eq!(riscv.get_gpr(sp) as i32, -1);
+    assert_eq!(riscv.get_gpr(sp), 0xffff_ffff);
 }
 
 #[test]
@@ -80,8 +80,8 @@ fn or_imm() {
 #[test]
 fn xor_imm() {
     let program = vec![
-        0x93, 0x40, 0xf0, 0xff, // xori ra, zero -1
-        0x13, 0xc1, 0xf0, 0xff, // xori sp, ra -1
+        0x93, 0x00, 0xf0, 0xff, // xori ra, zero -1
+        0x13, 0xc1, 0xf0, 0xff, // xori sp, ra, -1
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
@@ -89,6 +89,48 @@ fn xor_imm() {
 
     assert_eq!(riscv.get_gpr(ra), 0xffff_ffff);
     assert_eq!(riscv.get_gpr(sp), 0x0000_0000);
+}
+
+#[test]
+fn sll_imm() {
+    let program = vec![
+        0x93, 0x80, 0x10, 0x00, // addi ra, zero, 1
+        0x93, 0x90, 0x50, 0x00, // slli ra, ra 5
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 1u32 << 5);
+}
+
+#[test]
+fn srl_imm() {
+    let program = vec![
+        0x93, 0x80, 0x00, 0x10, // addi ra, zero, 0x100
+        0x13, 0xd1, 0x50, 0x00, // srli sp, ra 5
+        0x93, 0x00, 0xf0, 0xff, // addi ra, zero, -1
+        0x93, 0xd1, 0x40, 0x00, // srli gp, ra 4
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(sp), 0x100u32 >> 5);
+    assert_eq!(riscv.get_gpr(gp), 0x0fff_ffff);
+}
+
+#[test]
+fn sra_imm() {
+    let program = vec![
+        0x93, 0x00, 0x00, 0xf0, // addi ra, zero, 0xf00
+        0x13, 0xd1, 0x50, 0x40, // srai sp, ra 5
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(sp), 0xffff_fff8);
 }
 
 // # Integer Regiser-Register Instructions

@@ -56,6 +56,8 @@ bitfield! {
     pub struct ITypeInstr(u32);
     i32;
     pub imm12, _: 31, 20;
+    pub funct7, _: 31, 25;
+    pub shamt, _: 24, 20;
     u32;
     pub rs1, _: 19, 15;
     pub funct3, _: 14, 12;

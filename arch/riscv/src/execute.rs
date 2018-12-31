@@ -2,7 +2,8 @@
 //! Returns write back data.
 
 use crate::decode::{AluInstr, BrInstr, DecodedInstr, LsuInstr};
-use crate::isa::opcode::{AluOpcode, BranchType, LoadStoreType};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType};
+use bit_field::BitField;
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
@@ -60,15 +61,30 @@ fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
 
 // Must not be failed.
 // Decode stage validated that the instructions is correct.
-fn alu_op(op: AluOpcode, src1: u32, src2: u32) -> u32 {
-    use self::AluOpcode::*;
+fn alu_op(op: AluOp, src1: u32, src2: u32) -> u32 {
+    use self::AluOp::*;
     match op {
         ADD => (src1 as i32 + src2 as i32) as u32,
         OR => src1 | src2,
-        SLT => if (src1 as i32) < (src2 as i32) { 1 } else { 0 },
-        SLTU => if src1 < src2 { 1 } else { 0 },
+        SLT => {
+            if (src1 as i32) < (src2 as i32) {
+                1
+            } else {
+                0
+            }
+        }
+        SLTU => {
+            if src1 < src2 {
+                1
+            } else {
+                0
+            }
+        }
         AND => src1 & src2,
         XOR => src1 ^ src2,
+        SLL => src1 << src2.get_bits(0..5),
+        SRL => src1 >> src2.get_bits(0..5),
+        SRA => ((src1 as i32) >> src2.get_bits(0..5)) as u32,
     }
 }
 

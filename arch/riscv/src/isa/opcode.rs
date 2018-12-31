@@ -17,13 +17,16 @@ enum_from_primitive! {
 
 /// Opcode for ALU
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum AluOpcode {
+pub enum AluOp {
     ADD,
     OR,
     SLT,
     SLTU,
     AND,
     XOR,
+    SLL,
+    SRL,
+    SRA,
 }
 
 /// Branch type

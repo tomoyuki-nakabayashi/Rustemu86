@@ -4,7 +4,7 @@ mod operand_fetch;
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::*;
-use crate::isa::opcode::{AluOpcode, BranchType, LoadStoreType, Opcode};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -35,7 +35,7 @@ pub struct SystemInstr {
 /// Decoded format for instructions executed in ALU.
 #[derive(Debug, PartialEq)]
 pub struct AluInstr {
-    pub alu_opcode: AluOpcode,
+    pub alu_opcode: AluOp,
     pub dest: u32,
     pub src1: u32,
     pub src2: u32,
@@ -44,13 +44,7 @@ pub struct AluInstr {
 
 impl AluInstr {
     // Create AluInstr from InstrFormat.
-    fn from<T: OperandFetch>(
-        op: AluOpcode,
-        use_imm: bool,
-        instr: &T,
-        gpr: &Gpr,
-        npc: u32,
-    ) -> AluInstr {
+    fn from<T: OperandFetch>(op: AluOp, use_imm: bool, instr: &T, gpr: &Gpr, npc: u32) -> AluInstr {
         AluInstr {
             alu_opcode: op,
             dest: instr.rd(),
@@ -62,6 +56,28 @@ impl AluInstr {
             },
             next_pc: npc,
         }
+    }
+}
+
+struct AluInstrBuilder<'a, T: OperandFetch> {
+    use_imm: bool,
+    instr: &'a T,
+    gpr: &'a Gpr,
+    npc: u32,
+}
+
+impl<'a, T: OperandFetch> AluInstrBuilder<'a, T> {
+    fn new(use_imm: bool, instr: &'a T, gpr: &'a Gpr, npc: u32) -> Self {
+        AluInstrBuilder {
+            use_imm,
+            instr,
+            gpr,
+            npc,
+        }
+    }
+
+    fn build_instr(&self, op: AluOp) -> AluInstr {
+        AluInstr::from(op, self.use_imm, self.instr, &self.gpr, self.npc)
     }
 }
 
@@ -150,11 +166,11 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
         Load => Ok(Lsu(decode_load(ITypeInstr(instr), &gpr, npc)?)),
         Store => Ok(Lsu(decode_store(STypeInstr(instr), &gpr, npc)?)),
         MiscMem => Ok(Alu(decode_as_nop(npc).unwrap())),
-        OpSystem => Ok(System(SystemInstr { next_pc: npc })),
         OpImm => Ok(Alu(decode_op_imm(ITypeInstr(instr), &gpr, npc)?)),
         Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
         Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, npc)?)),
         Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, npc)?)),
+        OpSystem => Ok(System(SystemInstr { next_pc: npc })),
     }
 }
 
@@ -171,15 +187,24 @@ fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, Dec
         Rv32iOpImmFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
             funct3: instr.funct3(),
         })?;
-    match funct3 {
-        //ADDI => Ok(AluInstr::from_i_type(AluOpcode::ADD, instr, &gpr)),
-        ADDI => Ok(AluInstr::from(AluOpcode::ADD, true, &instr, &gpr, npc)),
-        ORI => Ok(AluInstr::from(AluOpcode::OR, true, &instr, &gpr, npc)),
-        SLTI => Ok(AluInstr::from(AluOpcode::SLT, true, &instr, &gpr, npc)),
-        SLTIU => Ok(AluInstr::from(AluOpcode::SLTU, true, &instr, &gpr, npc)),
-        ANDI => Ok(AluInstr::from(AluOpcode::AND, true, &instr, &gpr, npc)),
-        XORI => Ok(AluInstr::from(AluOpcode::XOR, true, &instr, &gpr, npc)),
-    }
+    let builder = AluInstrBuilder::new(true, &instr, &gpr, npc);
+    let decoded = match funct3 {
+        ADDI => builder.build_instr(AluOp::ADD),
+        SLLI => builder.build_instr(AluOp::SLL),
+        ORI => builder.build_instr(AluOp::OR),
+        SLTI => builder.build_instr(AluOp::SLT),
+        SLTIU => builder.build_instr(AluOp::SLTU),
+        ANDI => builder.build_instr(AluOp::AND),
+        XORI => builder.build_instr(AluOp::XOR),
+        SRxI => {
+            if instr.funct7() == 0b0100000 {
+                builder.build_instr(AluOp::SRA)
+            } else {
+                builder.build_instr(AluOp::SRL)
+            }
+        },
+    };
+    Ok(decoded)
 }
 
 // decode OP
@@ -189,7 +214,7 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeE
         funct3: instr.funct3(),
     })?;
     match funct3 {
-        ADD => Ok(AluInstr::from(AluOpcode::ADD, false, &instr, &gpr, npc)),
+        ADD => Ok(AluInstr::from(AluOp::ADD, false, &instr, &gpr, npc)),
     }
 }
 
@@ -216,7 +241,7 @@ fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, Deco
 // decode as NOP for fence.i
 fn decode_as_nop(npc: u32) -> Result<AluInstr, DecodeError> {
     Ok(AluInstr {
-        alu_opcode: AluOpcode::ADD,
+        alu_opcode: AluOp::ADD,
         dest: 0,
         src1: 0,
         src2: 0,

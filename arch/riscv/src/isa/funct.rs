@@ -4,12 +4,14 @@
 enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Rv32iOpImmFunct3 {
-        ADDI = 0b000,
-        SLTI = 0b010,
+        ADDI  = 0b000,
+        SLLI  = 0b001,
+        SLTI  = 0b010,
         SLTIU = 0b011,
-        XORI = 0b100,
-        ORI = 0b110,
-        ANDI = 0b111,
+        XORI  = 0b100,
+        SRxI  = 0b101,
+        ORI   = 0b110,
+        ANDI  = 0b111,
     }
 }
 

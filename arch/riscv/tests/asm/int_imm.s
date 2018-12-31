@@ -23,4 +23,10 @@ andi x2, x1, 170
 andi x3, x1, -171
 xori x1, zero, -1
 xori x2, x1, -1
+slli x1, x1, 5
+srli x2, x1, 5
+srli x3, x1, 4
+addi x1, x0, -1
+addi x1, x0, -256
+srai x2, x1, 5
 
