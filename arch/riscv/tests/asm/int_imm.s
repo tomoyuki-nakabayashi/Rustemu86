@@ -15,4 +15,6 @@ wfi
 lw  x1, 4(x2)
 sw  x1, 0xc(x2)
 fence.i
+slti x2, x1, 1
+slti x3, x1, -1
 

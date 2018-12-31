@@ -20,6 +20,7 @@ enum_from_primitive! {
 pub enum AluOpcode {
     ADD,
     OR,
+    SLT,
 }
 
 /// Branch type

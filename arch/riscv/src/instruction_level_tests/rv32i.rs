@@ -4,6 +4,8 @@ use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::{memory::Memory, mmio::Mmio};
 
+// # Integer Regiser-Immediate Instructions
+
 #[test]
 fn add_imm() {
     let program = vec![
@@ -19,6 +21,20 @@ fn add_imm() {
 }
 
 #[test]
+fn slti_imm() {
+    let program = vec![
+        0x13, 0xa1, 0x10, 0x00, // slti sp, ra, 1
+        0x93, 0xa1, 0xf0, 0xff, // slti gp, ra -1
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(sp), 1);
+    assert_eq!(riscv.get_gpr(gp), 0);
+}
+
+#[test]
 fn or_imm() {
     let program = vec![
         0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
@@ -31,6 +47,8 @@ fn or_imm() {
     assert_eq!(riscv.get_gpr(ra), 2);
     assert_eq!(riscv.get_gpr(sp), 0xffff_ffff);
 }
+
+// # Integer Regiser-Register Instructions
 
 #[test]
 fn add() {

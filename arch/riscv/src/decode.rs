@@ -175,6 +175,7 @@ fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, Dec
         //ADDI => Ok(AluInstr::from_i_type(AluOpcode::ADD, instr, &gpr)),
         ADDI => Ok(AluInstr::from(AluOpcode::ADD, true, &instr, &gpr, npc)),
         ORI => Ok(AluInstr::from(AluOpcode::OR, true, &instr, &gpr, npc)),
+        SLTI => Ok(AluInstr::from(AluOpcode::SLT, true, &instr, &gpr, npc)),
         _ => unimplemented!(),
     }
 }
