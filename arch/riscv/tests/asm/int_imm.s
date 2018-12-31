@@ -17,4 +17,10 @@ sw  x1, 0xc(x2)
 fence.i
 slti x2, x1, 1
 slti x3, x1, -1
+sltiu x2, x1, 1
+sltiu x3, x1, -1
+andi x2, x1, 170
+andi x3, x1, -171
+xori x1, zero, -1
+xori x2, x1, -1
 

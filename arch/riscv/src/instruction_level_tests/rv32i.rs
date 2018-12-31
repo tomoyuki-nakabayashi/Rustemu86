@@ -35,6 +35,35 @@ fn slti_imm() {
 }
 
 #[test]
+fn sltiu_imm() {
+    let program = vec![
+        0x13, 0xb1, 0x10, 0x00, // sltiu sp, ra, 1
+        0x93, 0xb1, 0xf0, 0xff, // sltiu gp, ra -1 indicates less than MAX of u32
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(sp), 1);
+    assert_eq!(riscv.get_gpr(gp), 1);
+}
+
+#[test]
+fn and_imm() {
+    let program = vec![
+        0x93, 0x80, 0xf0, 0xff, // addi ra, zero, -1
+        0x13, 0xf1, 0xa0, 0x0a, // andi sp, ra 0x0aa
+        0x93, 0xf1, 0x50, 0xf5, // andi gp, ra 0xf55
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(sp), 0xaa);
+    assert_eq!(riscv.get_gpr(gp), 0xffff_ff55);
+}
+
+#[test]
 fn or_imm() {
     let program = vec![
         0x93, 0xe0, 0x20, 0x00, // ori ra, zero, 2
@@ -46,6 +75,20 @@ fn or_imm() {
 
     assert_eq!(riscv.get_gpr(ra), 2);
     assert_eq!(riscv.get_gpr(sp), 0xffff_ffff);
+}
+
+#[test]
+fn xor_imm() {
+    let program = vec![
+        0x93, 0x40, 0xf0, 0xff, // xori ra, zero -1
+        0x13, 0xc1, 0xf0, 0xff, // xori sp, ra -1
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0xffff_ffff);
+    assert_eq!(riscv.get_gpr(sp), 0x0000_0000);
 }
 
 // # Integer Regiser-Register Instructions

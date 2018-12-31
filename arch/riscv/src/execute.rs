@@ -66,6 +66,9 @@ fn alu_op(op: AluOpcode, src1: u32, src2: u32) -> u32 {
         ADD => (src1 as i32 + src2 as i32) as u32,
         OR => src1 | src2,
         SLT => if (src1 as i32) < (src2 as i32) { 1 } else { 0 },
+        SLTU => if src1 < src2 { 1 } else { 0 },
+        AND => src1 & src2,
+        XOR => src1 ^ src2,
     }
 }
 

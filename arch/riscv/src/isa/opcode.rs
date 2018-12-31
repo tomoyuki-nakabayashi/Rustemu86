@@ -21,6 +21,9 @@ pub enum AluOpcode {
     ADD,
     OR,
     SLT,
+    SLTU,
+    AND,
+    XOR,
 }
 
 /// Branch type
