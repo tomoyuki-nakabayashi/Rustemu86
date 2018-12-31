@@ -48,7 +48,7 @@ pub fn execute(instr: &DecodedInstr) -> Result<(WriteBackData, u32), ExecuteErro
 
 // Executes ALU operation.
 fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
-    let value = alu_op(instr.alu_opcode, instr.operand1, instr.operand2);
+    let value = alu_op(instr.alu_opcode, instr.src1, instr.src2);
     Ok((
         WriteBackData::Gpr {
             target: instr.dest,
@@ -60,11 +60,11 @@ fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
 
 // Must not be failed.
 // Decode stage validated that the instructions is correct.
-fn alu_op(op: AluOpcode, rs1: u32, rs2: u32) -> u32 {
+fn alu_op(op: AluOpcode, src1: u32, src2: u32) -> u32 {
     use self::AluOpcode::*;
     match op {
-        ADD => (rs1 as i32 + rs2 as i32) as u32,
-        OR => rs1 | rs2,
+        ADD => (src1 as i32 + src2 as i32) as u32,
+        OR => src1 | src2,
     }
 }
 
@@ -80,7 +80,7 @@ fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError>
             Ok((link, next_pc))
         }
         BranchType::COND_EQ => {
-            let next_pc = if instr.operand1 == instr.operand2 {
+            let next_pc = if instr.src1 == instr.src2 {
                 instr.base + instr.offset
             } else {
                 instr.next_pc

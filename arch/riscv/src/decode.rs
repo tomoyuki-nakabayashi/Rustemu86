@@ -37,18 +37,29 @@ pub struct SystemInstr {
 pub struct AluInstr {
     pub alu_opcode: AluOpcode,
     pub dest: u32,
-    pub operand1: u32,
-    pub operand2: u32,
+    pub src1: u32,
+    pub src2: u32,
     pub next_pc: u32,
 }
 
 impl AluInstr {
-    fn from<T: OperandFetch>(op: AluOpcode, instr: &T, gpr: &Gpr, npc: u32) -> AluInstr {
+    // Create AluInstr from InstrFormat.
+    fn from<T: OperandFetch>(
+        op: AluOpcode,
+        use_imm: bool,
+        instr: &T,
+        gpr: &Gpr,
+        npc: u32,
+    ) -> AluInstr {
         AluInstr {
             alu_opcode: op,
-            dest: instr.dest(),
-            operand1: instr.operand1(&gpr),
-            operand2: instr.operand2(&gpr),
+            dest: instr.rd(),
+            src1: instr.rs1(&gpr),
+            src2: if use_imm {
+                instr.imm()
+            } else {
+                instr.rs2(&gpr)
+            },
             next_pc: npc,
         }
     }
@@ -59,8 +70,8 @@ impl AluInstr {
 pub struct BrInstr {
     pub op: BranchType,
     pub dest: u32,
-    pub operand1: u32,
-    pub operand2: u32,
+    pub src1: u32,
+    pub src2: u32,
     pub base: u32,
     pub offset: u32,
     pub next_pc: u32,
@@ -71,20 +82,20 @@ impl BrInstr {
         match op {
             BranchType::JAL => BrInstr {
                 op,
-                dest: instr.dest(),
-                operand1: 0, // do not use
-                operand2: 0, // do not use
+                dest: instr.rd(),
+                src1: 0, // do not use
+                src2: 0, // do not use
                 base: npc - 4,
-                offset: instr.operand1(&gpr),
+                offset: instr.imm(),
                 next_pc: npc,
             },
             BranchType::COND_EQ => BrInstr {
                 op,
-                dest: instr.dest(), // ignore the result.
-                operand1: instr.operand1(&gpr),
-                operand2: instr.operand2(&gpr),
+                dest: instr.rd(), // ignore the result.
+                src1: instr.rs1(&gpr),
+                src2: instr.rs2(&gpr),
                 base: npc - 4,
-                offset: instr.operand3(),
+                offset: instr.imm(),
                 next_pc: npc,
             },
         }
@@ -109,22 +120,21 @@ impl LsuInstr {
         match op {
             LoadStoreType::LW => LsuInstr {
                 op,
-                dest: instr.dest(),
-                base: instr.operand1(&gpr),
+                dest: instr.rd(),
+                base: instr.rs1(&gpr),
                 src: 0,
-                offset: instr.operand2(&gpr),
+                offset: instr.imm(),
                 next_pc: npc,
             },
             LoadStoreType::SW => LsuInstr {
                 op,
-                dest: instr.dest(),
-                base: instr.operand1(&gpr),
-                src: instr.operand2(&gpr),
-                offset: instr.operand3(),
+                dest: instr.rd(),
+                base: instr.rs1(&gpr),
+                src: instr.rs2(&gpr),
+                offset: instr.imm(),
                 next_pc: npc,
             },
         }
-        
     }
 }
 
@@ -162,8 +172,8 @@ fn decode_op_imm(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, Dec
         })?;
     match funct3 {
         //ADDI => Ok(AluInstr::from_i_type(AluOpcode::ADD, instr, &gpr)),
-        ADDI => Ok(AluInstr::from(AluOpcode::ADD, &instr, &gpr, npc)),
-        ORI => Ok(AluInstr::from(AluOpcode::OR, &instr, &gpr, npc)),
+        ADDI => Ok(AluInstr::from(AluOpcode::ADD, true, &instr, &gpr, npc)),
+        ORI => Ok(AluInstr::from(AluOpcode::OR, true, &instr, &gpr, npc)),
         _ => unimplemented!(),
     }
 }
@@ -175,7 +185,7 @@ fn decode_op(instr: RTypeInstr, gpr: &Gpr, npc: u32) -> Result<AluInstr, DecodeE
         funct3: instr.funct3(),
     })?;
     match funct3 {
-        ADD => Ok(AluInstr::from(AluOpcode::ADD, &instr, &gpr, npc)),
+        ADD => Ok(AluInstr::from(AluOpcode::ADD, false, &instr, &gpr, npc)),
     }
 }
 
