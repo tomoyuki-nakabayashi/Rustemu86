@@ -104,6 +104,19 @@ fn store() {
     assert_eq!(riscv.get_gpr(ra), 0);
 }
 
+// Test for dummy implementation. This instruction does no-effect in this emulator.
+// This is required for pipelined processor.
+#[test]
+fn fence_i() {
+    let program = vec![
+        0x0f, 0x10, 0x00, 0x00, // fence.i
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    // just check whether it successfully finishes execution.
+    execute_program(program);
+}
+
 // Helper for test.
 // Simply execute the program with memory.
 fn execute_program(program: Vec<u8>) -> Riscv {

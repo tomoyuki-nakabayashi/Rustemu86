@@ -5,6 +5,7 @@ enum_from_primitive! {
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub enum Opcode {
         Load     = 0b000_0011,
+        MiscMem  = 0b000_1111,
         OpImm    = 0b001_0011,
         Store    = 0b010_0011,
         Op       = 0b011_0011,

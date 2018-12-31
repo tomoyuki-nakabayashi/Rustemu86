@@ -149,6 +149,7 @@ pub fn decode(instr: u32, gpr: &Gpr, npc: u32) -> Result<DecodedInstr, DecodeErr
     match opcode {
         Load => Ok(Lsu(decode_load(ITypeInstr(instr), &gpr, npc)?)),
         Store => Ok(Lsu(decode_store(STypeInstr(instr), &gpr, npc)?)),
+        MiscMem => Ok(Alu(decode_as_nop(npc).unwrap())),
         OpSystem => Ok(System(SystemInstr { next_pc: npc })),
         OpImm => Ok(Alu(decode_op_imm(ITypeInstr(instr), &gpr, npc)?)),
         Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
@@ -204,9 +205,20 @@ fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, Decod
     Ok(LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc))
 }
 
-// docode STORE
+// decode STORE
 fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr, DecodeError> {
     Ok(LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc))
+}
+
+// decode as NOP for fence.i
+fn decode_as_nop(npc: u32) -> Result<AluInstr, DecodeError> {
+    Ok(AluInstr {
+        alu_opcode: AluOpcode::ADD,
+        dest: 0,
+        src1: 0,
+        src2: 0,
+        next_pc: npc,
+    })
 }
 
 #[cfg(test)]
