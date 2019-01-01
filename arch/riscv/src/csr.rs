@@ -23,7 +23,7 @@ impl Csr {
         let index = usize::from_u32(index).expect("invalid register index");
         assert!(
             index <= MAX_CSR_INDEX,
-            "register index must be smaller than 255 but {}",
+            "register index must be smaller than 4096 but {}",
             index
         );
         self.ram[index]

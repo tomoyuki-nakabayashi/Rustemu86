@@ -54,15 +54,22 @@ bitfield! {
 bitfield! {
     #[derive(Clone, Copy, Debug, PartialEq)]
     pub struct ITypeInstr(u32);
-    i32;
+    u32;
     pub imm12, _: 31, 20;
     pub funct7, _: 31, 25;
     pub shamt, _: 24, 20;
-    u32;
     pub rs1, _: 19, 15;
     pub funct3, _: 14, 12;
     pub rd, _: 11, 7;
     pub opcode, _: 6, 0;
+}
+
+impl ITypeInstr {
+    pub fn imm_11_0(self) -> i32 {
+        let imm11_0 = self.imm12();
+
+        sign_extend_at(imm11_0, 12) as i32
+    }
 }
 
 /// S type format:
@@ -110,13 +117,13 @@ bitfield! {
 
 impl BTypeInstr {
     pub fn offset_12_1(self) -> i32 {
-        let imm12 = (self.imm12() as u32) << (12 - 1);
-        let imm11 = (self.imm11() as u32) << (11 - 1);
-        let imm10_5 = self.imm10_5() << (5 - 1);
+        let imm12 = (self.imm12() as u32) << 12;
+        let imm11 = (self.imm11() as u32) << 11;
+        let imm10_5 = self.imm10_5() << 5;
         let imm4_1 = self.imm4_1() << 1;
         let imm12_0 = imm12 | imm11 | imm10_5 | imm4_1;
 
-        sign_extend_at(imm12_0, 12) as i32
+        sign_extend_at(imm12_0, 13) as i32
     }
 }
 
@@ -151,13 +158,13 @@ bitfield! {
 
 impl JTypeInstr {
     pub fn offset_20_1(self) -> i32 {
-        let imm20 = (self.imm20() as u32) << (20 - 1);
-        let imm19_12 = self.imm19_12() << (12 - 1);
-        let imm11 = (self.imm11() as u32) << (11 - 1);
+        let imm20 = (self.imm20() as u32) << 20;
+        let imm19_12 = self.imm19_12() << 12;
+        let imm11 = (self.imm11() as u32) << 11;
         let imm10_1 = self.imm10_1() << 1;
         let imm20_0 = imm20 | imm19_12 | imm11 | imm10_1;
 
-        sign_extend_at(imm20_0, 20) as i32
+        sign_extend_at(imm20_0, 21) as i32
     }
 }
 

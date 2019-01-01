@@ -9,6 +9,9 @@ use peripherals::memory_access::MemoryAccess;
 pub enum LsuError {
     #[fail(display = "misaligned memory access to {:08x}", addr)]
     Misalignment { addr: u32 },
+
+    #[fail(display = "memory access error to {:08x}", addr)]
+    MemoryAccessError { addr: u32 },
 }
 
 pub fn load_store(
@@ -55,7 +58,7 @@ pub fn load_store(
         SW => {
             data_mem
                 .write_u32(instr.addr as usize, instr.value)
-                .unwrap();
+                .map_err(|_| LsuError::MemoryAccessError {addr: instr.addr} )?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: 0,

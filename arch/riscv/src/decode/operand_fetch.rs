@@ -36,7 +36,7 @@ impl OperandFetch for ITypeInstr {
         0 // will be ignored
     }
     fn imm(&self) -> u32 {
-        self.imm12() as u32
+        self.imm_11_0() as u32
     }
 }
 

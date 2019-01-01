@@ -706,3 +706,33 @@ fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv {
 
     riscv
 }
+
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Read;
+
+#[test]
+fn riscv_tests_simple() {
+    let program = load("/home/tomoyuki/work/02.x86/Rustemu86/arch/riscv/tests/riscv_tests/rv32ui-p-simple.bin");
+    let dram = Memory::new_with_filled_ram(&program, 0x1000);
+    let mut mmio = Mmio::empty();
+    mmio.add((0x8000_0000, program.len()), Box::new(dram)).unwrap();
+
+    // create object and run.
+    let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+    riscv.set_pc(0x8000_0000);
+    riscv.init();
+
+    let result = riscv.run();
+
+    assert!(result.is_err());
+    assert_eq!(riscv.get_gpr(gp), 1);
+}
+
+fn load(filename: &str) -> Vec<u8> {
+    let mut reader = BufReader::new(File::open(&filename).unwrap());
+    let mut program = Vec::new();
+    reader.read_to_end(&mut program).unwrap();
+
+    program
+}

@@ -97,7 +97,7 @@ fn alu_op(op: AluOp, src1: u32, src2: u32) -> u32 {
         SRL => src1 >> src2.get_bits(0..5),
         SRA => ((src1 as i32) >> src2.get_bits(0..5)) as u32,
         LUI => src2 << 12,
-        AUIPC => src1 + (src2 << 12),
+        AUIPC => src1.wrapping_add(src2 << 12),
     }
 }
 
@@ -160,7 +160,7 @@ fn branch_target(instr: &BrInstr, condition: bool) -> u32 {
 
 // Execute load/store operation
 fn execute_lsu(instr: LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
-    let addr = instr.base + instr.offset;
+    let addr = instr.base.wrapping_add(instr.offset);
     Ok((
         WriteBackData::Lsu(LsuOp {
             op: instr.op,
