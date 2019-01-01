@@ -64,11 +64,11 @@ pub enum LoadStoreType {
     SB,
 }
 
-/// System type
+/// Csr OP
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[allow(non_camel_case_types)]
-pub enum SystemOp {
-    WFI,
-    CSRRW,
-    CSRRS,
+pub enum CsrOp {
+    WRITE,
+    SET,
+    //CLEAR,
 }

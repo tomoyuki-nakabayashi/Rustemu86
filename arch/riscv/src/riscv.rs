@@ -1,8 +1,8 @@
+use crate::csr::Csr;
 use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
 use crate::gpr::Gpr;
-use crate::csr::Csr;
 use crate::lsu::load_store;
 use cpu::model::CpuModel;
 use debug::DebugMode;
@@ -91,16 +91,20 @@ impl CpuModel for Riscv {
                     };
                 }
                 Csr(instr) => {
-                    use crate::isa::opcode::SystemOp::*;
+                    use crate::isa::opcode::CsrOp::*;
                     match instr.op {
-                        CSRRW => {
+                        WRITE => {
                             let old = self.csr.read_u32(instr.csr_addr);
-                            self.gpr.write_u32(instr.dest, old);
                             self.csr.write_u32(instr.csr_addr, instr.src);
+                            self.gpr.write_u32(instr.dest, old);
                         }
-                        _ => unimplemented!(),
+                        SET => {
+                            let old = self.csr.read_u32(instr.csr_addr);
+                            self.csr.write_u32(instr.csr_addr, instr.src | old);
+                            self.gpr.write_u32(instr.dest, old);
+                        }
                     }
-                },
+                }
                 Halt => self.halted = true,
             }
             self.pc = next_pc;

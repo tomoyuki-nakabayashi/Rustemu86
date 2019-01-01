@@ -1,14 +1,14 @@
 //! Execute stage.
 //! Returns write back data.
 
-use crate::decode::{SystemInstr, AluInstr, BrInstr, DecodedInstr, LsuInstr};
-use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, SystemOp};
+use crate::decode::{AluInstr, BrInstr, CsrInstr, DecodedInstr, LsuInstr};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType};
 use bit_field::BitField;
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
     Gpr { target: u32, value: u32 },
-    Csr(SystemInstr),
+    Csr(CsrInstr),
     Lsu(LsuOp),
     Halt,
 }
@@ -41,7 +41,8 @@ pub enum ExecuteError {
 /// Executes an instruction.
 pub fn execute(instr: DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr {
-        DecodedInstr::System(decoded) => forward_system(decoded),
+        DecodedInstr::System { npc } => Ok((WriteBackData::Halt, npc)),
+        DecodedInstr::Csr(decoded) => forward_system(decoded),
         DecodedInstr::Alu(decoded) => execute_alu(decoded),
         DecodedInstr::Br(decoded) => execute_branch(decoded),
         DecodedInstr::Lsu(decoded) => execute_lsu(decoded),
@@ -49,10 +50,9 @@ pub fn execute(instr: DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError
 }
 
 // Forward decoded packet to CSR.
-fn forward_system(instr: SystemInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+fn forward_system(instr: CsrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     let next_pc = instr.next_pc;
     match instr.op {
-        SystemOp::WFI => Ok((WriteBackData::Halt, instr.next_pc)),
         _ => Ok((WriteBackData::Csr(instr), next_pc)), // dummy next PC
     }
 }

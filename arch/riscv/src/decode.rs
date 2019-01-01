@@ -4,7 +4,7 @@ mod operand_fetch;
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::*;
-use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, SystemOp, Opcode};
+use crate::isa::opcode::{AluOp, BranchType, CsrOp, LoadStoreType, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -23,7 +23,8 @@ pub enum DecodeError {
 
 #[derive(Debug, PartialEq)]
 pub enum DecodedInstr {
-    System(SystemInstr),
+    System { npc: u32 },
+    Csr(CsrInstr),
     Alu(AluInstr),
     Br(BrInstr),
     Lsu(LsuInstr),
@@ -31,22 +32,26 @@ pub enum DecodedInstr {
 
 /// Decoded format for instructions executed in ALU.
 #[derive(Debug, PartialEq)]
-pub struct SystemInstr {
-    pub op: SystemOp,
+pub struct CsrInstr {
+    pub op: CsrOp,
     pub dest: u32,
     pub src: u32,
     pub csr_addr: u32,
     pub next_pc: u32,
 }
 
-impl SystemInstr {
-    // Create SystemInstr from InstrFormat.
-    fn from<T: OperandFetch>(op: SystemOp, instr: &T, gpr: &Gpr, npc: u32) -> SystemInstr {
-        SystemInstr {
+impl CsrInstr {
+    // Create CsrInstr from InstrFormat.
+    fn from(op: CsrOp, rs1_as_imm: bool, instr: &ITypeInstr, gpr: &Gpr, npc: u32) -> CsrInstr {
+        CsrInstr {
             op,
             dest: instr.rd(),
-            src: instr.rs1(&gpr),
-            csr_addr: instr.imm(),
+            src: if rs1_as_imm {
+                instr.rs1()
+            } else {
+                gpr.read_u32(instr.rs1())
+            },
+            csr_addr: instr.imm12() as u32,
             next_pc: npc,
         }
     }
@@ -172,7 +177,7 @@ pub fn decode(instr: u32, gpr: &Gpr, pc: u32, npc: u32) -> Result<DecodedInstr> 
         Jalr => Ok(Br(decode_jalr(ITypeInstr(instr), &gpr, pc, npc)?)),
         Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, pc, npc)?)),
         Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, pc, npc)?)),
-        OpSystem => Ok(System(decode_system(ITypeInstr(instr), &gpr, npc)?)),
+        OpSystem => decode_system(ITypeInstr(instr), &gpr, npc),
     }
 }
 
@@ -319,7 +324,7 @@ fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
 }
 
 // decode SYSTEM
-fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<SystemInstr> {
+fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<DecodedInstr> {
     use crate::isa::funct::Rv32iSystemFunct3::{self, *};
     let funct3 =
         Rv32iSystemFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
@@ -327,9 +332,10 @@ fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<SystemInstr> 
         })?;
 
     let decoded = match funct3 {
-        PRIV => SystemInstr::from(SystemOp::WFI, &instr, gpr, npc),
-        CSRRW => SystemInstr::from(SystemOp::CSRRW, &instr, gpr, npc),
-        _ => unimplemented!(),
+        PRIV => DecodedInstr::System { npc },
+        CSRRW => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, false, &instr, gpr, npc)),
+        CSRRS => DecodedInstr::Csr(CsrInstr::from(CsrOp::SET, false, &instr, gpr, npc)),
+        CSRRWI => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, true, &instr, gpr, npc)),
     };
     Ok(decoded)
 }

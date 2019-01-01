@@ -65,3 +65,6 @@ bgeu x1, x2, j7
 nop
 j7:
 nop
+csrr t1, mtvec
+csrwi mtvec, 5
+

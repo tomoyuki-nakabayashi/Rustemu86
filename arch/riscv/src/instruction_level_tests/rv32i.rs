@@ -592,11 +592,11 @@ fn fence_i() {
 // Control and Status Registers
 use crate::isa::csr_map::*;
 
-// swap a csr entry by gpr
+// swap a csr entry by gpr.
 // The old value is written to the destination register of gpr,
 // the new value in source register of gpr is written to csr.
 #[test]
-fn csrrs() {
+fn csrrw() {
     let program = vec![
         0x93, 0x82, 0x02, 0x02, // addi t0, t0, 32
         0x73, 0x90, 0x52, 0x30, // csrw mtvec, t0
@@ -606,6 +606,18 @@ fn csrrs() {
     let riscv = execute_program(program);
 
     assert_eq!(riscv.get_csr(mtvec), 32);
+}
+
+#[test]
+fn csrwi() {
+    let program = vec![
+        0x73, 0xd0, 0x52, 0x30, // csrwi mtvec, 5
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_csr(mtvec), 5);
 }
 
 // Helper for test.

@@ -3,11 +3,11 @@ extern crate failure;
 #[macro_use]
 extern crate enum_primitive;
 
+mod csr;
 mod decode;
 mod execute;
 mod fetch;
 mod gpr;
-mod csr;
 mod isa;
 mod lsu;
 pub mod riscv;
