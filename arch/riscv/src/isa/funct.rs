@@ -42,3 +42,25 @@ enum_from_primitive! {
         BGEU = 0b111,
     }
 }
+
+/// funct3 for LOAD of RV32I
+enum_from_primitive! {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Rv32iLoadFunct3 {
+        LB = 0b000,
+        LH = 0b001,
+        LW = 0b010,
+        LBU = 0b100,
+        LHU = 0b101,
+    }
+}
+
+/// funct3 for STORE of RV32I
+enum_from_primitive! {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Rv32iStoreFunct3 {
+        SB = 0b000,
+        SH = 0b001,
+        SW = 0b010,
+    }
+}

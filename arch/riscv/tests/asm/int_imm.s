@@ -13,7 +13,13 @@ nop
 j2:
 wfi
 lw  x1, 4(x2)
+lh  x1, 10(x2)
+lhu x1, 10(x2)
+lb  x1, 11(x2)
+lbu x1, 11(x2)
 sw  x1, 0xc(x2)
+sh  x1, 0xe(x2)
+sb  x1, 0xf(x2)
 fence.i
 slti x2, x1, 1
 slti x3, x1, -1

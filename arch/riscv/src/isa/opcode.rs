@@ -55,5 +55,11 @@ pub enum BranchType {
 #[allow(non_camel_case_types)]
 pub enum LoadStoreType {
     LW,
+    LH,
+    LHU,
+    LB,
+    LBU,
     SW,
+    SH,
+    SB,
 }

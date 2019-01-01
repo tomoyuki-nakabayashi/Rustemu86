@@ -468,7 +468,7 @@ fn bgeu() {
 
 // Load second instruction in program, i.e., wfi.
 #[test]
-fn load() {
+fn lw() {
     let program = vec![
         0x83, 0x20, 0x41, 0x00, // lw ra, 4(sp)
         0x73, 0x00, 0x50, 0x10, // wfi
@@ -479,9 +479,61 @@ fn load() {
     assert_eq!(riscv.get_gpr(ra), 0x1050_0073);
 }
 
+#[test]
+fn lh() {
+    let program = vec![
+        0x83, 0x10, 0xa1, 0x00, // lh ra, 10(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xf0, 0xf1, 0xf2, 0xf3, // dummy data to load.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0xffff_f3f2);
+}
+
+#[test]
+fn lhu() {
+    let program = vec![
+        0x83, 0x50, 0xa1, 0x00, // lhu ra, 10(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xf0, 0xf1, 0xf2, 0xf3, // dummy data to load.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x0000_f3f2);
+}
+
+#[test]
+fn lb() {
+    let program = vec![
+        0x83, 0x00, 0xb1, 0x00, // lb ra, 11(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xf0, 0xf1, 0xf2, 0xf3, // dummy data to load.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0xffff_fff3);
+}
+
+#[test]
+fn lbu() {
+    let program = vec![
+        0x83, 0x40, 0xb1, 0x00, // lbu ra, 11(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xf0, 0xf1, 0xf2, 0xf3, // dummy data to load.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x0000_00f3);
+}
+
 // Store to third instruction position.
 #[test]
-fn store() {
+fn sw() {
     let program = vec![
         0x23, 0x26, 0x11, 0x00, // sw ra, 0xc(sp)
         0x83, 0x20, 0xc1, 0x00, // lw ra, 0xc(sp)
@@ -492,6 +544,36 @@ fn store() {
     let riscv = execute_program(program);
 
     assert_eq!(riscv.get_gpr(ra), 0);
+}
+
+// Store to third instruction position.
+#[test]
+fn sh() {
+    let program = vec![
+        0x23, 0x17, 0x11, 0x00, // sh ra, 0xe(sp)
+        0x83, 0x20, 0xc1, 0x00, // lw ra, 0xc(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xff, 0xff, 0xff, 0xff, // dummy initial data at address 0xc.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x0000_ffff);
+}
+
+// Store to third instruction position.
+#[test]
+fn sb() {
+    let program = vec![
+        0xa3, 0x07, 0x11, 0x00, // sb ra, 0xf(sp)
+        0x83, 0x20, 0xc1, 0x00, // lw ra, 0xc(sp)
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0xff, 0xff, 0xff, 0xff, // dummy initial data at address 0xc.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_gpr(ra), 0x00ff_ffff);
 }
 
 // Test for dummy implementation. This instruction does no-effect in this emulator.

@@ -252,11 +252,12 @@ fn decode_jal(instr: JTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr
 
 // decode BRANCH
 fn decode_branch(instr: BTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
-    use crate::isa::funct::Rv32iBranchFunct3::{self, *};
     use self::BranchType::*;
-    let funct3 = Rv32iBranchFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
-        funct3: instr.funct3(),
-    })?;
+    use crate::isa::funct::Rv32iBranchFunct3::{self, *};
+    let funct3 =
+        Rv32iBranchFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+            funct3: instr.funct3(),
+        })?;
 
     let decoded = match funct3 {
         BEQ => BrInstr::from(COND_EQ, &instr, &gpr, pc, npc),
@@ -271,12 +272,33 @@ fn decode_branch(instr: BTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrIn
 
 // decode LOAD
 fn decode_load(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
-    Ok(LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc))
+    use crate::isa::funct::Rv32iLoadFunct3::{self, *};
+    let funct3 = Rv32iLoadFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+        funct3: instr.funct3(),
+    })?;
+    let decoded = match funct3 {
+        LW => LsuInstr::from(LoadStoreType::LW, &instr, &gpr, npc),
+        LH => LsuInstr::from(LoadStoreType::LH, &instr, &gpr, npc),
+        LHU => LsuInstr::from(LoadStoreType::LHU, &instr, &gpr, npc),
+        LB => LsuInstr::from(LoadStoreType::LB, &instr, &gpr, npc),
+        LBU => LsuInstr::from(LoadStoreType::LBU, &instr, &gpr, npc),
+    };
+    Ok(decoded)
 }
 
 // decode STORE
 fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
-    Ok(LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc))
+    use crate::isa::funct::Rv32iStoreFunct3::{self, *};
+    let funct3 =
+        Rv32iStoreFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+            funct3: instr.funct3(),
+        })?;
+    let decoded = match funct3 {
+        SW => LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc),
+        SH => LsuInstr::from(LoadStoreType::SH, &instr, &gpr, npc),
+        SB => LsuInstr::from(LoadStoreType::SB, &instr, &gpr, npc),
+    };
+    Ok(decoded)
 }
 
 // decode as NOP for fence.i

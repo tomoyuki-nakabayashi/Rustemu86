@@ -140,8 +140,7 @@ fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError>
 
 // helper for conditional branch returns next PC.
 #[inline(always)]
-fn branch_target(instr: &BrInstr, condition: bool) -> u32
-{
+fn branch_target(instr: &BrInstr, condition: bool) -> u32 {
     if condition {
         instr.base + instr.offset
     } else {
