@@ -45,8 +45,9 @@ impl Mmio {
 impl MemoryAccess for Mmio {
     fn read_u8(&self, addr: usize) -> memory_access::Result<u8> {
         for (range, device) in &self.memory_map {
-            if range.0 <= addr && addr <= range.1 {
-                return device.read_u8(addr);
+            let (base, length) = range;
+            if *base <= addr && addr < *base + *length {
+                return device.read_u8(addr - *base);
             }
         }
         Err(MemoryAccessError::DeviceNotMapped { addr })
@@ -54,8 +55,9 @@ impl MemoryAccess for Mmio {
 
     fn write_u8(&mut self, addr: usize, data: u8) -> memory_access::Result<()> {
         for (range, device) in &mut self.memory_map {
-            if range.0 <= addr && addr <= range.1 {
-                return device.write_u8(addr, data);
+            let (base, length) = range;
+            if *base <= addr && addr < *base + *length {
+                return device.write_u8(addr - base, data);
             }
         }
         Err(MemoryAccessError::DeviceNotMapped { addr })
@@ -89,5 +91,15 @@ mod test {
 
         assert_eq!(Err(DeviceNotMapped { addr: 65 }), mmio.read_u8(65));
         assert_eq!(Err(DeviceNotMapped { addr: 65 }), mmio.write_u8(65, 1));
+    }
+
+    #[test]
+    fn non_zero_map() {
+        let dram = Box::new(Memory::new(64));
+
+        let mut mmio = Mmio::empty();
+        mmio.add((0x8000_0000, 64), dram).unwrap();
+
+        assert_eq!(0, mmio.read_u8(0x8000_0000).unwrap());
     }
 }
