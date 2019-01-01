@@ -152,6 +152,7 @@ pub fn decode(instr: u32, gpr: &Gpr, pc: u32, npc: u32) -> Result<DecodedInstr> 
         Auipc => Ok(Alu(decode_auipc(UTypeInstr(instr), pc, npc)?)),
         Op => Ok(Alu(decode_op(RTypeInstr(instr), &gpr, npc)?)),
         Lui => Ok(Alu(decode_lui(UTypeInstr(instr), &gpr, npc)?)),
+        Jalr => Ok(Br(decode_jalr(ITypeInstr(instr), &gpr, pc, npc)?)),
         Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, pc, npc)?)),
         Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, pc, npc)?)),
         OpSystem => Ok(System(SystemInstr { next_pc: npc })),
@@ -239,6 +240,11 @@ fn decode_auipc(instr: UTypeInstr, pc: u32, npc: u32) -> Result<AluInstr> {
     })
 }
 
+// decode JALR
+fn decode_jalr(instr: ITypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
+    Ok(BrInstr::from(BranchType::JALR, &instr, &gpr, pc, npc))
+}
+
 // decode JAL
 fn decode_jal(instr: JTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
     Ok(BrInstr::from(BranchType::JAL, &instr, &gpr, pc, npc))
@@ -246,7 +252,21 @@ fn decode_jal(instr: JTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr
 
 // decode BRANCH
 fn decode_branch(instr: BTypeInstr, gpr: &Gpr, pc: u32, npc: u32) -> Result<BrInstr> {
-    Ok(BrInstr::from(BranchType::COND_EQ, &instr, &gpr, pc, npc))
+    use crate::isa::funct::Rv32iBranchFunct3::{self, *};
+    use self::BranchType::*;
+    let funct3 = Rv32iBranchFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+        funct3: instr.funct3(),
+    })?;
+
+    let decoded = match funct3 {
+        BEQ => BrInstr::from(COND_EQ, &instr, &gpr, pc, npc),
+        BNE => BrInstr::from(COND_NE, &instr, &gpr, pc, npc),
+        BLT => BrInstr::from(COND_LT, &instr, &gpr, pc, npc),
+        BLTU => BrInstr::from(COND_LTU, &instr, &gpr, pc, npc),
+        BGE => BrInstr::from(COND_GE, &instr, &gpr, pc, npc),
+        BGEU => BrInstr::from(COND_GEU, &instr, &gpr, pc, npc),
+    };
+    Ok(decoded)
 }
 
 // decode LOAD

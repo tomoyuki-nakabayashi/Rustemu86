@@ -12,6 +12,7 @@ enum_from_primitive! {
         Op       = 0b011_0011,
         Lui      = 0b011_0111,
         Branch   = 0b110_0011,
+        Jalr     = 0b110_0111,
         Jal      = 0b110_1111,
         OpSystem = 0b111_0011,
     }
@@ -40,8 +41,13 @@ pub enum AluOp {
 pub enum BranchType {
     //NONE,
     JAL,
-    //JALR,
+    JALR,
     COND_EQ,
+    COND_NE,
+    COND_LT,
+    COND_LTU,
+    COND_GE,
+    COND_GEU,
 }
 
 /// Load/Store type

@@ -29,3 +29,16 @@ enum_from_primitive! {
         AND = 0b111,
     }
 }
+
+/// funct3 for BRANCH of RV32I
+enum_from_primitive! {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Rv32iBranchFunct3 {
+        BEQ = 0b000,
+        BNE = 0b001,
+        BLT = 0b100,
+        BGE = 0b101,
+        BLTU = 0b110,
+        BGEU = 0b111,
+    }
+}

@@ -42,4 +42,20 @@ sll x3, x1, x2
 srl x3, x1, x2
 add x2, x2, x1
 sub x2, x2, x1
-
+jalr x2, x1, 4
+bne x1, x2, j3
+xor x1, x1, x1
+j3:
+blt x1, x2, j4
+nop
+j4:
+bltu x1, x2, j5
+nop
+j5:
+bge x1, x2, j6
+nop
+j6:
+bgeu x1, x2, j7
+nop
+j7:
+nop

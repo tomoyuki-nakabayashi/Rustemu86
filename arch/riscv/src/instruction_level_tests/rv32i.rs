@@ -342,10 +342,27 @@ fn jal() {
 }
 
 #[test]
+fn jalr() {
+    let program = vec![
+        0x67, 0x81, 0x40, 0x00, // jalr sp, 4(ra)
+        0x13, 0x61, 0xf1, 0xff, // ori sp, sp -1 # if executed, sp will be 0xffff_ffff
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0x4);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_gpr(sp), 0x4);
+    assert_eq!(riscv.get_pc(), 0xc);
+}
+
+#[test]
 fn beq() {
     let program = vec![
-        0x63, 0x84, 0x20, 0x00, // beq ra, sp, 0x4
-        0x93, 0xe0, 0x00, 0x00, // ori ra, zero, 0
+        0x63, 0x84, 0x20, 0x00, // beq ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
@@ -356,6 +373,97 @@ fn beq() {
     let riscv = execute_program_init_by(program, initializer);
 
     assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 1);
+}
+
+#[test]
+fn bne() {
+    let program = vec![
+        0x63, 0x94, 0x20, 0x00, // bne ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 1);
+        riscv.set_gpr(sp, 0);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 1);
+}
+
+#[test]
+fn blt() {
+    let program = vec![
+        0x63, 0xc4, 0x20, 0x00, // blt ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 1);
+        riscv.set_gpr(sp, 2);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 1);
+}
+
+#[test]
+fn bltu() {
+    let program = vec![
+        0x63, 0xe4, 0x20, 0x00, // bltu ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 1);
+        riscv.set_gpr(sp, 2);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 1);
+}
+
+#[test]
+fn bge() {
+    let program = vec![
+        0x63, 0xd4, 0x20, 0x00, // bge ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 1);
+        riscv.set_gpr(sp, 0xffff_ffff); // signed `-1`
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 1);
+}
+
+#[test]
+fn bgeu() {
+    let program = vec![
+        0x63, 0xf4, 0x20, 0x00, // bgeu ra, sp, 0x8
+        0xb3, 0xc0, 0x10, 0x00, // xor ra, ra, ra # zero clear
+        0x73, 0x00, 0x50, 0x10, // wfi
+    ];
+
+    let initializer = |riscv: &mut Riscv| {
+        riscv.set_gpr(ra, 0xffff_ffff); // max of unsigned u32
+        riscv.set_gpr(sp, 1);
+    };
+    let riscv = execute_program_init_by(program, initializer);
+
+    assert_eq!(riscv.get_pc(), 0xc);
+    assert_eq!(riscv.get_gpr(ra), 0xffff_ffff);
 }
 
 // Load second instruction in program, i.e., wfi.

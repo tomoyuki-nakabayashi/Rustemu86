@@ -94,6 +94,15 @@ fn alu_op(op: AluOp, src1: u32, src2: u32) -> u32 {
 // Execute branch operation.
 fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr.op {
+        BranchType::JALR => {
+            let link = WriteBackData::Gpr {
+                target: instr.dest,
+                value: instr.next_pc,
+            };
+            // base is rs1.
+            let next_pc = instr.src1 + instr.offset;
+            Ok((link, next_pc))
+        }
         BranchType::JAL => {
             let link = WriteBackData::Gpr {
                 target: instr.dest,
@@ -103,13 +112,40 @@ fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError>
             Ok((link, next_pc))
         }
         BranchType::COND_EQ => {
-            let next_pc = if instr.src1 == instr.src2 {
-                instr.base + instr.offset
-            } else {
-                instr.next_pc
-            };
+            let next_pc = branch_target(&instr, instr.src1 == instr.src2);
             Ok((WriteBackData::default(), next_pc))
         }
+        BranchType::COND_NE => {
+            let next_pc = branch_target(&instr, instr.src1 != instr.src2);
+            Ok((WriteBackData::default(), next_pc))
+        }
+        BranchType::COND_LT => {
+            let next_pc = branch_target(&instr, (instr.src1 as i32) < (instr.src2 as i32));
+            Ok((WriteBackData::default(), next_pc))
+        }
+        BranchType::COND_LTU => {
+            let next_pc = branch_target(&instr, instr.src1 < instr.src2);
+            Ok((WriteBackData::default(), next_pc))
+        }
+        BranchType::COND_GE => {
+            let next_pc = branch_target(&instr, (instr.src1 as i32) >= (instr.src2 as i32));
+            Ok((WriteBackData::default(), next_pc))
+        }
+        BranchType::COND_GEU => {
+            let next_pc = branch_target(&instr, instr.src1 >= instr.src2);
+            Ok((WriteBackData::default(), next_pc))
+        }
+    }
+}
+
+// helper for conditional branch returns next PC.
+#[inline(always)]
+fn branch_target(instr: &BrInstr, condition: bool) -> u32
+{
+    if condition {
+        instr.base + instr.offset
+    } else {
+        instr.next_pc
     }
 }
 
