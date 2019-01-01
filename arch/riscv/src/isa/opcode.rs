@@ -79,5 +79,5 @@ pub enum CsrOp {
 pub enum PrivOp {
     WFI,
     MRET,
-    //ECALL,
+    ECALL,
 }

@@ -3,3 +3,5 @@
 pub const mtvec: u32 = 0x305;
 /// Machine exception program counter.
 pub const mepc: u32 = 0x341;
+/// Machine trap cause.
+pub const mcause: u32 = 0x341;

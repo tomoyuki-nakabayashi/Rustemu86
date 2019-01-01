@@ -636,6 +636,22 @@ fn mret() {
     assert_eq!(riscv.get_pc(), 24);
 }
 
+#[test]
+fn ecall() {
+    let program = vec![
+        0xef, 0x00, 0x80, 0x00, // jal ra, 0x8
+        0x73, 0x00, 0x50, 0x10, // wfi
+        0x73, 0x00, 0x00, 0x00, // ecall
+    ];
+
+    let mut riscv = create_riscv_cpu_at_dram_address(program);
+    let result = riscv.run();
+    assert!(result.is_ok(), "{}", result.unwrap_err());
+
+    assert_eq!(riscv.get_pc(), 0x8000_0008);
+    assert_eq!(riscv.get_csr(mcause), 11);
+}
+
 // Helper for test.
 // Simply execute the program with memory.
 fn execute_program(program: Vec<u8>) -> Riscv {
@@ -671,6 +687,21 @@ fn create_riscv_cpu(program: Vec<u8>) -> Riscv {
 
     // create object and run.
     let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+    riscv.init();
+
+    riscv
+}
+
+// Workaround. Make all tests start at 0x8000_0000.
+fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv {
+    // prepare minimum peripherals.
+    let dram = Memory::new_with_filled_ram(&program, program.len());
+    let mut mmio = Mmio::empty();
+    mmio.add((0x8000_0000, program.len()), Box::new(dram)).unwrap();
+
+    // create object and run.
+    let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
+    riscv.set_pc(0x8000_0000);
     riscv.init();
 
     riscv

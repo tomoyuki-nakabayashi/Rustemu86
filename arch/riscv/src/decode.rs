@@ -334,6 +334,7 @@ fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<DecodedInstr>
     let decoded = match funct3 {
         PRIV => {
             match instr.imm12() {
+                0b0000_0000_0000 => DecodedInstr::System { op: PrivOp::ECALL, npc },
                 0b0011_0000_0010 => DecodedInstr::System { op: PrivOp::MRET, npc },
                 0b0001_0000_0101 => DecodedInstr::System { op: PrivOp::WFI, npc },
                 _ => unimplemented!(),

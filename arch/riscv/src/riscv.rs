@@ -46,6 +46,11 @@ impl Riscv {
     }
 
     #[cfg(test)]
+    pub fn set_pc(&mut self, pc: u32) {
+        self.pc = pc
+    }
+
+    #[cfg(test)]
     pub fn get_pc(&self) -> u32 {
         self.pc
     }
@@ -113,6 +118,11 @@ impl CpuModel for Riscv {
                     }
                 }
                 Priv(op) => match op {
+                    PrivOp::ECALL => {
+                        use crate::isa::csr_map::mcause;
+                        self.pc = 0x8000_0004; // trap vector for riscv-tests
+                        self.csr.write_u32(mcause, 11);
+                    }
                     PrivOp::WFI => self.halted = true,
                     PrivOp::MRET => {
                         use crate::isa::csr_map::mepc;
