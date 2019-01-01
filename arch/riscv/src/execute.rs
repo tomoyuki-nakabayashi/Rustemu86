@@ -2,7 +2,7 @@
 //! Returns write back data.
 
 use crate::decode::{AluInstr, BrInstr, CsrInstr, DecodedInstr, LsuInstr};
-use crate::isa::opcode::{AluOp, BranchType, LoadStoreType};
+use crate::isa::opcode::{PrivOp, AluOp, BranchType, LoadStoreType};
 use bit_field::BitField;
 
 /// Packet to modify CPU state finally.
@@ -10,7 +10,7 @@ pub enum WriteBackData {
     Gpr { target: u32, value: u32 },
     Csr(CsrInstr),
     Lsu(LsuOp),
-    Halt,
+    Priv(PrivOp),
 }
 
 impl Default for WriteBackData {
@@ -41,7 +41,7 @@ pub enum ExecuteError {
 /// Executes an instruction.
 pub fn execute(instr: DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr {
-        DecodedInstr::System { npc } => Ok((WriteBackData::Halt, npc)),
+        DecodedInstr::System { op, npc } => Ok((WriteBackData::Priv(op), npc)),
         DecodedInstr::Csr(decoded) => forward_system(decoded),
         DecodedInstr::Alu(decoded) => execute_alu(decoded),
         DecodedInstr::Br(decoded) => execute_branch(decoded),

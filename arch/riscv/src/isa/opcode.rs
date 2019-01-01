@@ -72,3 +72,12 @@ pub enum CsrOp {
     SET,
     //CLEAR,
 }
+
+/// Priviledged OP
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum PrivOp {
+    WFI,
+    MRET,
+    //ECALL,
+}

@@ -81,7 +81,14 @@ impl CpuModel for Riscv {
             let (wb, next_pc) = execute(instr)?;
 
             // Change CPU state only here.
-            use crate::execute::WriteBackData::*;;
+            // First, update program counter. 
+            // This will be updated again in case of priviledged instruction.
+            self.pc = next_pc;
+
+            // Next, write to general purpose register and control, status register,
+            // and memory.
+            use crate::execute::WriteBackData::*;
+            use crate::isa::opcode::PrivOp;
             match wb {
                 Gpr { target, value } => self.gpr.write_u32(target, value),
                 Lsu(ref op) => {
@@ -105,9 +112,14 @@ impl CpuModel for Riscv {
                         }
                     }
                 }
-                Halt => self.halted = true,
+                Priv(op) => match op {
+                    PrivOp::WFI => self.halted = true,
+                    PrivOp::MRET => {
+                        use crate::isa::csr_map::mepc;
+                        self.pc = self.csr.read_u32(mepc);
+                    }
+                }
             }
-            self.pc = next_pc;
         }
         Ok(())
     }

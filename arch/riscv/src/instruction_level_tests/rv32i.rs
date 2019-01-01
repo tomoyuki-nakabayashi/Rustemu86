@@ -620,6 +620,22 @@ fn csrwi() {
     assert_eq!(riscv.get_csr(mtvec), 5);
 }
 
+#[test]
+fn mret() {
+    let program = vec![
+        0x93, 0x82, 0x42, 0x01, // addi t0, t0, 20
+        0x73, 0x90, 0x12, 0x34, // csrw mepc, t0
+        0x73, 0x00, 0x20, 0x30, // mret
+        0x73, 0x00, 0x50, 0x10, // wfi@12
+        0x73, 0x00, 0x50, 0x10, // wfi@16
+        0x73, 0x00, 0x50, 0x10, // wfi@20 expected stop at.
+    ];
+
+    let riscv = execute_program(program);
+
+    assert_eq!(riscv.get_pc(), 24);
+}
+
 // Helper for test.
 // Simply execute the program with memory.
 fn execute_program(program: Vec<u8>) -> Riscv {
