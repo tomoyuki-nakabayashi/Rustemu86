@@ -1,13 +1,14 @@
 //! Execute stage.
 //! Returns write back data.
 
-use crate::decode::{AluInstr, BrInstr, DecodedInstr, LsuInstr};
-use crate::isa::opcode::{AluOp, BranchType, LoadStoreType};
+use crate::decode::{SystemInstr, AluInstr, BrInstr, DecodedInstr, LsuInstr};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, SystemOp};
 use bit_field::BitField;
 
 /// Packet to modify CPU state finally.
 pub enum WriteBackData {
     Gpr { target: u32, value: u32 },
+    Csr(SystemInstr),
     Lsu(LsuOp),
     Halt,
 }
@@ -38,17 +39,26 @@ pub enum ExecuteError {
 }
 
 /// Executes an instruction.
-pub fn execute(instr: &DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+pub fn execute(instr: DecodedInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr {
-        DecodedInstr::System(ref decoded) => Ok((WriteBackData::Halt, decoded.next_pc)),
-        DecodedInstr::Alu(ref decoded) => execute_alu(decoded),
-        DecodedInstr::Br(ref decoded) => execute_branch(decoded),
-        DecodedInstr::Lsu(ref decoded) => execute_lsu(decoded),
+        DecodedInstr::System(decoded) => forward_system(decoded),
+        DecodedInstr::Alu(decoded) => execute_alu(decoded),
+        DecodedInstr::Br(decoded) => execute_branch(decoded),
+        DecodedInstr::Lsu(decoded) => execute_lsu(decoded),
+    }
+}
+
+// Forward decoded packet to CSR.
+fn forward_system(instr: SystemInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+    let next_pc = instr.next_pc;
+    match instr.op {
+        SystemOp::WFI => Ok((WriteBackData::Halt, instr.next_pc)),
+        _ => Ok((WriteBackData::Csr(instr), next_pc)), // dummy next PC
     }
 }
 
 // Executes ALU operation.
-fn execute_alu(instr: &AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+fn execute_alu(instr: AluInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     let value = alu_op(instr.alu_opcode, instr.src1, instr.src2);
     Ok((
         WriteBackData::Gpr {
@@ -92,7 +102,7 @@ fn alu_op(op: AluOp, src1: u32, src2: u32) -> u32 {
 }
 
 // Execute branch operation.
-fn execute_branch(instr: &BrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+fn execute_branch(instr: BrInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     match instr.op {
         BranchType::JALR => {
             let link = WriteBackData::Gpr {
@@ -149,7 +159,7 @@ fn branch_target(instr: &BrInstr, condition: bool) -> u32 {
 }
 
 // Execute load/store operation
-fn execute_lsu(instr: &LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
+fn execute_lsu(instr: LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
     let addr = instr.base + instr.offset;
     Ok((
         WriteBackData::Lsu(LsuOp {

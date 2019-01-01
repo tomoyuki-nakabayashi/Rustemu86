@@ -64,3 +64,13 @@ enum_from_primitive! {
         SW = 0b010,
     }
 }
+
+/// funct3 for SYSTEM of RV32I
+enum_from_primitive! {
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum Rv32iSystemFunct3 {
+        PRIV = 0b000,
+        CSRRW = 0b001,
+        CSRRS = 0b010,
+    }
+}

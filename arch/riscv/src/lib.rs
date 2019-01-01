@@ -7,6 +7,7 @@ mod decode;
 mod execute;
 mod fetch;
 mod gpr;
+mod csr;
 mod isa;
 mod lsu;
 pub mod riscv;

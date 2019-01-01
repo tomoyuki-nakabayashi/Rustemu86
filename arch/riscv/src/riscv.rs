@@ -2,6 +2,7 @@ use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
 use crate::gpr::Gpr;
+use crate::csr::Csr;
 use crate::lsu::load_store;
 use cpu::model::CpuModel;
 use debug::DebugMode;
@@ -19,6 +20,7 @@ pub struct Riscv {
     mmio: Mmio,
     debug: DebugMode,
     gpr: Gpr,
+    csr: Csr,
     halted: bool,
 }
 
@@ -31,6 +33,7 @@ impl Riscv {
             mmio,
             debug,
             gpr: Gpr::new(),
+            csr: Csr::new(),
             halted: true,
         }
     }
@@ -51,6 +54,11 @@ impl Riscv {
     pub fn set_gpr(&mut self, index: u32, value: u32) {
         self.gpr.write_u32(index, value);
     }
+
+    #[cfg(test)]
+    pub fn get_csr(&self, index: u32) -> u32 {
+        self.csr.read_u32(index)
+    }
 }
 
 impl CpuModel for Riscv {
@@ -70,7 +78,7 @@ impl CpuModel for Riscv {
         while !self.halted {
             let (instr, next_pc) = fetch(&self.mmio, self.pc)?;
             let instr = decode(instr, &self.gpr, self.pc, next_pc)?;
-            let (wb, next_pc) = execute(&instr)?;
+            let (wb, next_pc) = execute(instr)?;
 
             // Change CPU state only here.
             use crate::execute::WriteBackData::*;;
@@ -82,6 +90,17 @@ impl CpuModel for Riscv {
                         self.gpr.write_u32(target, value);
                     };
                 }
+                Csr(instr) => {
+                    use crate::isa::opcode::SystemOp::*;
+                    match instr.op {
+                        CSRRW => {
+                            let old = self.csr.read_u32(instr.csr_addr);
+                            self.gpr.write_u32(instr.dest, old);
+                            self.csr.write_u32(instr.csr_addr, instr.src);
+                        }
+                        _ => unimplemented!(),
+                    }
+                },
                 Halt => self.halted = true,
             }
             self.pc = next_pc;

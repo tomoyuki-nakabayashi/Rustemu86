@@ -4,7 +4,7 @@ mod operand_fetch;
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::*;
-use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, Opcode};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, SystemOp, Opcode};
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -32,7 +32,24 @@ pub enum DecodedInstr {
 /// Decoded format for instructions executed in ALU.
 #[derive(Debug, PartialEq)]
 pub struct SystemInstr {
+    pub op: SystemOp,
+    pub dest: u32,
+    pub src: u32,
+    pub csr_addr: u32,
     pub next_pc: u32,
+}
+
+impl SystemInstr {
+    // Create SystemInstr from InstrFormat.
+    fn from<T: OperandFetch>(op: SystemOp, instr: &T, gpr: &Gpr, npc: u32) -> SystemInstr {
+        SystemInstr {
+            op,
+            dest: instr.rd(),
+            src: instr.rs1(&gpr),
+            csr_addr: instr.imm(),
+            next_pc: npc,
+        }
+    }
 }
 
 /// Decoded format for instructions executed in ALU.
@@ -155,7 +172,7 @@ pub fn decode(instr: u32, gpr: &Gpr, pc: u32, npc: u32) -> Result<DecodedInstr> 
         Jalr => Ok(Br(decode_jalr(ITypeInstr(instr), &gpr, pc, npc)?)),
         Jal => Ok(Br(decode_jal(JTypeInstr(instr), &gpr, pc, npc)?)),
         Branch => Ok(Br(decode_branch(BTypeInstr(instr), &gpr, pc, npc)?)),
-        OpSystem => Ok(System(SystemInstr { next_pc: npc })),
+        OpSystem => Ok(System(decode_system(ITypeInstr(instr), &gpr, npc)?)),
     }
 }
 
@@ -297,6 +314,22 @@ fn decode_store(instr: STypeInstr, gpr: &Gpr, npc: u32) -> Result<LsuInstr> {
         SW => LsuInstr::from(LoadStoreType::SW, &instr, &gpr, npc),
         SH => LsuInstr::from(LoadStoreType::SH, &instr, &gpr, npc),
         SB => LsuInstr::from(LoadStoreType::SB, &instr, &gpr, npc),
+    };
+    Ok(decoded)
+}
+
+// decode SYSTEM
+fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<SystemInstr> {
+    use crate::isa::funct::Rv32iSystemFunct3::{self, *};
+    let funct3 =
+        Rv32iSystemFunct3::from_u32(instr.funct3()).ok_or(DecodeError::UndefinedFunct3 {
+            funct3: instr.funct3(),
+        })?;
+
+    let decoded = match funct3 {
+        PRIV => SystemInstr::from(SystemOp::WFI, &instr, gpr, npc),
+        CSRRW => SystemInstr::from(SystemOp::CSRRW, &instr, gpr, npc),
+        _ => unimplemented!(),
     };
     Ok(decoded)
 }
