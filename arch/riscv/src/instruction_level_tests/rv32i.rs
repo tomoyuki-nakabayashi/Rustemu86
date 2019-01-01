@@ -697,7 +697,8 @@ fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv {
     // prepare minimum peripherals.
     let dram = Memory::new_with_filled_ram(&program, program.len());
     let mut mmio = Mmio::empty();
-    mmio.add((0x8000_0000, program.len()), Box::new(dram)).unwrap();
+    mmio.add((0x8000_0000, program.len()), Box::new(dram))
+        .unwrap();
 
     // create object and run.
     let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
@@ -707,16 +708,25 @@ fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv {
     riscv
 }
 
+use crate::isa::exceptions::InternalExceptions;
+use crate::lsu::LsuError;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
 
 #[test]
 fn riscv_tests_simple() {
-    let program = load("/home/tomoyuki/work/02.x86/Rustemu86/arch/riscv/tests/riscv_tests/rv32ui-p-simple.bin");
+    riscv_tests(
+        "/home/tomoyuki/work/02.x86/Rustemu86/arch/riscv/tests/riscv_tests/rv32ui-p-simple.bin",
+    );
+}
+
+fn riscv_tests(filename: &str) {
+    let program = load(filename);
     let dram = Memory::new_with_filled_ram(&program, 0x1000);
     let mut mmio = Mmio::empty();
-    mmio.add((0x8000_0000, program.len()), Box::new(dram)).unwrap();
+    mmio.add((0x8000_0000, program.len()), Box::new(dram))
+        .unwrap();
 
     // create object and run.
     let mut riscv = Riscv::fabricate(mmio, DebugMode::Disabled);
@@ -725,7 +735,16 @@ fn riscv_tests_simple() {
 
     let result = riscv.run();
 
+    // Confirm exit because of memory access error.
     assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err(),
+        InternalExceptions::MemoryAccessException {
+            error: LsuError::MemoryAccessError { addr: 0x8000_1000 }
+        }
+    );
+
+    // Check success or not.
     assert_eq!(riscv.get_gpr(gp), 1);
 }
 

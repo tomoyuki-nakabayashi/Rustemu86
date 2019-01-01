@@ -2,7 +2,7 @@
 //! Returns write back data.
 
 use crate::decode::{AluInstr, BrInstr, CsrInstr, DecodedInstr, LsuInstr};
-use crate::isa::opcode::{PrivOp, AluOp, BranchType, LoadStoreType};
+use crate::isa::opcode::{AluOp, BranchType, LoadStoreType, PrivOp};
 use bit_field::BitField;
 
 /// Packet to modify CPU state finally.

@@ -86,7 +86,7 @@ impl CpuModel for Riscv {
             let (wb, next_pc) = execute(instr)?;
 
             // Change CPU state only here.
-            // First, update program counter. 
+            // First, update program counter.
             // This will be updated again in case of priviledged instruction.
             self.pc = next_pc;
 
@@ -128,7 +128,7 @@ impl CpuModel for Riscv {
                         use crate::isa::csr_map::mepc;
                         self.pc = self.csr.read_u32(mepc);
                     }
-                }
+                },
             }
         }
         Ok(())

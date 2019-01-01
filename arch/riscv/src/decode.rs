@@ -4,7 +4,7 @@ mod operand_fetch;
 use self::operand_fetch::OperandFetch;
 use crate::gpr::Gpr;
 use crate::isa::instr_format::*;
-use crate::isa::opcode::{AluOp, BranchType, PrivOp, CsrOp, LoadStoreType, Opcode};
+use crate::isa::opcode::{AluOp, BranchType, CsrOp, LoadStoreType, Opcode, PrivOp};
 use bit_field::BitField;
 use num::FromPrimitive;
 
@@ -332,14 +332,21 @@ fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<DecodedInstr>
         })?;
 
     let decoded = match funct3 {
-        PRIV => {
-            match instr.imm12() {
-                0b0000_0000_0000 => DecodedInstr::System { op: PrivOp::ECALL, npc },
-                0b0011_0000_0010 => DecodedInstr::System { op: PrivOp::MRET, npc },
-                0b0001_0000_0101 => DecodedInstr::System { op: PrivOp::WFI, npc },
-                _ => unimplemented!(),
-            }
-        }
+        PRIV => match instr.imm12() {
+            0b0000_0000_0000 => DecodedInstr::System {
+                op: PrivOp::ECALL,
+                npc,
+            },
+            0b0011_0000_0010 => DecodedInstr::System {
+                op: PrivOp::MRET,
+                npc,
+            },
+            0b0001_0000_0101 => DecodedInstr::System {
+                op: PrivOp::WFI,
+                npc,
+            },
+            _ => unimplemented!(),
+        },
         CSRRW => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, false, &instr, gpr, npc)),
         CSRRS => DecodedInstr::Csr(CsrInstr::from(CsrOp::SET, false, &instr, gpr, npc)),
         CSRRWI => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, true, &instr, gpr, npc)),

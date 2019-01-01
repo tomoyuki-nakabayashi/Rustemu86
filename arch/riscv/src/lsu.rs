@@ -21,35 +21,45 @@ pub fn load_store(
     use self::LoadStoreType::*;
     match instr.op {
         LW => {
-            let data = data_mem.read_u32(instr.addr as usize).unwrap();
+            let data = data_mem
+                .read_u32(instr.addr as usize)
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: data,
             })
         }
         LH => {
-            let data = data_mem.read_u16(instr.addr as usize).unwrap();
+            let data = data_mem
+                .read_u16(instr.addr as usize)
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: sign_extend_from_u16(data),
             })
         }
         LHU => {
-            let data = data_mem.read_u16(instr.addr as usize).unwrap();
+            let data = data_mem
+                .read_u16(instr.addr as usize)
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: data.into(),
             })
         }
         LB => {
-            let data = data_mem.read_u8(instr.addr as usize).unwrap();
+            let data = data_mem
+                .read_u8(instr.addr as usize)
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: sign_extend_from_u8(data),
             })
         }
         LBU => {
-            let data = data_mem.read_u8(instr.addr as usize).unwrap();
+            let data = data_mem
+                .read_u8(instr.addr as usize)
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: data.into(),
@@ -58,7 +68,7 @@ pub fn load_store(
         SW => {
             data_mem
                 .write_u32(instr.addr as usize, instr.value)
-                .map_err(|_| LsuError::MemoryAccessError {addr: instr.addr} )?;
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: 0,
@@ -67,7 +77,7 @@ pub fn load_store(
         SH => {
             data_mem
                 .write_u16(instr.addr as usize, instr.value as u16)
-                .unwrap();
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: 0,
@@ -76,7 +86,7 @@ pub fn load_store(
         SB => {
             data_mem
                 .write_u8(instr.addr as usize, instr.value as u8)
-                .unwrap();
+                .map_err(|_| LsuError::MemoryAccessError { addr: instr.addr })?;
             Ok(WriteBackData::Gpr {
                 target: instr.dest,
                 value: 0,

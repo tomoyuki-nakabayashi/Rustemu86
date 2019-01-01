@@ -89,11 +89,11 @@ bitfield! {
 
 impl STypeInstr {
     pub fn offset_11_0(self) -> i32 {
-        let imm11_5 = self.imm11_5() << (5 - 1);
+        let imm11_5 = self.imm11_5() << 5;
         let imm4_0 = self.imm4_0();
         let imm11_0 = imm11_5 | imm4_0;
 
-        sign_extend_at(imm11_0, 11) as i32
+        sign_extend_at(imm11_0, 12) as i32
     }
 }
 
