@@ -13,6 +13,8 @@ use crate::isa::exceptions::InternalExceptions;
 use std::result;
 pub type Result<T> = result::Result<T, InternalExceptions>;
 
+use std::fmt;
+
 /// RISC-V CPU model.
 #[allow(dead_code)]
 pub struct Riscv {
@@ -132,6 +134,16 @@ impl CpuModel for Riscv {
             }
         }
         Ok(())
+    }
+}
+
+impl fmt::Display for Riscv {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, r"
+pc: {:08x}
+general purpose register:{}
+",
+        self.pc, self.gpr)
     }
 }
 
