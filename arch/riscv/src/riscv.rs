@@ -1,10 +1,10 @@
 use crate::csr::Csr;
+use crate::debug::DebugInterface;
 use crate::decode::decode;
 use crate::execute::execute;
 use crate::fetch::fetch;
 use crate::gpr::Gpr;
 use crate::lsu::load_store;
-use crate::debug::DebugInterface;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
@@ -135,11 +135,14 @@ impl<BUS: MemoryAccess> DebugInterface for Riscv<BUS> {
 
 impl<BUS: MemoryAccess> fmt::Display for Riscv<BUS> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, r"
+        write!(
+            f,
+            r"
 pc: {:08x}
 general purpose register:{}
 ",
-        self.pc, self.gpr)
+            self.pc, self.gpr
+        )
     }
 }
 

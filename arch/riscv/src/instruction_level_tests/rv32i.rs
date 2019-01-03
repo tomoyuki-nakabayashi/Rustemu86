@@ -1,6 +1,6 @@
+use crate::debug::DebugInterface;
 use crate::isa::abi_name::*;
 use crate::riscv::Riscv;
-use crate::debug::DebugInterface;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::{memory::Memory, mmio::Mmio};

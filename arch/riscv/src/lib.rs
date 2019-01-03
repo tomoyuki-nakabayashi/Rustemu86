@@ -4,17 +4,17 @@ extern crate failure;
 extern crate enum_primitive;
 
 mod csr;
+mod debug;
 mod decode;
 mod execute;
 mod fetch;
 mod gpr;
 mod isa;
 mod lsu;
-mod debug;
 pub mod riscv;
-pub use self::riscv::Riscv as Riscv;
 pub use self::debug::DebugInterface;
-pub use self::isa::abi_name as abi_name;
+pub use self::isa::abi_name;
+pub use self::riscv::Riscv;
 
 #[cfg(test)]
 mod instruction_level_tests;

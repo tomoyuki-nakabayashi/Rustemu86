@@ -51,7 +51,9 @@ impl Gpr {
 
 impl fmt::Display for Gpr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, r"
+        write!(
+            f,
+            r"
 zero: {:08x}, ra : {:08x}, sp : {:08x}, gp : {:08x}
 tp  : {:08x}, t0 : {:08x}, t1 : {:08x}, t2 : {:08x}
 s0  : {:08x}, s1 : {:08x}, a0 : {:08x}, a1 : {:08x}
@@ -61,14 +63,38 @@ s4  : {:08x}, s5 : {:08x}, s6 : {:08x}, s7 : {:08x}
 s8  : {:08x}, s9 : {:08x}, s10: {:08x}, s11: {:08x}
 t3  : {:08x}, t4 : {:08x}, t5 : {:08x}, t6 : {:08x}
 ",
-self.ram[0], self.ram[1], self.ram[2], self.ram[3],
-self.ram[4], self.ram[5], self.ram[6], self.ram[7],
-self.ram[8], self.ram[9], self.ram[10], self.ram[11],
-self.ram[12], self.ram[13], self.ram[14], self.ram[15],
-self.ram[16], self.ram[17], self.ram[18], self.ram[19],
-self.ram[20], self.ram[21], self.ram[22], self.ram[23],
-self.ram[24], self.ram[25], self.ram[26], self.ram[27],
-self.ram[28], self.ram[29], self.ram[30], self.ram[31],
+            self.ram[0],
+            self.ram[1],
+            self.ram[2],
+            self.ram[3],
+            self.ram[4],
+            self.ram[5],
+            self.ram[6],
+            self.ram[7],
+            self.ram[8],
+            self.ram[9],
+            self.ram[10],
+            self.ram[11],
+            self.ram[12],
+            self.ram[13],
+            self.ram[14],
+            self.ram[15],
+            self.ram[16],
+            self.ram[17],
+            self.ram[18],
+            self.ram[19],
+            self.ram[20],
+            self.ram[21],
+            self.ram[22],
+            self.ram[23],
+            self.ram[24],
+            self.ram[25],
+            self.ram[26],
+            self.ram[27],
+            self.ram[28],
+            self.ram[29],
+            self.ram[30],
+            self.ram[31],
         )
     }
 }
