@@ -4,6 +4,7 @@ use crate::execute::execute;
 use crate::fetch::fetch;
 use crate::gpr::Gpr;
 use crate::lsu::load_store;
+use crate::debug::DebugInterface;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
@@ -38,33 +39,6 @@ impl<BUS: MemoryAccess> Riscv<BUS> {
             csr: Csr::new(),
             halted: true,
         }
-    }
-
-    /// These get/set functions are only used for test.
-    /// These will be a trait like `DebugInterface`.
-    #[cfg(test)]
-    pub fn get_gpr(&self, index: u32) -> u32 {
-        self.gpr.read_u32(index)
-    }
-
-    #[cfg(test)]
-    pub fn set_pc(&mut self, pc: u32) {
-        self.pc = pc
-    }
-
-    #[cfg(test)]
-    pub fn get_pc(&self) -> u32 {
-        self.pc
-    }
-
-    #[cfg(test)]
-    pub fn set_gpr(&mut self, index: u32, value: u32) {
-        self.gpr.write_u32(index, value);
-    }
-
-    #[cfg(test)]
-    pub fn get_csr(&self, index: u32) -> u32 {
-        self.csr.read_u32(index)
     }
 }
 
@@ -134,6 +108,28 @@ impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
             }
         }
         Ok(())
+    }
+}
+
+impl<BUS: MemoryAccess> DebugInterface for Riscv<BUS> {
+    fn set_gpr(&mut self, index: u32, value: u32) {
+        self.gpr.write_u32(index, value);
+    }
+
+    fn get_gpr(&self, index: u32) -> u32 {
+        self.gpr.read_u32(index)
+    }
+
+    fn set_pc(&mut self, pc: u32) {
+        self.pc = pc;
+    }
+
+    fn get_pc(&self) -> u32 {
+        self.pc
+    }
+
+    fn get_csr(&self, index: u32) -> u32 {
+        self.csr.read_u32(index)
     }
 }
 
