@@ -168,7 +168,7 @@ fn add() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 2);
         riscv.set_gpr(sp, 0x7fff_ffff);
     };
@@ -187,7 +187,7 @@ fn sub() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 2);
         riscv.set_gpr(sp, 3);
     };
@@ -205,7 +205,7 @@ fn slt() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xffff_ffff);
     };
     let riscv = execute_program_init_by(program, initializer);
@@ -222,7 +222,7 @@ fn sltu() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xffff_ffff);
     };
     let riscv = execute_program_init_by(program, initializer);
@@ -238,7 +238,7 @@ fn and() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 0xaaaa_aaaa);
     };
@@ -254,7 +254,7 @@ fn or() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 0xaaaa_aaaa);
     };
@@ -270,7 +270,7 @@ fn xor() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 0xaaaa_aaaa);
     };
@@ -286,7 +286,7 @@ fn sll() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 5);
     };
@@ -302,7 +302,7 @@ fn srl() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 5);
     };
@@ -318,7 +318,7 @@ fn sra() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xff00_ff00);
         riscv.set_gpr(sp, 5);
     };
@@ -349,7 +349,7 @@ fn jalr() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0x4);
     };
     let riscv = execute_program_init_by(program, initializer);
@@ -366,7 +366,7 @@ fn beq() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 1);
         riscv.set_gpr(sp, 1);
     };
@@ -384,7 +384,7 @@ fn bne() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 1);
         riscv.set_gpr(sp, 0);
     };
@@ -402,7 +402,7 @@ fn blt() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 1);
         riscv.set_gpr(sp, 2);
     };
@@ -420,7 +420,7 @@ fn bltu() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 1);
         riscv.set_gpr(sp, 2);
     };
@@ -438,7 +438,7 @@ fn bge() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 1);
         riscv.set_gpr(sp, 0xffff_ffff); // signed `-1`
     };
@@ -456,7 +456,7 @@ fn bgeu() {
         0x73, 0x00, 0x50, 0x10, // wfi
     ];
 
-    let initializer = |riscv: &mut Riscv| {
+    let initializer = |riscv: &mut Riscv<Mmio>| {
         riscv.set_gpr(ra, 0xffff_ffff); // max of unsigned u32
         riscv.set_gpr(sp, 1);
     };
@@ -654,7 +654,7 @@ fn ecall() {
 
 // Helper for test.
 // Simply execute the program with memory.
-fn execute_program(program: Vec<u8>) -> Riscv {
+fn execute_program(program: Vec<u8>) -> Riscv<Mmio> {
     let mut riscv = create_riscv_cpu(program);
     let result = riscv.run();
 
@@ -666,7 +666,7 @@ fn execute_program(program: Vec<u8>) -> Riscv {
 }
 
 // Helper for test.
-fn execute_program_init_by(program: Vec<u8>, initializer: fn(&mut Riscv)) -> Riscv {
+fn execute_program_init_by(program: Vec<u8>, initializer: fn(&mut Riscv<Mmio>)) -> Riscv<Mmio> {
     let mut riscv = create_riscv_cpu(program);
     initializer(&mut riscv);
     let result = riscv.run();
@@ -679,7 +679,7 @@ fn execute_program_init_by(program: Vec<u8>, initializer: fn(&mut Riscv)) -> Ris
 }
 
 // helper for test.
-fn create_riscv_cpu(program: Vec<u8>) -> Riscv {
+fn create_riscv_cpu(program: Vec<u8>) -> Riscv<Mmio> {
     // prepare minimum peripherals.
     let dram = Memory::new_with_filled_ram(&program, program.len());
     let mut mmio = Mmio::empty();
@@ -693,7 +693,7 @@ fn create_riscv_cpu(program: Vec<u8>) -> Riscv {
 }
 
 // Workaround. Make all tests start at 0x8000_0000.
-fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv {
+fn create_riscv_cpu_at_dram_address(program: Vec<u8>) -> Riscv<Mmio> {
     // prepare minimum peripherals.
     let dram = Memory::new_with_filled_ram(&program, program.len());
     let mut mmio = Mmio::empty();

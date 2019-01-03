@@ -7,7 +7,7 @@ use crate::lsu::load_store;
 use cpu::model::CpuModel;
 use debug::DebugMode;
 use peripherals::interconnect::Interconnect;
-use peripherals::mmio::Mmio;
+use peripherals::memory_access::MemoryAccess;
 
 use crate::isa::exceptions::InternalExceptions;
 use std::result;
@@ -17,19 +17,19 @@ use std::fmt;
 
 /// RISC-V CPU model.
 #[allow(dead_code)]
-pub struct Riscv {
+pub struct Riscv<BUS: MemoryAccess> {
     pc: u32,
-    mmio: Mmio,
+    mmio: BUS,
     debug: DebugMode,
     gpr: Gpr,
     csr: Csr,
     halted: bool,
 }
 
-impl Riscv {
+impl<BUS: MemoryAccess> Riscv<BUS> {
     /// Temporary `new`.
     /// TODO: This must be a new. It requires to modify CpuModel interface.
-    pub fn fabricate(mmio: Mmio, debug: DebugMode) -> Riscv {
+    pub fn fabricate(mmio: BUS, debug: DebugMode) -> Self {
         Riscv {
             pc: 0,
             mmio,
@@ -68,10 +68,10 @@ impl Riscv {
     }
 }
 
-impl CpuModel for Riscv {
+impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
     type Error = InternalExceptions;
 
-    fn new(_mmio: Interconnect, _debug: DebugMode) -> Riscv {
+    fn new(_mmio: Interconnect, _debug: DebugMode) -> Self {
         unimplemented!()
     }
 
@@ -137,7 +137,7 @@ impl CpuModel for Riscv {
     }
 }
 
-impl fmt::Display for Riscv {
+impl<BUS: MemoryAccess> fmt::Display for Riscv<BUS> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, r"
 pc: {:08x}
@@ -151,6 +151,7 @@ general purpose register:{}
 mod test {
     use super::*;
     use peripherals::memory::Memory;
+    use peripherals::mmio::Mmio;
 
     #[test]
     fn stop_at_wfi() {
