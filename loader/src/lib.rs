@@ -1,5 +1,8 @@
 //! This crate will be an elf loader.
 
+mod elf;
+mod elf_loader;
+
 use std::fs::File;
 use std::io::BufReader;
 use std::io::Read;
@@ -32,7 +35,7 @@ mod test {
 
     #[test]
     fn load_mov_binary() {
-        let load_result = load("./tests/asms/simple_add");
+        let load_result = load("./tests/data/simple_add");
         assert!(load_result.is_ok());
 
         let mut binary_file = load_result.unwrap();
