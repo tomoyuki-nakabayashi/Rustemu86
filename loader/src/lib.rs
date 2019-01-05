@@ -1,7 +1,11 @@
 //! This crate will be an elf loader.
 
+#[macro_use]
+extern crate failure;
+
 mod elf;
-mod elf_loader;
+pub mod elf_loader;
+pub mod error;
 
 use std::fs::File;
 use std::io::BufReader;
@@ -53,4 +57,3 @@ mod test {
         assert!(non_exist_file_open.is_err());
     }
 }
-
