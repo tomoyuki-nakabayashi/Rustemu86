@@ -18,8 +18,11 @@ const ET_EXEC: u16 = 2;
 const EM_RISCV: u16 = 243;
 const EV_CURRENT: u32 = 1;
 
+const PT_LOAD: u32 = 1;
+
 /// ELF header parsing first 52/64 bytes for 32/64 bits binary.
 /// Currently, support only 32-bit binary.
+#[derive(Debug)]
 pub struct ElfHeader {
     identification: ElfIdentification,
     elf_type: u16,
@@ -39,7 +42,6 @@ pub struct ElfHeader {
 
 impl ElfHeader {
     /// Create an object from byte array.
-    // TODO: return Result.
     pub fn try_new(binary: &[u8]) -> Result<ElfHeader> {
         if binary.len() < SIZE_ELF32_HEADER {
             return Err(LoaderError::TooShortBinary{})
@@ -83,6 +85,7 @@ fn read_u16(binary: &[u8]) -> std::io::Result<u16> {
 }
 
 // File identification in elf header.
+#[derive(Debug)]
 struct ElfIdentification {
     magic: [u8; 4],
     class: u8,
@@ -109,6 +112,41 @@ impl ElfIdentification {
             os_abi_version: binary[8],
             reserved: [0; 7],
         }
+    }
+}
+
+#[derive(Debug)]
+struct ProgramHeader {
+    program_type: u32,
+    offset: usize, // 4-byte
+    vaddr: usize, // 4-byte
+    paddr: usize, // 4-byte
+    file_size: u32,
+    mem_size: u32,
+    flags: u32,
+    align: u32,
+}
+
+impl ProgramHeader {
+    // create an instance from byte array which starts at the first byte of
+    // the header will be read.
+    fn new(start: &[u8]) -> ProgramHeader {
+        ProgramHeader {
+            program_type: read_u32(&start[0..=3]).unwrap(),
+            offset: read_u32(&start[4..=7]).unwrap() as usize,
+            vaddr: read_u32(&start[8..=11]).unwrap() as usize,
+            paddr: read_u32(&start[12..=15]).unwrap() as usize,
+            file_size: read_u32(&start[16..=19]).unwrap(),
+            mem_size: read_u32(&start[20..=23]).unwrap(),
+            flags: read_u32(&start[24..=27]).unwrap(),
+            align: read_u32(&start[28..=31]).unwrap(),
+        }
+    }
+
+    fn extract_headers(_binary: &[u8], _header: &ElfHeader) -> Vec<ProgramHeader> {
+        let headers: Vec<ProgramHeader> = Vec::new();
+
+        headers
     }
 }
 
@@ -140,10 +178,10 @@ mod test {
         let mapped_file = unsafe { Mmap::map(&file).unwrap() };
         let identification = ElfIdentification::new(&mapped_file);
 
-        assert_eq!(ELF_CLASS_32, identification.class);
-        assert_eq!(ELF_DATA_LSB, identification.endianess);
-        assert_eq!(EIV_CURRENT, identification.version);
-        assert_eq!(ELF_OS_ABI_NONE, identification.os_abi);
+        assert_eq!(identification.class, ELF_CLASS_32);
+        assert_eq!(identification.endianess, ELF_DATA_LSB);
+        assert_eq!(identification.version, EIV_CURRENT);
+        assert_eq!(identification.os_abi, ELF_OS_ABI_NONE);
     }
 
     // Check the ELF header is as bellow:
@@ -167,18 +205,41 @@ mod test {
         let mapped_file = unsafe { Mmap::map(&file).unwrap() };
         let header = ElfHeader::try_new(&mapped_file).unwrap();
 
-        assert_eq!(ET_EXEC, header.elf_type);
-        assert_eq!(EM_RISCV, header.elf_machine);
-        assert_eq!(EV_CURRENT, header.elf_version);
-        assert_eq!(0x8000_0000, header.elf_entry);
-        assert_eq!(52, header.elf_program_header_offset);
-        assert_eq!(8692, header.elf_section_header_offset);
-        assert_eq!(0, header.elf_flag);
-        assert_eq!(52, header.elf_header_size);
-        assert_eq!(32, header.elf_program_header_entry_size);
-        assert_eq!(2, header.elf_program_header_num);
-        assert_eq!(40, header.elf_section_header_entry_size);
-        assert_eq!(6, header.elf_section_header_num);
-        assert_eq!(5, header.elf_section_header_table_index);
+        assert_eq!(header.elf_type, ET_EXEC);
+        assert_eq!(header.elf_machine, EM_RISCV);
+        assert_eq!(header.elf_version, EV_CURRENT);
+        assert_eq!(header.elf_entry, 0x8000_0000);
+        assert_eq!(header.elf_program_header_offset, 52);
+        assert_eq!(header.elf_section_header_offset, 8692);
+        assert_eq!(header.elf_flag, 0);
+        assert_eq!(header.elf_header_size, 52);
+        assert_eq!(header.elf_program_header_entry_size, 32);
+        assert_eq!(header.elf_program_header_num, 2);
+        assert_eq!(header.elf_section_header_entry_size, 40);
+        assert_eq!(header.elf_section_header_num, 6);
+        assert_eq!(header.elf_section_header_table_index, 5);
+    }
+
+    // Entry point 0x80000000
+    // There are 2 program headers, starting at offset 52
+
+    // Program Headers:
+    //   Type           Offset   VirtAddr   PhysAddr   FileSiz MemSiz  Flg Align
+    //   LOAD           0x001000 0x80000000 0x80000000 0x00144 0x00144 R E 0x1000
+    //   LOAD           0x002000 0x80001000 0x80001000 0x00048 0x00048 RW  0x1000
+
+    //  Section to Segment mapping:
+    //   Segment Sections...
+    //    00     .text.init
+    //    01     .tohost
+    #[test]
+    fn program_header() {
+        let file = File::open("tests/data/elf/rv32ui-p-simple").unwrap();
+        // safe accessing only from the main thread, and treating the contents as immutable.
+        let mapped_file = unsafe { Mmap::map(&file).unwrap() };
+
+        let text_init = ProgramHeader::new(&mapped_file[52..]);
+
+        assert_eq!(text_init.program_type, PT_LOAD);
     }
 }
