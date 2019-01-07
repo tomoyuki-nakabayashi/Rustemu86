@@ -1,7 +1,7 @@
 //! EFL loader.
 #![allow(dead_code)]
 use crate::elf::ElfHeader;
-use crate::error::{Result, LoaderError};
+use crate::error::{LoaderError, Result};
 use memmap::Mmap;
 use std::fs::File;
 
