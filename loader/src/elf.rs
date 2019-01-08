@@ -120,7 +120,7 @@ impl ElfIdentification {
 }
 
 #[derive(Debug)]
-struct ProgramHeader {
+pub struct ProgramHeader {
     program_type: u32,
     offset: usize, // 4-byte
     vaddr: usize,  // 4-byte
@@ -148,7 +148,7 @@ impl ProgramHeader {
     }
 
     // TODO: Check the binary size is large enough to extract headers.
-    fn extract_headers(binary: &[u8], header: &ElfHeader) -> Vec<ProgramHeader> {
+    pub fn extract_headers(binary: &[u8], header: &ElfHeader) -> Vec<ProgramHeader> {
         let mut pheaders: Vec<ProgramHeader> = Vec::new();
 
         for i in 0..header.elf_pheader_num {
