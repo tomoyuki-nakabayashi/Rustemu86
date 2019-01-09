@@ -34,6 +34,28 @@ impl ElfLoader {
             pheaders,
         })
     }
+
+    /// Returns an iterator to get segments.
+    pub fn get_segments(&self) -> Vec<Segment> {
+        let mut segments = Vec::new();
+        for ph in self.pheaders.iter() {
+            let bytes = self.mapped_file[ph.offset..(ph.offset + ph.mem_size as usize)].to_vec();
+            let segment = Segment {
+                vaddr: ph.vaddr,
+                size: ph.mem_size as usize,
+                bytes
+            };
+            segments.push(segment);
+        }
+
+        segments
+    }
+}
+
+pub struct Segment {
+    pub vaddr: usize,
+    pub size: usize,
+    pub bytes: Vec<u8>,
 }
 
 #[cfg(test)]
@@ -45,6 +67,15 @@ mod test {
         let loader = ElfLoader::try_new("tests/data/elf/rv32ui-p-simple");
         assert!(loader.is_ok(), "target file is not elf binary");
         assert_eq!(loader.unwrap().pheaders.len(), 2);
+    }
+
+    #[test]
+    fn get_segments() {
+        let loader = ElfLoader::try_new("tests/data/elf/rv32ui-p-simple").unwrap();
+        let segments = loader.get_segments();
+
+        assert_eq!(segments.len(), 2);
+        assert_eq!(segments[0].vaddr, 0x8000_0000);
     }
 
     #[test]

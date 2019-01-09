@@ -120,15 +120,15 @@ impl ElfIdentification {
 }
 
 #[derive(Debug)]
-pub struct ProgramHeader {
+pub(crate) struct ProgramHeader {
     program_type: u32,
-    offset: usize, // 4-byte
-    vaddr: usize,  // 4-byte
+    pub offset: usize, // 4-byte
+    pub vaddr: usize,  // 4-byte
     paddr: usize,  // 4-byte
     file_size: u32,
-    mem_size: u32,
+    pub mem_size: u32,
     flags: u32,
-    align: u32,
+    pub align: u32,
 }
 
 impl ProgramHeader {
