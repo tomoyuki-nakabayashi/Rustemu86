@@ -1,6 +1,6 @@
 //! ELF format.
 #![allow(dead_code)]
-use crate::error::{Result, LoaderError};
+use crate::error::{LoaderError, Result};
 use byteorder::{LittleEndian, ReadBytesExt};
 
 /// 0x7f 'E' 'L' 'F'
@@ -29,12 +29,12 @@ pub struct ElfHeader {
     elf_machine: u16,
     elf_version: u32,
     elf_entry: usize,
-    elf_program_header_offset: usize,
+    pheader_offset: usize,
     elf_section_header_offset: usize,
     elf_flag: u32,
     elf_header_size: u16,
-    elf_program_header_entry_size: u16,
-    elf_program_header_num: u16,
+    pheader_entry_size: u16,
+    pheader_num: u16,
     elf_section_header_entry_size: u16,
     elf_section_header_num: u16,
     elf_section_header_table_index: u16,
@@ -44,7 +44,7 @@ impl ElfHeader {
     /// Create an object from byte array.
     pub fn try_new(binary: &[u8]) -> Result<ElfHeader> {
         if binary.len() < SIZE_ELF32_HEADER {
-            return Err(LoaderError::TooShortBinary{})
+            return Err(LoaderError::TooShortBinary {});
         }
         // unwrap the result of read_u* because the binary has enough length to read
         // and the operations never fail.
@@ -54,12 +54,12 @@ impl ElfHeader {
             elf_machine: read_u16(&binary[18..=19]).unwrap(),
             elf_version: read_u32(&binary[20..=23]).unwrap(),
             elf_entry: read_u32(&binary[24..=27]).unwrap() as usize,
-            elf_program_header_offset: read_u32(&binary[28..=31]).unwrap() as usize,
+            pheader_offset: read_u32(&binary[28..=31]).unwrap() as usize,
             elf_section_header_offset: read_u32(&binary[32..=35]).unwrap() as usize,
             elf_flag: read_u32(&binary[36..=39]).unwrap(),
             elf_header_size: read_u16(&binary[40..=41]).unwrap(),
-            elf_program_header_entry_size: read_u16(&binary[42..=43]).unwrap(),
-            elf_program_header_num: read_u16(&binary[44..=45]).unwrap(),
+            pheader_entry_size: read_u16(&binary[42..=43]).unwrap(),
+            pheader_num: read_u16(&binary[44..=45]).unwrap(),
             elf_section_header_entry_size: read_u16(&binary[46..=47]).unwrap(),
             elf_section_header_num: read_u16(&binary[48..=49]).unwrap(),
             elf_section_header_table_index: read_u16(&binary[50..=51]).unwrap(),
@@ -115,12 +115,12 @@ impl ElfIdentification {
     }
 }
 
-#[derive(Debug)]
-struct ProgramHeader {
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct ProgramHeader {
     program_type: u32,
     offset: usize, // 4-byte
-    vaddr: usize, // 4-byte
-    paddr: usize, // 4-byte
+    vaddr: usize,  // 4-byte
+    paddr: usize,  // 4-byte
     file_size: u32,
     mem_size: u32,
     flags: u32,
@@ -128,6 +128,7 @@ struct ProgramHeader {
 }
 
 impl ProgramHeader {
+    // Private constructor.
     // create an instance from byte array which starts at the first byte of
     // the header will be read.
     fn new(start: &[u8]) -> ProgramHeader {
@@ -143,10 +144,33 @@ impl ProgramHeader {
         }
     }
 
-    fn extract_headers(_binary: &[u8], _header: &ElfHeader) -> Vec<ProgramHeader> {
-        let headers: Vec<ProgramHeader> = Vec::new();
+    /// Public constructor.
+    /// This function takes
+    /// - binary -> an elf binary from offset 0.
+    /// - header -> an elf header which also contains program header meta information.
+    pub fn extract_pheaders(binary: &[u8], header: &ElfHeader) -> Vec<ProgramHeader> {
+        let mut pheaders: Vec<ProgramHeader> = Vec::new();
+        for i in 0..header.pheader_num {
+            let offset = header.pheader_offset + (header.pheader_entry_size * i) as usize;
+            let header = ProgramHeader::new(&binary[offset..]);
+            pheaders.push(header);
+        }
 
-        headers
+        pheaders
+    }
+
+    /// Returns the offsets indicating segment range in the elf binary.
+    /// - return: (begin, end)
+    pub fn segment_offset_range(&self) -> (usize, usize) {
+        let begin = self.offset;
+        let end = begin + (self.mem_size as usize);
+        (begin, end)
+    }
+
+    pub fn paddr_range(&self) -> (usize, usize) {
+        let begin = self.paddr;
+        let end = begin + (self.mem_size as usize);
+        (begin, end)
     }
 }
 
@@ -209,12 +233,12 @@ mod test {
         assert_eq!(header.elf_machine, EM_RISCV);
         assert_eq!(header.elf_version, EV_CURRENT);
         assert_eq!(header.elf_entry, 0x8000_0000);
-        assert_eq!(header.elf_program_header_offset, 52);
+        assert_eq!(header.pheader_offset, 52);
         assert_eq!(header.elf_section_header_offset, 8692);
         assert_eq!(header.elf_flag, 0);
         assert_eq!(header.elf_header_size, 52);
-        assert_eq!(header.elf_program_header_entry_size, 32);
-        assert_eq!(header.elf_program_header_num, 2);
+        assert_eq!(header.pheader_entry_size, 32);
+        assert_eq!(header.pheader_num, 2);
         assert_eq!(header.elf_section_header_entry_size, 40);
         assert_eq!(header.elf_section_header_num, 6);
         assert_eq!(header.elf_section_header_table_index, 5);
@@ -241,5 +265,27 @@ mod test {
         let text_init = ProgramHeader::new(&mapped_file[52..]);
 
         assert_eq!(text_init.program_type, PT_LOAD);
+        assert_eq!(text_init.offset, 0x1000);
+
+        // Confirm the first instruction in the `.text.init` section.
+        // 80000000 <_start>:
+        // 80000000: 04c0006f  j  8000004c <reset_vector>
+        let inst =
+            (&mapped_file[text_init.offset..(text_init.offset + 4)]).read_u32::<LittleEndian>();
+        assert_eq!(inst.unwrap(), 0x04c0_006f);
+    }
+
+    #[test]
+    fn program_headers() {
+        let file = File::open("tests/data/elf/rv32ui-p-simple").unwrap();
+        let mapped_file = unsafe { Mmap::map(&file).unwrap() };
+        let elf_header = ElfHeader::try_new(&mapped_file).unwrap();
+
+        let pheaders = ProgramHeader::extract_pheaders(&mapped_file, &elf_header);
+
+        // The first program header starts at 52-byte offset.
+        let expect = ProgramHeader::new(&mapped_file[52..]);
+
+        assert_eq!(pheaders[0], expect);
     }
 }
