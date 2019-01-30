@@ -9,11 +9,11 @@ use riscv::DebugInterface;
 use riscv::Riscv;
 
 #[test]
-fn riscv_tests_simple() {
-    riscv_tests("./tests/riscv_tests/rv32ui-p-simple.bin");
+fn riscv_tests_simple_elf() {
+    riscv_test_elf("./tests/riscv_tests/rv32ui-p-simple");
 }
 
-fn riscv_tests(filename: &str) {
+fn riscv_test_elf(filename: &str) {
     let bus = Memory::new(&filename);
 
     // create object and run.
@@ -32,12 +32,10 @@ fn riscv_tests(filename: &str) {
 
 // A memory which hooks `tohost` store to 0x8000_1000 which indicates the finish of test.
 mod riscv_tests_memory {
+    use loader::elf_loader::ElfLoader;
     use peripherals::error::MemoryAccessError;
     use peripherals::memory;
     use peripherals::memory_access::{self, MemoryAccess};
-    use std::fs::File;
-    use std::io::BufReader;
-    use std::io::Read;
 
     pub struct Memory {
         memory: memory::Memory,
@@ -45,9 +43,12 @@ mod riscv_tests_memory {
 
     impl Memory {
         pub fn new(filename: &str) -> Memory {
-            let program = load(filename);
+            let loader = ElfLoader::try_new(filename).unwrap();
+            let layouts = loader.memory_image();
+            let text = &layouts[0];
+
             Memory {
-                memory: memory::Memory::new_with_filled_ram(&program, 0x1000),
+                memory: memory::Memory::new_with_filled_ram(text.binary_as_ref(), text.size()),
             }
         }
     }
@@ -68,13 +69,5 @@ mod riscv_tests_memory {
                 self.memory.write_u8(addr - 0x8000_0000, data)
             }
         }
-    }
-
-    fn load(filename: &str) -> Vec<u8> {
-        let mut reader = BufReader::new(File::open(&filename).unwrap());
-        let mut program = Vec::new();
-        reader.read_to_end(&mut program).unwrap();
-
-        program
     }
 }
