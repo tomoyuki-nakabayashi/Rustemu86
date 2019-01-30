@@ -68,6 +68,7 @@ mod test {
     fn load_elf() {
         let loader = ElfLoader::try_new("tests/data/elf/rv32ui-p-simple");
         assert!(loader.is_ok(), "target file is not elf binary");
+        assert_eq!(loader.unwrap().pheaders.len(), 2);
     }
 
     #[test]

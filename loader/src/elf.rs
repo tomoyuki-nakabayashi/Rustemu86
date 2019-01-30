@@ -19,6 +19,10 @@ const EM_RISCV: u16 = 243;
 const EV_CURRENT: u32 = 1;
 
 const PT_LOAD: u32 = 1;
+// flags in program header indicate access permission for the segment.
+const PF_X: u32 = 0x1;
+const PF_W: u32 = 0x2;
+const PF_R: u32 = 0x4;
 
 /// ELF header parsing first 52/64 bytes for 32/64 bits binary.
 /// Currently, support only 32-bit binary.
@@ -122,9 +126,9 @@ pub struct ProgramHeader {
     vaddr: usize,  // 4-byte
     paddr: usize,  // 4-byte
     file_size: u32,
-    mem_size: u32,
+    pub mem_size: u32,
     flags: u32,
-    align: u32,
+    pub align: u32,
 }
 
 impl ProgramHeader {
