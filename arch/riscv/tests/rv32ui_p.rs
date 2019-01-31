@@ -8,10 +8,57 @@ use riscv::abi_name::*;
 use riscv::DebugInterface;
 use riscv::Riscv;
 
-#[test]
-fn riscv_tests_simple_elf() {
-    riscv_test_elf("./tests/riscv_tests/rv32ui-p-simple");
+const TEST_BASE: &str = "./tests/riscv_tests/rv32ui-p-";
+
+macro_rules! riscv_test {
+    ($name: ident, $test_case: expr) => {
+        #[test]
+        fn $name() {
+            let file = TEST_BASE.to_owned() + $test_case;
+            riscv_test_elf(&file);
+        }
+    };
 }
+
+riscv_test!(simple, "simple");
+riscv_test!(add, "add");
+riscv_test!(addi, "addi");
+riscv_test!(and, "and");
+riscv_test!(andi, "andi");
+riscv_test!(auipc, "auipc");
+riscv_test!(beq, "beq");
+riscv_test!(bge, "bge");
+riscv_test!(bgeu, "bgeu");
+riscv_test!(blt, "blt");
+riscv_test!(bltu, "bltu");
+riscv_test!(bne, "bne");
+//riscv_test!(fence_i, "fence_i");
+riscv_test!(jal, "jal");
+riscv_test!(jalr, "jalr");
+//riscv_test!(lb, "lb");
+//riscv_test!(lbu, "lbu");
+//riscv_test!(lh, "lh");
+//riscv_test!(lhu, "lhu");
+riscv_test!(lui, "lui");
+//riscv_test!(lw, "lw");
+riscv_test!(or, "or");
+riscv_test!(ori, "ori");
+//riscv_test!(sb, "sb");
+//riscv_test!(sh, "sh");
+riscv_test!(sll, "sll");
+riscv_test!(slli, "slli");
+riscv_test!(slt, "slt");
+riscv_test!(slti, "slti");
+riscv_test!(sltiu, "sltiu");
+riscv_test!(sltu, "sltu");
+riscv_test!(sra, "sra");
+riscv_test!(srai, "srai");
+riscv_test!(srl, "srl");
+riscv_test!(srli, "srli");
+riscv_test!(sub, "sub");
+//riscv_test!(sw, "sw");
+riscv_test!(xor, "xor");
+riscv_test!(xori, "xori");
 
 fn riscv_test_elf(filename: &str) {
     let bus = Memory::new(&filename);

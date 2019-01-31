@@ -110,7 +110,7 @@ fn execute_branch(instr: BrInstr) -> Result<(WriteBackData, u32), ExecuteError> 
                 value: instr.next_pc,
             };
             // base is rs1.
-            let next_pc = instr.src1 + instr.offset;
+            let next_pc = instr.src1.wrapping_add(instr.offset);
             Ok((link, next_pc))
         }
         BranchType::JAL => {
@@ -152,7 +152,7 @@ fn execute_branch(instr: BrInstr) -> Result<(WriteBackData, u32), ExecuteError> 
 #[inline(always)]
 fn branch_target(instr: &BrInstr, condition: bool) -> u32 {
     if condition {
-        instr.base + instr.offset
+        instr.base.wrapping_add(instr.offset)
     } else {
         instr.next_pc
     }
