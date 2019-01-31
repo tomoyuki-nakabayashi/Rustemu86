@@ -166,7 +166,7 @@ fn execute_lsu(instr: LsuInstr) -> Result<(WriteBackData, u32), ExecuteError> {
             op: instr.op,
             dest: instr.dest,
             addr,
-            value: 0,
+            value: instr.src,
         }),
         instr.next_pc,
     ))

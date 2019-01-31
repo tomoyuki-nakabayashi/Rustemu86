@@ -32,19 +32,19 @@ riscv_test!(bgeu, "bgeu");
 riscv_test!(blt, "blt");
 riscv_test!(bltu, "bltu");
 riscv_test!(bne, "bne");
-//riscv_test!(fence_i, "fence_i");
+riscv_test!(fence_i, "fence_i");
 riscv_test!(jal, "jal");
 riscv_test!(jalr, "jalr");
-//riscv_test!(lb, "lb");
-//riscv_test!(lbu, "lbu");
-//riscv_test!(lh, "lh");
-//riscv_test!(lhu, "lhu");
+riscv_test!(lb, "lb");
+riscv_test!(lbu, "lbu");
+riscv_test!(lh, "lh");
+riscv_test!(lhu, "lhu");
 riscv_test!(lui, "lui");
-//riscv_test!(lw, "lw");
+riscv_test!(lw, "lw");
 riscv_test!(or, "or");
 riscv_test!(ori, "ori");
-//riscv_test!(sb, "sb");
-//riscv_test!(sh, "sh");
+riscv_test!(sb, "sb");
+riscv_test!(sh, "sh");
 riscv_test!(sll, "sll");
 riscv_test!(slli, "slli");
 riscv_test!(slt, "slt");
@@ -56,7 +56,7 @@ riscv_test!(srai, "srai");
 riscv_test!(srl, "srl");
 riscv_test!(srli, "srli");
 riscv_test!(sub, "sub");
-//riscv_test!(sw, "sw");
+riscv_test!(sw, "sw");
 riscv_test!(xor, "xor");
 riscv_test!(xori, "xori");
 
@@ -84,8 +84,10 @@ mod riscv_tests_memory {
     use peripherals::memory;
     use peripherals::memory_access::{self, MemoryAccess};
 
+    // riscv-tests has only two segment of memory.
     pub struct Memory {
-        memory: memory::Memory,
+        text: memory::Memory,
+        data: memory::Memory,
     }
 
     impl Memory {
@@ -93,27 +95,38 @@ mod riscv_tests_memory {
             let loader = ElfLoader::try_new(filename).unwrap();
             let layouts = loader.memory_image();
             let text = &layouts[0];
+            let data = &layouts[1];
 
             Memory {
-                memory: memory::Memory::new_with_filled_ram(text.binary_as_ref(), text.size()),
+                text: memory::Memory::new_with_filled_ram(text.binary_as_ref(), text.size()),
+                data: memory::Memory::new_with_filled_ram(data.binary_as_ref(), data.size()),
             }
         }
     }
 
+    // riscv-tests let us know finishing the test case by storing something into 0x8000_1000.
     impl MemoryAccess for Memory {
         fn read_u8(&self, addr: usize) -> memory_access::Result<u8> {
             if addr == 0x8000_1000 {
                 return Err(MemoryAccessError::DeviceNotMapped { addr });
-            } else {
-                self.memory.read_u8(addr - 0x8000_0000)
+            }
+
+            match addr {
+                0x8000_0000...0x8000_0FFF => self.text.read_u8(addr - 0x8000_0000),
+                0x8000_1000...0x8000_2FFF => self.data.read_u8(addr - 0x8000_1000),
+                _ => unimplemented!(),
             }
         }
 
         fn write_u8(&mut self, addr: usize, data: u8) -> memory_access::Result<()> {
             if addr == 0x8000_1000 {
                 return Err(MemoryAccessError::DeviceNotMapped { addr });
-            } else {
-                self.memory.write_u8(addr - 0x8000_0000, data)
+            }
+
+            match addr {
+                0x8000_0000...0x8000_0FFF => self.text.write_u8(addr - 0x8000_0000, data),
+                0x8000_1000...0x8000_2FFF => self.data.write_u8(addr - 0x8000_1000, data),
+                _ => unimplemented!(),
             }
         }
     }
