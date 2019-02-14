@@ -118,7 +118,7 @@ fn execute_branch(instr: BrInstr) -> Result<(WriteBackData, u32), ExecuteError> 
                 target: instr.dest,
                 value: instr.next_pc,
             };
-            let next_pc = instr.base + instr.offset;
+            let next_pc = instr.base.wrapping_add(instr.offset);
             Ok((link, next_pc))
         }
         BranchType::COND_EQ => {

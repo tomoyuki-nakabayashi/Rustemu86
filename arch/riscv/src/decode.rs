@@ -349,6 +349,7 @@ fn decode_system(instr: ITypeInstr, gpr: &Gpr, npc: u32) -> Result<DecodedInstr>
         },
         CSRRW => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, false, &instr, gpr, npc)),
         CSRRS => DecodedInstr::Csr(CsrInstr::from(CsrOp::SET, false, &instr, gpr, npc)),
+        CSRRC => DecodedInstr::Csr(CsrInstr::from(CsrOp::CLEAR, false, &instr, gpr, npc)),
         CSRRWI => DecodedInstr::Csr(CsrInstr::from(CsrOp::WRITE, true, &instr, gpr, npc)),
     };
     Ok(decoded)

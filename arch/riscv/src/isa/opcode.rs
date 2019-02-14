@@ -70,7 +70,7 @@ pub enum LoadStoreType {
 pub enum CsrOp {
     WRITE,
     SET,
-    //CLEAR,
+    CLEAR,
 }
 
 /// Priviledged OP

@@ -91,6 +91,11 @@ impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
                             self.csr.write_u32(instr.csr_addr, instr.src | old);
                             self.gpr.write_u32(instr.dest, old);
                         }
+                        CLEAR => {
+                            let old = self.csr.read_u32(instr.csr_addr);
+                            self.csr.write_u32(instr.csr_addr, (!instr.src) & old);
+                            self.gpr.write_u32(instr.dest, old);
+                        }
                     }
                 }
                 Priv(op) => match op {

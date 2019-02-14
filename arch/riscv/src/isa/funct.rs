@@ -72,6 +72,7 @@ enum_from_primitive! {
         PRIV = 0b000,
         CSRRW = 0b001,
         CSRRS = 0b010,
+        CSRRC = 0b011,
         CSRRWI = 0b101,
     }
 }
