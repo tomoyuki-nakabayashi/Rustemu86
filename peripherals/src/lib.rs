@@ -7,3 +7,4 @@ pub mod memory;
 pub mod memory_access;
 pub mod mmio;
 pub mod uart16550;
+pub mod sifive_uart;
