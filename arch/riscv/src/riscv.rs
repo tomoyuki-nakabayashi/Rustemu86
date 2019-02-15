@@ -57,6 +57,7 @@ impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
     /// Executes instructions until WFI.
     fn run(&mut self) -> Result<()> {
         while !self.halted {
+            //println!("pc: {0:8x}", self.pc);
             let (instr, next_pc) = fetch(&self.mmio, self.pc)?;
             let instr = decode(instr, &self.gpr, self.pc, next_pc)?;
             let (wb, next_pc) = execute(instr)?;
@@ -101,7 +102,7 @@ impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
                 Priv(op) => match op {
                     PrivOp::ECALL => {
                         use crate::isa::csr_map::mcause;
-                        self.pc = 0x8000_0004; // trap vector for riscv-tests
+                        self.pc = 0x2040_0010; // trap vector for riscv-tests
                         self.csr.write_u32(mcause, 11);
                     }
                     PrivOp::WFI => self.halted = true,
