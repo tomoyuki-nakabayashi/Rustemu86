@@ -59,6 +59,20 @@ pub struct MemoryLayout {
     pheader: ProgramHeader,
 }
 
+impl<'a> MemoryLayout {
+    pub fn binary_as_ref(&'a self) -> &'a Vec<u8> {
+        &self.binary
+    }
+
+    pub fn start_addr(&self) -> usize {
+        self.pheader.paddr
+    }
+
+    pub fn size(&self) -> usize {
+        self.pheader.mem_size as usize
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

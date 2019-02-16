@@ -124,7 +124,7 @@ pub struct ProgramHeader {
     program_type: u32,
     offset: usize, // 4-byte
     vaddr: usize,  // 4-byte
-    paddr: usize,  // 4-byte
+    pub paddr: usize,  // 4-byte
     file_size: u32,
     pub mem_size: u32,
     flags: u32,
