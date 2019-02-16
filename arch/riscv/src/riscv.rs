@@ -24,6 +24,7 @@ pub struct Riscv<BUS: MemoryAccess> {
     debug: DebugMode,
     gpr: Gpr,
     csr: Csr,
+    trap_vector: u32,
     halted: bool,
 }
 
@@ -37,8 +38,14 @@ impl<BUS: MemoryAccess> Riscv<BUS> {
             debug,
             gpr: Gpr::new(),
             csr: Csr::new(),
+            trap_vector: 0x8000_0004,  // default for riscv-tests.
             halted: true,
         }
+    }
+
+    /// Set trap vector address as `addr`.
+    pub fn set_trap_vector(&mut self, addr: u32) {
+        self.trap_vector = addr;
     }
 }
 
@@ -102,7 +109,7 @@ impl<BUS: MemoryAccess> CpuModel for Riscv<BUS> {
                 Priv(op) => match op {
                     PrivOp::ECALL => {
                         use crate::isa::csr_map::mcause;
-                        self.pc = 0x2040_0010; // trap vector for riscv-tests
+                        self.pc = self.trap_vector;
                         self.csr.write_u32(mcause, 11);
                     }
                     PrivOp::WFI => self.halted = true,

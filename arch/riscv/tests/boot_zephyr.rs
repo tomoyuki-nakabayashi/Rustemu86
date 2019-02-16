@@ -16,6 +16,7 @@ fn test_boot_zephyr() {
     // create object and run.
     let mut riscv = Riscv::fabricate(bus, DebugMode::Disabled);
     riscv.set_pc(0x2040_0000);
+    riscv.set_trap_vector(0x2040_0010);
     riscv.init();
 
     let result = riscv.run();
@@ -46,6 +47,7 @@ mod riscv_tests_memory {
     impl Memory {
         pub fn new(filename: &str) -> Memory {
             let loader = ElfLoader::try_new(filename).unwrap();
+            // There are three sections in hello sample in Zephyr.
             let layouts = loader.memory_image();
             let vector = &layouts[0];
             let data_rom = &layouts[1];
@@ -54,6 +56,8 @@ mod riscv_tests_memory {
             Memory {
                 vector: memory::Memory::new_with_filled_ram(vector.binary_as_ref(), vector.size()),
                 data_rom: memory::Memory::new_with_filled_ram(data_rom.binary_as_ref(), data_rom.size()),
+                // data in data_rom will be copied to RAM, so that we should allocate
+                // the area in RAM.
                 data: memory::Memory::new(data_rom.size()),
                 bss: memory::Memory::new_with_filled_ram(bss.binary_as_ref(), bss.size()),
                 clint: memory::Memory::new(0x10000),
