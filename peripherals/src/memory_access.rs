@@ -87,21 +87,21 @@ pub trait MemoryAccess {
     fn write_u8(&mut self, addr: usize, data: u8) -> Result<()>;
 
     fn write_u16(&mut self, addr: usize, data: u16) -> Result<()> {
-        let bytes: [u8; mem::size_of::<u16>()] = unsafe { mem::transmute(data) };
+        let bytes = data.to_le_bytes();
         (0..mem::size_of::<u16>())
             .map(|x| self.write_u8(addr + x, bytes[x]))
             .collect::<Result<()>>()
     }
 
     fn write_u32(&mut self, addr: usize, data: u32) -> Result<()> {
-        let bytes: [u8; mem::size_of::<u32>()] = unsafe { mem::transmute(data) };
+        let bytes = data.to_le_bytes();
         (0..mem::size_of::<u32>())
             .map(|x| self.write_u8(addr + x, bytes[x]))
             .collect::<Result<()>>()
     }
 
     fn write_u64(&mut self, addr: usize, data: u64) -> Result<()> {
-        let bytes: [u8; mem::size_of::<u64>()] = unsafe { mem::transmute(data) };
+        let bytes = data.to_le_bytes();
         (0..mem::size_of::<u64>())
             .map(|x| self.write_u8(addr + x, bytes[x]))
             .collect::<Result<()>>()
